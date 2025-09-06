@@ -42,18 +42,69 @@ let moveCount = 0;
 let adRotationIndex = 0;
 let playerNameTexts = [];
 let turnIcon;
+let currentChoicesFaction = null;
+let choiceListBottomY = 0;
+
+// Factions et teintes
+const brandTints = {
+  nintendo: 0xe60012,
+  sega: 0x0089cf,
+  playstation: 0x003087,
+  xbox: 0x107c10
+};
+
+function parseFactionInput(input) {
+  const v = (input || '').toLowerCase();
+  if (v.includes('seg')) return 'sega';
+  if (v.includes('play') || v.includes('sony') || v.includes('ps')) return 'playstation';
+  if (v.includes('xbox') || v.includes('xb')) return 'xbox';
+  return 'nintendo';
+}
+
+function applyFactionTintByPlayerId(playerId, sprite) {
+  const player = players.find(p => p.id === playerId);
+  const tint = brandTints[player && player.faction ? player.faction : 'nintendo'];
+  if (sprite && typeof sprite.setTint === 'function') sprite.setTint(tint);
+}
 
 // --- BUDGET / DRAFT ---
 let players = [];
 
-// catalogue de persos
-const catalog = {
-  link: { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3, color: 0xff0000 },
-  mario: { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2, color: 0x0000ff },
-  zelda: { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8, color: 0x00ff00 },
-  // Pièce spéciale automatique par joueur (non draftée)
-  nintendo: { cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1, color: 0x222222, draft: false }
+// roi par faction (non drafté)
+const kings = {
+  nintendo: { key: 'king-nintendo', cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 },
+  sega: { key: 'king-sega', cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 },
+  playstation: { key: 'king-playstation', cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 },
+  xbox: { key: 'king-xbox', cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 }
 };
+
+// catalogues par faction (draftables)
+const factionCatalogs = {
+  nintendo: {
+    link: { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
+    mario: { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+    zelda: { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+  },
+  xbox: {
+    'masterchief': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
+    'marcus-fenix': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+    'joanna-dark': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+  },
+  sega: {
+    'sonic': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
+    'ryo': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+    'joe-musashi': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+  },
+  playstation: {
+    'nathan-drake': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
+    'kratos': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+    'astro-bot': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+  }
+};
+
+function getCatalogForFaction(faction) {
+  return factionCatalogs[faction] || factionCatalogs.nintendo;
+}
 
 // Draft UI
 let infoText;
@@ -68,14 +119,41 @@ let clearAllBtn;
 let playerCountBtns = [];
 
 function preload() {
-  // Chemin relatif (fonctionne quel que soit le port/domaine du serveur local)
-  this.load.setPath('public/images/characters/');
-  this.load.image('mario', 'sprite-mario.png');
-  this.load.image('link', 'sprite-link.png');
+  // Nintendo existants (actuels)
+  this.load.setPath('public/images/nintendo/characters/');
+  this.load.image('mario', 'mario.png');
+  this.load.image('link', 'link.png');
   // zelda utilise temporairement le sprite de samus
-  this.load.image('zelda', 'sprite-samus.png');
-  // nintendo utilise le sprite de pit
-  this.load.image('nintendo', 'sprite-pit.png');
+  this.load.image('zelda', 'samus.png');
+  // nintendo utilise le sprite de pit (fallback)
+  this.load.image('nintendo', 'pit.png');
+
+  // Rois par faction (images à fournir) - chemins par dossier faction
+  this.load.setPath('public/images/nintendo/characters/');
+  this.load.image('king-nintendo', 'king.png');
+  this.load.setPath('public/images/sega/characters/');
+  this.load.image('king-sega', 'king.png');
+  this.load.setPath('public/images/playstation/characters/');
+  this.load.image('king-playstation', 'king.png');
+  this.load.setPath('public/images/xbox/characters/');
+  this.load.image('king-xbox', 'king.png');
+
+  // Sprites factionnels (images à ajouter par faction, sans préfixe dans les noms de fichiers)
+  // Xbox
+  this.load.setPath('public/images/xbox/characters/');
+  this.load.image('masterchief', 'masterchief.png');
+  this.load.image('marcus-fenix', 'marcus-fenix.png');
+  this.load.image('joanna-dark', 'joanna-dark.png');
+  // SEGA
+  this.load.setPath('public/images/sega/characters/');
+  this.load.image('sonic', 'sonic.png');
+  this.load.image('ryo', 'ryo.png');
+  this.load.image('joe-musashi', 'joe-musashi.png');
+  // PlayStation
+  this.load.setPath('public/images/playstation/characters/');
+  this.load.image('nathan-drake', 'nathan-drake.png');
+  this.load.image('kratos', 'kratos.png');
+  this.load.image('astro-bot', 'astro-bot.png');
 }
 
 function create() {
@@ -99,11 +177,13 @@ function setupPlayerCountUI(scene) {
 }
 
 function selectPlayerCount(scene, n) {
-  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [], name: '' }));
+  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [], name: '', faction: 'nintendo' }));
   // demander les noms
   for (let i = 0; i < n; i++) {
     const provided = window.prompt(`Nom du Joueur ${i+1} :`, `Joueur ${i+1}`);
     players[i].name = (provided && provided.trim()) ? provided.trim() : `Joueur ${i+1}`;
+    const f = window.prompt(`Faction du Joueur ${i+1} (Nintendo/SEGA/PlayStation/Xbox) :`, `Nintendo`);
+    players[i].faction = parseFactionInput(f);
   }
   currentPlayer = 0;
   // nettoyer UI de sélection
@@ -115,29 +195,16 @@ function selectPlayerCount(scene, n) {
 }
 
 function setupDraftUI(scene) {
-  let y = 50;
-  for (let key in catalog) {
-    if (catalog[key].draft === false) continue; // ne pas afficher 'nintendo' dans le draft
-    const img = scene.add.image(35, y, key)
-      .setDisplaySize(52,52)
-      .setInteractive()
-      .on("pointerdown", () => pickCharacter(scene, key));
-    const nameText = scene.add.text(70, y - 12, `${key}`, { font: "16px Arial", fill: "#000" })
-      .setInteractive()
-      .on("pointerdown", () => pickCharacter(scene, key));
-    const costText = scene.add.text(70, y + 10, `cost: ${catalog[key].cost}` , { font: "12px Arial", fill: "#333" });
-    choiceThumbs.push({ key, image: img, nameText, costText });
-    y += 70;
-  }
+  rebuildChoiceList(scene);
 
   // bouton "Terminer"
-  endDraftBtn = scene.add.text(10, y+10, "✅ Terminer draft", 
+  endDraftBtn = scene.add.text(10, choiceListBottomY+10, "✅ Terminer draft", 
     { font: "16px Arial", fill: "#000", backgroundColor: "#afa" })
     .setInteractive()
     .on("pointerdown", () => endDraft(scene));
 
   // bouton "Tout supprimer"
-  clearAllBtn = scene.add.text(180, y+10, "🗑️ Tout supprimer", 
+  clearAllBtn = scene.add.text(180, choiceListBottomY+10, "🗑️ Tout supprimer", 
     { font: "16px Arial", fill: "#000", backgroundColor: "#faa" })
     .setInteractive()
     .on("pointerdown", () => clearCurrentBasket(scene));
@@ -156,9 +223,57 @@ function setupDraftUI(scene) {
   renderArmyThumbnails(scene);
 }
 
+function hasTexture(scene, key) {
+  return scene.textures && typeof scene.textures.exists === 'function' && scene.textures.exists(key);
+}
+
+function rebuildChoiceList(scene) {
+  const faction = players[currentPlayer] && players[currentPlayer].faction ? players[currentPlayer].faction : 'nintendo';
+  const draftCatalog = getCatalogForFaction(faction);
+  // détruire anciens choix
+  if (choiceThumbs.length) {
+    for (let entry of choiceThumbs) {
+      entry.image.destroy();
+      entry.nameText.destroy();
+      entry.costText.destroy();
+    }
+    choiceThumbs = [];
+  }
+  currentChoicesFaction = faction;
+  let y = 50;
+  for (let key in draftCatalog) {
+    const displayName = getDisplayNameForKey(key);
+    const texKey = hasTexture(scene, key) ? key : 'nintendo';
+    const img = scene.add.image(35, y, texKey)
+      .setDisplaySize(52,52)
+      .setInteractive()
+      .on("pointerdown", () => pickCharacter(scene, key));
+    const nameText = scene.add.text(70, y - 12, displayName, { font: "16px Arial", fill: "#000" })
+      .setInteractive()
+      .on("pointerdown", () => pickCharacter(scene, key));
+    const costText = scene.add.text(70, y + 10, `cost: ${draftCatalog[key].cost}` , { font: "12px Arial", fill: "#333" });
+    choiceThumbs.push({ key, image: img, nameText, costText });
+    y += 70;
+  }
+  choiceListBottomY = y;
+  if (endDraftBtn) endDraftBtn.setY(choiceListBottomY + 10);
+  if (clearAllBtn) clearAllBtn.setY(choiceListBottomY + 10);
+}
+
+function mapCharacterToFactionSprite(faction, baseKey) {
+  // baseKey est déjà la clé du sprite à charger dans le dossier de la faction
+  return baseKey;
+}
+
+function getDisplayNameForKey(key) {
+  // Capitalise chaque mot
+  return key.replaceAll('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function updateDraftUI() {
   let p = players[currentPlayer];
   infoText.setText(`Joueur ${p.id+1} - Points restants: ${p.points}\nChoisissez vos persos`);
+  rebuildChoiceList(infoText.scene); // reconstruire au changement de joueur/faction
   updateChoiceAvailability();
   const scene = infoText.scene;
   renderArmyThumbnails(scene);
@@ -169,6 +284,7 @@ function updateDraftUI() {
 
 function updateChoiceAvailability() {
   const p = players[currentPlayer];
+  const catalog = getCatalogForFaction(p.faction);
   for (let entry of choiceThumbs) {
     const affordable = p.points >= catalog[entry.key].cost;
     entry.image.setAlpha(affordable ? 1 : 0.4);
@@ -212,7 +328,7 @@ function removeArmyItem(scene, playerIndex, itemIndex) {
   const key = players[playerIndex].army[itemIndex];
   if (!key) return;
   players[playerIndex].army.splice(itemIndex, 1);
-  players[playerIndex].points += catalog[key].cost;
+  players[playerIndex].points += getCatalogForFaction(players[playerIndex].faction)[key].cost;
   renderArmyThumbnails(scene);
   updateDraftUI();
 }
@@ -227,7 +343,7 @@ function clearCurrentBasket(scene) {
   // rembourser tous les choix
   let refund = 0;
   for (let key of p.army) {
-    refund += catalog[key].cost;
+    refund += getCatalogForFaction(p.faction)[key].cost;
   }
   p.points += refund;
   p.army = [];
@@ -237,7 +353,7 @@ function clearCurrentBasket(scene) {
 
 function pickCharacter(scene, key) {
   let p = players[currentPlayer];
-  let char = catalog[key];
+  let char = getCatalogForFaction(p.faction)[key];
   if (p.points >= char.cost) {
     p.points -= char.cost;
     p.army.push(key);
@@ -356,7 +472,7 @@ function startGame(scene) {
     return slots;
   };
 
-  // 1) Placer les rois (nintendo) au centre exact du bord
+  // 1) Placer les rois par faction au centre exact du bord
   players.forEach((p,i) => {
     const side = getPlayerSide(i);
     let pos = { x: mid, y: 0 };
@@ -364,7 +480,9 @@ function startGame(scene) {
     if (side === 'bottom') pos = { x: mid, y: GRID_SIZE - 1 };
     if (side === 'left') pos = { x: 0, y: mid };
     if (side === 'right') pos = { x: GRID_SIZE - 1, y: mid };
-    pieces.push({ sprite: scene.add.image(0,0,'nintendo'), type: 'nintendo', x: pos.x, y: pos.y, player: p.id });
+    const kingKey = (kings[p.faction] && kings[p.faction].key) ? kings[p.faction].key : 'nintendo';
+    const spr = scene.add.image(0,0,kingKey);
+    pieces.push({ sprite: spr, type: 'king', x: pos.x, y: pos.y, player: p.id });
   });
 
   // 2) Placer les autres pièces en partant du bord propre à chaque joueur
@@ -377,7 +495,8 @@ function startGame(scene) {
       while (si < slots.length && getPieceAt(slots[si])) si++;
       if (si >= slots.length) return; // plus de place dans le bloc
       const pos = slots[si];
-      pieces.push({ sprite: scene.add.image(0,0,charKey), type: charKey, x: pos.x, y: pos.y, player: p.id });
+      const spr = scene.add.image(0,0,charKey);
+      pieces.push({ sprite: spr, type: charKey, x: pos.x, y: pos.y, player: p.id });
       si++;
     });
   });
@@ -401,7 +520,10 @@ function startGame(scene) {
     if (side === 'bottom') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y + GRID_SIZE*TILE_SIZE + 6; }
     if (side === 'left') { nx = GRID_OFFSET_X - 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
     if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
-    const txt = scene.add.text(nx, ny, p.name, { font: "18px Arial", fill: "#000" }).setOrigin(0.5);
+    const tintColor = brandTints[p.faction || 'nintendo'] || 0x000000;
+    const txt = scene.add.text(nx, ny, p.name, { font: "18px Arial", fill: `#${tintColor.toString(16).padStart(6,'0')}` }).setOrigin(0.5);
+    if (side === 'left') txt.setAngle(-90);
+    if (side === 'right') txt.setAngle(90);
     txt.setDepth(1500);
     playerNameTexts.push(txt);
   });
@@ -491,7 +613,7 @@ function getPieceAt(pos) {
 
 function getReachablePositions(piece) {
   const positions = [];
-  const rule = catalog[piece.type];
+  const rule = getRuleForPiece(piece);
   for (let dir of rule.moves) {
     for (let step = 1; step <= rule.range; step++) {
       const nx = piece.x + dir[0] * step;
@@ -510,6 +632,19 @@ function getReachablePositions(piece) {
     }
   }
   return positions;
+}
+
+function getRuleForPiece(piece) {
+  // Retourne l'objet { moves, range } pour la pièce, selon faction/type
+  const owner = players[piece.player];
+  if (!owner) return { moves: [], range: 0 };
+  if (piece.type === 'king') {
+    const k = kings[owner.faction];
+    return k ? { moves: k.moves, range: k.range } : { moves: [], range: 0 };
+  }
+  const catalog = getCatalogForFaction(owner.faction);
+  const entry = catalog[piece.type];
+  return entry ? { moves: entry.moves, range: entry.range } : { moves: [], range: 0 };
 }
 
 function endGame(winnerPlayerIndex) {
@@ -545,6 +680,9 @@ function updateTurnUI() {
     const t = playerNameTexts[currentPlayer];
     turnIcon.x = t.x - t.displayWidth/2 - 16;
     turnIcon.y = t.y - t.displayHeight/2;
+    // Rotation de l'icône selon côté
+    const side = (currentPlayer===0)?'top':(currentPlayer===1)?'bottom':(currentPlayer===2)?'left':'right';
+    if (side === 'left') turnIcon.setAngle(-90); else if (side === 'right') turnIcon.setAngle(90); else turnIcon.setAngle(0);
   }
 }
 
