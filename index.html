@@ -45,6 +45,10 @@ const catalog = {
 // Draft UI
 let infoText;
 let choiceButtons = [];
+let choiceThumbs = [];
+let armyThumbs = [[], []];
+let armyLabels = [];
+let endDraftBtn;
 
 function preload() {
   // Chemin relatif (fonctionne quel que soit le port/domaine du serveur local)
@@ -68,24 +72,69 @@ function setupDraftUI(scene) {
   let y = 50;
   for (let key in catalog) {
     if (catalog[key].draft === false) continue; // ne pas afficher 'nintendo' dans le draft
-    let btn = scene.add.text(10, y, `${key} (cost: ${catalog[key].cost})`, 
-      { font: "16px Arial", fill: "#000", backgroundColor: "#ddd" })
+    const img = scene.add.image(30, y, key)
+      .setDisplaySize(40,40)
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    choiceButtons.push(btn);
-    y += 30;
+    const nameText = scene.add.text(60, y - 10, `${key}`, { font: "16px Arial", fill: "#000" })
+      .setInteractive()
+      .on("pointerdown", () => pickCharacter(scene, key));
+    const costText = scene.add.text(60, y + 8, `cost: ${catalog[key].cost}` , { font: "12px Arial", fill: "#333" });
+    choiceThumbs.push({ key, image: img, nameText, costText });
+    y += 60;
   }
 
   // bouton "Terminer"
-  scene.add.text(10, y+10, "✅ Terminer draft", 
+  endDraftBtn = scene.add.text(10, y+10, "✅ Terminer draft", 
     { font: "16px Arial", fill: "#000", backgroundColor: "#afa" })
     .setInteractive()
     .on("pointerdown", () => endDraft(scene));
+
+  // labels d'armées
+  armyLabels[0] = scene.add.text(300, 30, "Équipe J1", { font: "16px Arial", fill: "#000" });
+  armyLabels[1] = scene.add.text(300, 100, "Équipe J2", { font: "16px Arial", fill: "#000" });
+  renderArmyThumbnails(scene);
 }
 
 function updateDraftUI() {
   let p = players[currentPlayer];
   infoText.setText(`Joueur ${p.id+1} - Points restants: ${p.points}\nChoisissez vos persos`);
+  updateChoiceAvailability();
+  const scene = infoText.scene;
+  renderArmyThumbnails(scene);
+}
+
+function updateChoiceAvailability() {
+  const p = players[currentPlayer];
+  for (let entry of choiceThumbs) {
+    const affordable = p.points >= catalog[entry.key].cost;
+    entry.image.setAlpha(affordable ? 1 : 0.4);
+    entry.nameText.setAlpha(affordable ? 1 : 0.5);
+    entry.costText.setAlpha(affordable ? 1 : 0.5);
+    if (affordable) {
+      entry.image.setInteractive();
+      entry.nameText.setInteractive();
+    } else {
+      entry.image.disableInteractive();
+      entry.nameText.disableInteractive();
+    }
+  }
+}
+
+function renderArmyThumbnails(scene) {
+  // nettoyer existants
+  for (let i = 0; i < armyThumbs.length; i++) {
+    for (let img of armyThumbs[i]) { img.destroy(); }
+    armyThumbs[i] = [];
+  }
+  // re-créer
+  players.forEach((pl,i) => {
+    const baseY = i === 0 ? 60 : 130;
+    pl.army.forEach((charKey, idx) => {
+      const img = scene.add.image(300 + idx*45, baseY, charKey).setDisplaySize(32,32);
+      armyThumbs[i].push(img);
+    });
+  });
 }
 
 function pickCharacter(scene, key) {
@@ -112,8 +161,22 @@ function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
   infoText.setText("Début de la partie !");
-  // cacher les boutons
+  // cacher l'UI de draft
   choiceButtons.forEach(btn => btn.setVisible(false));
+  if (endDraftBtn) endDraftBtn.setVisible(false);
+  if (choiceThumbs && choiceThumbs.length) {
+    choiceThumbs.forEach(entry => {
+      entry.image.setVisible(false);
+      entry.nameText.setVisible(false);
+      entry.costText.setVisible(false);
+    });
+  }
+  if (armyLabels && armyLabels.length) {
+    armyLabels.forEach(lbl => lbl && lbl.setVisible(false));
+  }
+  if (armyThumbs && armyThumbs.length) {
+    armyThumbs.forEach(list => list.forEach(img => img && img.setVisible(false)));
+  }
 
   // créer la grille
   for (let y=0; y<GRID_SIZE; y++) {
