@@ -49,6 +49,9 @@ let choiceThumbs = [];
 let armyThumbs = [[], []];
 let armyLabels = [];
 let endDraftBtn;
+let armyPanels = [];
+let armyHints = [];
+let clearAllBtn;
 
 function preload() {
   // Chemin relatif (fonctionne quel que soit le port/domaine du serveur local)
@@ -72,16 +75,16 @@ function setupDraftUI(scene) {
   let y = 50;
   for (let key in catalog) {
     if (catalog[key].draft === false) continue; // ne pas afficher 'nintendo' dans le draft
-    const img = scene.add.image(30, y, key)
-      .setDisplaySize(40,40)
+    const img = scene.add.image(35, y, key)
+      .setDisplaySize(52,52)
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const nameText = scene.add.text(60, y - 10, `${key}`, { font: "16px Arial", fill: "#000" })
+    const nameText = scene.add.text(70, y - 12, `${key}`, { font: "16px Arial", fill: "#000" })
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const costText = scene.add.text(60, y + 8, `cost: ${catalog[key].cost}` , { font: "12px Arial", fill: "#333" });
+    const costText = scene.add.text(70, y + 10, `cost: ${catalog[key].cost}` , { font: "12px Arial", fill: "#333" });
     choiceThumbs.push({ key, image: img, nameText, costText });
-    y += 60;
+    y += 70;
   }
 
   // bouton "Terminer"
@@ -90,9 +93,24 @@ function setupDraftUI(scene) {
     .setInteractive()
     .on("pointerdown", () => endDraft(scene));
 
+  // bouton "Tout supprimer"
+  clearAllBtn = scene.add.text(180, y+10, "🗑️ Tout supprimer", 
+    { font: "16px Arial", fill: "#000", backgroundColor: "#faa" })
+    .setInteractive()
+    .on("pointerdown", () => clearCurrentBasket(scene));
+
   // labels d'armées
   armyLabels[0] = scene.add.text(300, 30, "Équipe J1", { font: "16px Arial", fill: "#000" });
   armyLabels[1] = scene.add.text(300, 100, "Équipe J2", { font: "16px Arial", fill: "#000" });
+
+  // panneaux de fond pour le panier (invisibles)
+  armyPanels[0] = scene.add.rectangle(450, 65, 280, 50, 0xffffff, 0);
+  armyPanels[1] = scene.add.rectangle(450, 135, 280, 50, 0xffffff, 0);
+  armyPanels.forEach(r => r.setStrokeStyle(0));
+
+  // hints d'aide
+  armyHints[0] = scene.add.text(300, 80, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
+  armyHints[1] = scene.add.text(300, 150, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
   renderArmyThumbnails(scene);
 }
 
@@ -102,6 +120,9 @@ function updateDraftUI() {
   updateChoiceAvailability();
   const scene = infoText.scene;
   renderArmyThumbnails(scene);
+  if (clearAllBtn) {
+    clearAllBtn.setText(`🗑️ Tout supprimer (J${currentPlayer+1})`);
+  }
 }
 
 function updateChoiceAvailability() {
@@ -132,9 +153,44 @@ function renderArmyThumbnails(scene) {
     const baseY = i === 0 ? 60 : 130;
     pl.army.forEach((charKey, idx) => {
       const img = scene.add.image(300 + idx*45, baseY, charKey).setDisplaySize(32,32);
+      if (i === currentPlayer && !gameStarted) {
+        img.setInteractive().on("pointerdown", () => removeArmyItem(scene, i, idx));
+      } else {
+        img.disableInteractive();
+        img.setAlpha(0.9);
+      }
       armyThumbs[i].push(img);
     });
   });
+}
+
+function removeArmyItem(scene, playerIndex, itemIndex) {
+  if (gameStarted) return;
+  if (playerIndex !== currentPlayer) return;
+  const key = players[playerIndex].army[itemIndex];
+  if (!key) return;
+  players[playerIndex].army.splice(itemIndex, 1);
+  players[playerIndex].points += catalog[key].cost;
+  renderArmyThumbnails(scene);
+  updateDraftUI();
+}
+
+function clearCurrentBasket(scene) {
+  if (gameStarted) return;
+  const p = players[currentPlayer];
+  // Confirmation
+  if (!window.confirm(`Voulez-vous supprimer tous les choix du Joueur ${currentPlayer+1} ?`)) {
+    return;
+  }
+  // rembourser tous les choix
+  let refund = 0;
+  for (let key of p.army) {
+    refund += catalog[key].cost;
+  }
+  p.points += refund;
+  p.army = [];
+  renderArmyThumbnails(scene);
+  updateDraftUI();
 }
 
 function pickCharacter(scene, key) {
@@ -171,11 +227,18 @@ function startGame(scene) {
       entry.costText.setVisible(false);
     });
   }
+  if (clearAllBtn) clearAllBtn.setVisible(false);
   if (armyLabels && armyLabels.length) {
     armyLabels.forEach(lbl => lbl && lbl.setVisible(false));
   }
   if (armyThumbs && armyThumbs.length) {
     armyThumbs.forEach(list => list.forEach(img => img && img.setVisible(false)));
+  }
+  if (armyPanels && armyPanels.length) {
+    armyPanels.forEach(r => r && r.setVisible(false));
+  }
+  if (armyHints && armyHints.length) {
+    armyHints.forEach(t => t && t.setVisible(false));
   }
 
   // créer la grille
@@ -222,7 +285,7 @@ function startGame(scene) {
       }
       if (y < 0 || y >= GRID_SIZE) return; // plus d'espace
       pieces.push({
-        sprite: scene.add.image(0,0,charKey).setDisplaySize(40,40),
+        sprite: scene.add.image(0,0,charKey),
         type: charKey,
         x, y, player: p.id
       });
@@ -244,7 +307,7 @@ function startGame(scene) {
     for (let cx of candidates) {
       if (!getPieceAt({ x: cx, y })) {
         pieces.push({
-          sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+          sprite: scene.add.image(0,0,'nintendo'),
           type: 'nintendo',
           x: cx, y, player: p.id
         });
@@ -259,7 +322,7 @@ function startGame(scene) {
           for (let xx = 0; xx < GRID_SIZE; xx++) {
             if (!getPieceAt({ x: xx, y: yy })) {
               pieces.push({
-                sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+                sprite: scene.add.image(0,0,'nintendo'),
                 type: 'nintendo',
                 x: xx, y: yy, player: p.id
               });
@@ -273,7 +336,7 @@ function startGame(scene) {
           for (let xx = GRID_SIZE - 1; xx >= 0; xx--) {
             if (!getPieceAt({ x: xx, y: yy })) {
               pieces.push({
-                sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+                sprite: scene.add.image(0,0,'nintendo'),
                 type: 'nintendo',
                 x: xx, y: yy, player: p.id
               });
@@ -298,6 +361,10 @@ function updatePieces() {
   for (let p of pieces) {
     p.sprite.x = p.x*TILE_SIZE + TILE_SIZE/2;
     p.sprite.y = p.y*TILE_SIZE + TILE_SIZE/2;
+    // ajuster la taille pour remplir la case moins une marge de bordure
+    const margin = 4; // 2px de chaque côté
+    const targetSize = TILE_SIZE - margin;
+    p.sprite.setDisplaySize(targetSize, targetSize);
   }
 }
 
