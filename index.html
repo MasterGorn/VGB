@@ -6,17 +6,27 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
 </head>
 <body>
+<div id="app" style="display:flex; gap:16px; align-items:flex-start;">
+  <div id="game-root"></div>
+  <div id="ads-panel" style="width:280px;">
+    <div id="ads-title" style="font:16px Arial; margin-bottom:8px;">Publicités</div>
+    <div id="ad-slot-1" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 1</div>
+    <div id="ad-slot-2" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 2</div>
+    <div id="ad-info" style="font:12px Arial; color:#555;">Mise à jour toutes les 5 actions</div>
+  </div>
+</div>
 <script>
 
 const config = {
   type: Phaser.AUTO,
-  width: 600,
-  height: 600,
+  width: 900,
+  height: 900,
   backgroundColor: '#ececec',
+  parent: 'game-root',
   scene: { preload, create, update }
 };
 
-const TILE_SIZE = 40;
+const TILE_SIZE = 60;
 const GRID_SIZE = 15;
 
 let grid = [];
@@ -26,6 +36,8 @@ let gameStarted = false;
 let selectedPiece = null;
 let highlightedTiles = [];
 let turnText;
+let moveCount = 0;
+let adRotationIndex = 0;
 
 // --- BUDGET / DRAFT ---
 let players = [];
@@ -413,6 +425,8 @@ function handleClick(scene, pos) {
           endGame(currentPlayer);
           return;
         }
+        moveCount++;
+        if (moveCount % 5 === 0) rotateAds();
         currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
         updateTurnUI();
         return;
@@ -423,6 +437,8 @@ function handleClick(scene, pos) {
       updatePieces();
       clearHighlights();
       selectedPiece = null;
+      moveCount++;
+      if (moveCount % 5 === 0) rotateAds();
       currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
       updateTurnUI();
     } else {
@@ -502,6 +518,23 @@ function updateTurnUI() {
 function update() {}
 
 new Phaser.Game(config);
+
+// --- Publicités ---
+const ADS = [
+  { a1: 'Retro Console XL', a2: 'Promo -30%' },
+  { a1: 'Figurines 8-bit', a2: 'Nouveautés' },
+  { a1: 'Cartouches Repro', a2: 'Rare Loot' },
+  { a1: 'T-shirts Pixel', a2: 'Collection 2025' },
+];
+
+function rotateAds() {
+  adRotationIndex = (adRotationIndex + 1) % ADS.length;
+  const data = ADS[adRotationIndex];
+  const s1 = document.getElementById('ad-slot-1');
+  const s2 = document.getElementById('ad-slot-2');
+  if (s1) s1.textContent = data.a1;
+  if (s2) s2.textContent = data.a2;
+}
 
 /* https://www.reddit.com/r/retrogaming/comments/1hkzmcw/i_redrew_some_nes_sprites_of_various_nintendo/?tl=fr */
 </script>
