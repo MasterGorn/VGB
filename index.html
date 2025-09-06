@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Chesstendo - Draft + Plateau</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+</head>
+<body>
+<script>
+
+const config = {
+  type: Phaser.AUTO,
+  width: 600,
+  height: 600,
+  backgroundColor: '#ececec',
+  scene: { preload, create, update }
+};
+
+const TILE_SIZE = 60;
+const GRID_SIZE = 10;
+
+let grid = [];
+let pieces = [];
+let currentPlayer = 0; // index joueur qui doit jouer
+let gameStarted = false;
+let selectedPiece = null;
+let highlightedTiles = [];
+let turnText;
+
+// --- BUDGET / DRAFT ---
+const players = [
+  { id: 0, points: 20, army: [] },
+  { id: 1, points: 20, army: [] }
+];
+
+// catalogue de persos
+const catalog = {
+  link: { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3, color: 0xff0000 },
+  mario: { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2, color: 0x0000ff },
+  zelda: { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8, color: 0x00ff00 },
+  // Pièce spéciale automatique par joueur (non draftée)
+  nintendo: { cost: 0, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1, color: 0x222222, draft: false }
+};
+
+// Draft UI
+let infoText;
+let choiceButtons = [];
+
+function preload() {
+  // Chemin relatif (fonctionne quel que soit le port/domaine du serveur local)
+  this.load.setPath('public/images/characters/');
+  this.load.image('mario', 'sprite-mario.png');
+  this.load.image('link', 'sprite-link.png');
+  // zelda utilise temporairement le sprite de samus
+  this.load.image('zelda', 'sprite-samus.png');
+  // nintendo utilise le sprite de pit
+  this.load.image('nintendo', 'sprite-pit.png');
+}
+
+function create() {
+  infoText = this.add.text(10, 10, "", { font: "16px Arial", fill: "#000" });
+  infoText.setDepth(1000);
+  setupDraftUI(this);
+  updateDraftUI();
+}
+
+function setupDraftUI(scene) {
+  let y = 50;
+  for (let key in catalog) {
+    if (catalog[key].draft === false) continue; // ne pas afficher 'nintendo' dans le draft
+    let btn = scene.add.text(10, y, `${key} (cost: ${catalog[key].cost})`, 
+      { font: "16px Arial", fill: "#000", backgroundColor: "#ddd" })
+      .setInteractive()
+      .on("pointerdown", () => pickCharacter(scene, key));
+    choiceButtons.push(btn);
+    y += 30;
+  }
+
+  // bouton "Terminer"
+  scene.add.text(10, y+10, "✅ Terminer draft", 
+    { font: "16px Arial", fill: "#000", backgroundColor: "#afa" })
+    .setInteractive()
+    .on("pointerdown", () => endDraft(scene));
+}
+
+function updateDraftUI() {
+  let p = players[currentPlayer];
+  infoText.setText(`Joueur ${p.id+1} - Points restants: ${p.points}\nChoisissez vos persos`);
+}
+
+function pickCharacter(scene, key) {
+  let p = players[currentPlayer];
+  let char = catalog[key];
+  if (p.points >= char.cost) {
+    p.points -= char.cost;
+    p.army.push(key);
+    updateDraftUI();
+  }
+}
+
+function endDraft(scene) {
+  if (currentPlayer === players.length-1) {
+    // Tous les joueurs ont fini => lancer la partie
+    startGame(scene);
+  } else {
+    currentPlayer++;
+    updateDraftUI();
+  }
+}
+
+function startGame(scene) {
+  gameStarted = true;
+  currentPlayer = 0;
+  infoText.setText("Début de la partie !");
+  // cacher les boutons
+  choiceButtons.forEach(btn => btn.setVisible(false));
+
+  // créer la grille
+  for (let y=0; y<GRID_SIZE; y++) {
+    grid[y] = [];
+    for (let x=0; x<GRID_SIZE; x++) {
+      const baseColor = (x+y)%2===0 ? 0xffffff : 0xcccccc;
+      const rect = scene.add.rectangle(
+        x*TILE_SIZE + TILE_SIZE/2,
+        y*TILE_SIZE + TILE_SIZE/2,
+        TILE_SIZE-2, TILE_SIZE-2,
+        baseColor
+      ).setStrokeStyle(1,0x000000).setInteractive();
+      rect.baseColor = baseColor;
+      rect.pos = {x,y};
+      rect.on('pointerdown', () => handleClick(scene, rect.pos));
+      grid[y][x] = rect;
+    }
+  }
+
+  // placer les armées
+  players.forEach((p,i) => {
+    p.army.forEach((charKey, idx) => {
+      let x, y;
+      if (i === 0) {
+        // Joueur 1: depuis la rangée du haut, de gauche à droite
+        x = idx % GRID_SIZE;
+        y = Math.floor(idx / GRID_SIZE);
+      } else {
+        // Joueur 2: depuis la rangée du bas, de droite à gauche
+        x = GRID_SIZE - 1 - (idx % GRID_SIZE);
+        y = GRID_SIZE - 1 - Math.floor(idx / GRID_SIZE);
+      }
+      // si occupé (par ex. par 'nintendo' plus tard), trouver la prochaine case libre dans la même rangée
+      while (getPieceAt({ x, y })) {
+        if (i === 0) {
+          x++;
+          if (x >= GRID_SIZE) { x = 0; y++; }
+        } else {
+          x--;
+          if (x < 0) { x = GRID_SIZE - 1; y--; }
+        }
+        if (y < 0 || y >= GRID_SIZE) break;
+      }
+      if (y < 0 || y >= GRID_SIZE) return; // plus d'espace
+      pieces.push({
+        sprite: scene.add.image(0,0,charKey).setDisplaySize(40,40),
+        type: charKey,
+        x, y, player: p.id
+      });
+    });
+  });
+
+  // Ajouter la pièce 'nintendo' pour chaque joueur, au centre de leur bord, sur case libre
+  players.forEach((p,i) => {
+    let y = (i === 0) ? 0 : GRID_SIZE - 1;
+    const centerX = Math.floor(GRID_SIZE / 2);
+    let candidates = [];
+    for (let radius = 0; radius < GRID_SIZE; radius++) {
+      let left = centerX - radius;
+      let right = centerX + radius;
+      if (left >= 0) candidates.push(left);
+      if (right < GRID_SIZE && right !== left) candidates.push(right);
+    }
+    let placed = false;
+    for (let cx of candidates) {
+      if (!getPieceAt({ x: cx, y })) {
+        pieces.push({
+          sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+          type: 'nintendo',
+          x: cx, y, player: p.id
+        });
+        placed = true;
+        break;
+      }
+    }
+    // Si la ligne est pleine, chercher dans toute la grille côté du joueur
+    if (!placed) {
+      if (i === 0) {
+        outerTop: for (let yy = 0; yy < GRID_SIZE; yy++) {
+          for (let xx = 0; xx < GRID_SIZE; xx++) {
+            if (!getPieceAt({ x: xx, y: yy })) {
+              pieces.push({
+                sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+                type: 'nintendo',
+                x: xx, y: yy, player: p.id
+              });
+              placed = true;
+              break outerTop;
+            }
+          }
+        }
+      } else {
+        outerBottom: for (let yy = GRID_SIZE - 1; yy >= 0; yy--) {
+          for (let xx = GRID_SIZE - 1; xx >= 0; xx--) {
+            if (!getPieceAt({ x: xx, y: yy })) {
+              pieces.push({
+                sprite: scene.add.image(0,0,'nintendo').setDisplaySize(40,40),
+                type: 'nintendo',
+                x: xx, y: yy, player: p.id
+              });
+              placed = true;
+              break outerBottom;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  updatePieces();
+  // Créer un texte dédié pour le tour, centré en haut et au-dessus de tout
+  turnText = scene.add.text(config.width/2, 10, "", { font: "18px Arial", fill: "#000", backgroundColor: "#fff" })
+    .setOrigin(0.5, 0)
+    .setDepth(2000);
+  updateTurnUI();
+}
+
+function updatePieces() {
+  for (let p of pieces) {
+    p.sprite.x = p.x*TILE_SIZE + TILE_SIZE/2;
+    p.sprite.y = p.y*TILE_SIZE + TILE_SIZE/2;
+  }
+}
+
+function handleClick(scene, pos) {
+  if (!gameStarted) return;
+  const clickedPiece = getPieceAt(pos);
+
+  // Sélection d'une pièce du joueur courant
+  if (clickedPiece && clickedPiece.player === currentPlayer) {
+    selectedPiece = clickedPiece;
+    const reachable = getReachablePositions(selectedPiece);
+    highlightPositions(reachable);
+    return;
+  }
+
+  // Déplacement si une pièce est sélectionnée et la case est atteignable
+  if (selectedPiece) {
+    const reachable = getReachablePositions(selectedPiece);
+    const isReachable = reachable.some(p => p.x === pos.x && p.y === pos.y);
+    if (isReachable) {
+      // Capture éventuelle sur la case cible
+      const target = getPieceAt(pos);
+      if (target && target.player !== selectedPiece.player) {
+        const capturedNintendo = target.type === 'nintendo';
+        target.sprite.destroy();
+        pieces = pieces.filter(p => p !== target);
+        // Déplacer la pièce du joueur sur la case capturée
+        selectedPiece.x = pos.x;
+        selectedPiece.y = pos.y;
+        updatePieces();
+        clearHighlights();
+        selectedPiece = null;
+        if (capturedNintendo) {
+          endGame(currentPlayer);
+          return;
+        }
+        currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        updateTurnUI();
+        return;
+      }
+      // Case vide
+      selectedPiece.x = pos.x;
+      selectedPiece.y = pos.y;
+      updatePieces();
+      clearHighlights();
+      selectedPiece = null;
+      currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+      updateTurnUI();
+    } else {
+      // Clic non valide: nettoyer la sélection pour éviter la confusion
+      clearHighlights();
+      selectedPiece = null;
+    }
+  }
+}
+
+function isValidMove(piece, pos) {
+  const reachable = getReachablePositions(piece);
+  return reachable.some(p => p.x === pos.x && p.y === pos.y);
+}
+
+function getPieceAt(pos) {
+  return pieces.find(p => p.x === pos.x && p.y === pos.y);
+}
+
+function getReachablePositions(piece) {
+  const positions = [];
+  const rule = catalog[piece.type];
+  for (let dir of rule.moves) {
+    for (let step = 1; step <= rule.range; step++) {
+      const nx = piece.x + dir[0] * step;
+      const ny = piece.y + dir[1] * step;
+      if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) break;
+      const occ = getPieceAt({ x: nx, y: ny });
+      if (!occ) {
+        positions.push({ x: nx, y: ny });
+        continue;
+      }
+      // Case occupée: on peut capturer un ennemi mais on s'arrête ensuite
+      if (occ.player !== piece.player) {
+        positions.push({ x: nx, y: ny });
+      }
+      break;
+    }
+  }
+  return positions;
+}
+
+function endGame(winnerPlayerIndex) {
+  gameStarted = false;
+  clearHighlights();
+  if (turnText) {
+    turnText.setText(`Le Joueur ${winnerPlayerIndex+1} gagne !`);
+  } else if (infoText) {
+    infoText.setText(`Le Joueur ${winnerPlayerIndex+1} gagne !`);
+  }
+}
+
+function clearHighlights() {
+  for (let tile of highlightedTiles) {
+    tile.setFillStyle(tile.baseColor);
+  }
+  highlightedTiles = [];
+}
+
+function highlightPositions(positions) {
+  clearHighlights();
+  for (let pos of positions) {
+    const tile = grid[pos.y][pos.x];
+    tile.setFillStyle(0xfff59d); // jaune clair
+    highlightedTiles.push(tile);
+  }
+}
+
+function updateTurnUI() {
+  if (turnText) {
+    turnText.setText(`Tour du Joueur ${currentPlayer+1}`);
+  } else if (infoText) {
+    infoText.setText(`Tour du Joueur ${currentPlayer+1}`);
+  }
+}
+
+function update() {}
+
+new Phaser.Game(config);
+
+/* https://www.reddit.com/r/retrogaming/comments/1hkzmcw/i_redrew_some_nes_sprites_of_various_nintendo/?tl=fr */
+</script>
+</body>
