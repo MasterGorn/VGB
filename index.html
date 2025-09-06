@@ -16,8 +16,8 @@ const config = {
   scene: { preload, create, update }
 };
 
-const TILE_SIZE = 60;
-const GRID_SIZE = 10;
+const TILE_SIZE = 40;
+const GRID_SIZE = 15;
 
 let grid = [];
 let pieces = [];
@@ -28,10 +28,7 @@ let highlightedTiles = [];
 let turnText;
 
 // --- BUDGET / DRAFT ---
-const players = [
-  { id: 0, points: 20, army: [] },
-  { id: 1, points: 20, army: [] }
-];
+let players = [];
 
 // catalogue de persos
 const catalog = {
@@ -46,12 +43,13 @@ const catalog = {
 let infoText;
 let choiceButtons = [];
 let choiceThumbs = [];
-let armyThumbs = [[], []];
+let armyThumbs = [];
 let armyLabels = [];
 let endDraftBtn;
 let armyPanels = [];
 let armyHints = [];
 let clearAllBtn;
+let playerCountBtns = [];
 
 function preload() {
   // Chemin relatif (fonctionne quel que soit le port/domaine du serveur local)
@@ -67,7 +65,31 @@ function preload() {
 function create() {
   infoText = this.add.text(10, 10, "", { font: "16px Arial", fill: "#000" });
   infoText.setDepth(1000);
-  setupDraftUI(this);
+  setupPlayerCountUI(this);
+}
+
+function setupPlayerCountUI(scene) {
+  infoText.setText("Choisissez le nombre de joueurs (2 à 4)");
+  const options = [2,3,4];
+  let x = 10;
+  let y = 40;
+  options.forEach(n => {
+    const btn = scene.add.text(x, y, `${n} joueurs`, { font: "16px Arial", fill: "#000", backgroundColor: "#ddd" })
+      .setInteractive()
+      .on("pointerdown", () => selectPlayerCount(scene, n));
+    playerCountBtns.push(btn);
+    y += 30;
+  });
+}
+
+function selectPlayerCount(scene, n) {
+  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [] }));
+  currentPlayer = 0;
+  // nettoyer UI de sélection
+  playerCountBtns.forEach(b => b.destroy());
+  playerCountBtns = [];
+  // lancer l'UI de draft
+  setupDraftUI(scene);
   updateDraftUI();
 }
 
@@ -99,18 +121,17 @@ function setupDraftUI(scene) {
     .setInteractive()
     .on("pointerdown", () => clearCurrentBasket(scene));
 
-  // labels d'armées
-  armyLabels[0] = scene.add.text(300, 30, "Équipe J1", { font: "16px Arial", fill: "#000" });
-  armyLabels[1] = scene.add.text(300, 100, "Équipe J2", { font: "16px Arial", fill: "#000" });
-
-  // panneaux de fond pour le panier (invisibles)
-  armyPanels[0] = scene.add.rectangle(450, 65, 280, 50, 0xffffff, 0);
-  armyPanels[1] = scene.add.rectangle(450, 135, 280, 50, 0xffffff, 0);
-  armyPanels.forEach(r => r.setStrokeStyle(0));
-
-  // hints d'aide
-  armyHints[0] = scene.add.text(300, 80, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
-  armyHints[1] = scene.add.text(300, 150, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
+  // labels/panneaux/hints dynamiques selon nombre de joueurs
+  armyLabels = [];
+  armyPanels = [];
+  armyHints = [];
+  armyThumbs = Array.from({ length: players.length }, () => []);
+  for (let i = 0; i < players.length; i++) {
+    const baseLabelY = 30 + i*70;
+    armyLabels[i] = scene.add.text(300, baseLabelY, `Équipe J${i+1}`, { font: "16px Arial", fill: "#000" });
+    armyPanels[i] = scene.add.rectangle(450, baseLabelY + 35, 280, 50, 0xffffff, 0).setStrokeStyle(0);
+    armyHints[i] = scene.add.text(300, baseLabelY + 15, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
+  }
   renderArmyThumbnails(scene);
 }
 
@@ -150,7 +171,7 @@ function renderArmyThumbnails(scene) {
   }
   // re-créer
   players.forEach((pl,i) => {
-    const baseY = i === 0 ? 60 : 130;
+    const baseY = 60 + i*70;
     pl.army.forEach((charKey, idx) => {
       const img = scene.add.image(300 + idx*45, baseY, charKey).setDisplaySize(32,32);
       if (i === currentPlayer && !gameStarted) {
@@ -259,94 +280,85 @@ function startGame(scene) {
     }
   }
 
-  // placer les armées
-  players.forEach((p,i) => {
-    p.army.forEach((charKey, idx) => {
-      let x, y;
-      if (i === 0) {
-        // Joueur 1: depuis la rangée du haut, de gauche à droite
-        x = idx % GRID_SIZE;
-        y = Math.floor(idx / GRID_SIZE);
-      } else {
-        // Joueur 2: depuis la rangée du bas, de droite à gauche
-        x = GRID_SIZE - 1 - (idx % GRID_SIZE);
-        y = GRID_SIZE - 1 - Math.floor(idx / GRID_SIZE);
-      }
-      // si occupé (par ex. par 'nintendo' plus tard), trouver la prochaine case libre dans la même rangée
-      while (getPieceAt({ x, y })) {
-        if (i === 0) {
-          x++;
-          if (x >= GRID_SIZE) { x = 0; y++; }
-        } else {
-          x--;
-          if (x < 0) { x = GRID_SIZE - 1; y--; }
+  // Helpers placement
+  const getPlayerSide = (index) => {
+    if (index === 0) return 'top';
+    if (index === 1) return 'bottom';
+    if (index === 2) return 'left';
+    return 'right';
+  };
+  const mid = Math.floor(GRID_SIZE / 2);
+
+  const getBlockSlotsForSide = (side) => {
+    // Générer une spirale en coordonnées locales (autour de 0,0) puis mapper vers la grille
+    let minDX, maxDX, minDY, maxDY;
+    if (side === 'top' || side === 'bottom') {
+      minDX = -2; maxDX = 2; minDY = 0; maxDY = 3; // 5x4
+    } else { // left / right
+      minDX = 0; maxDX = 3; minDY = -2; maxDY = 2; // 4x5
+    }
+    const area = (maxDX - minDX + 1) * (maxDY - minDY + 1);
+    const needed = area - 1; // case du roi exclue
+
+    const dirs = [ [1,0], [0,1], [-1,0], [0,-1] ]; // droite, bas, gauche, haut
+    let stepLen = 1;
+    let dirIndex = 0;
+    let lx = 0, ly = 0; // coords locales
+    const offsets = [];
+    while (offsets.length < needed && stepLen < 100) {
+      for (let repeat = 0; repeat < 2; repeat++) {
+        const [dxStep, dyStep] = dirs[dirIndex];
+        for (let s = 0; s < stepLen; s++) {
+          lx += dxStep; ly += dyStep;
+          if (lx >= minDX && lx <= maxDX && ly >= minDY && ly <= maxDY && !(lx === 0 && ly === 0)) {
+            offsets.push({ dx: lx, dy: ly });
+            if (offsets.length >= needed) break;
+          }
         }
-        if (y < 0 || y >= GRID_SIZE) break;
+        dirIndex = (dirIndex + 1) % 4;
+        if (offsets.length >= needed) break;
       }
-      if (y < 0 || y >= GRID_SIZE) return; // plus d'espace
-      pieces.push({
-        sprite: scene.add.image(0,0,charKey),
-        type: charKey,
-        x, y, player: p.id
-      });
-    });
+      stepLen++;
+    }
+
+    // Map vers les coordonnées grille selon le côté
+    const slots = [];
+    if (side === 'top') {
+      for (const o of offsets) slots.push({ x: mid + o.dx, y: 0 + o.dy });
+    } else if (side === 'bottom') {
+      for (const o of offsets) slots.push({ x: mid + o.dx, y: GRID_SIZE - 1 - o.dy });
+    } else if (side === 'left') {
+      for (const o of offsets) slots.push({ x: 0 + o.dx, y: mid + o.dy });
+    } else if (side === 'right') {
+      for (const o of offsets) slots.push({ x: GRID_SIZE - 1 - o.dx, y: mid + o.dy });
+    }
+    return slots;
+  };
+
+  // 1) Placer les rois (nintendo) au centre exact du bord
+  players.forEach((p,i) => {
+    const side = getPlayerSide(i);
+    let pos = { x: mid, y: 0 };
+    if (side === 'top') pos = { x: mid, y: 0 };
+    if (side === 'bottom') pos = { x: mid, y: GRID_SIZE - 1 };
+    if (side === 'left') pos = { x: 0, y: mid };
+    if (side === 'right') pos = { x: GRID_SIZE - 1, y: mid };
+    pieces.push({ sprite: scene.add.image(0,0,'nintendo'), type: 'nintendo', x: pos.x, y: pos.y, player: p.id });
   });
 
-  // Ajouter la pièce 'nintendo' pour chaque joueur, au centre de leur bord, sur case libre
+  // 2) Placer les autres pièces en partant du bord propre à chaque joueur
   players.forEach((p,i) => {
-    let y = (i === 0) ? 0 : GRID_SIZE - 1;
-    const centerX = Math.floor(GRID_SIZE / 2);
-    let candidates = [];
-    for (let radius = 0; radius < GRID_SIZE; radius++) {
-      let left = centerX - radius;
-      let right = centerX + radius;
-      if (left >= 0) candidates.push(left);
-      if (right < GRID_SIZE && right !== left) candidates.push(right);
-    }
-    let placed = false;
-    for (let cx of candidates) {
-      if (!getPieceAt({ x: cx, y })) {
-        pieces.push({
-          sprite: scene.add.image(0,0,'nintendo'),
-          type: 'nintendo',
-          x: cx, y, player: p.id
-        });
-        placed = true;
-        break;
-      }
-    }
-    // Si la ligne est pleine, chercher dans toute la grille côté du joueur
-    if (!placed) {
-      if (i === 0) {
-        outerTop: for (let yy = 0; yy < GRID_SIZE; yy++) {
-          for (let xx = 0; xx < GRID_SIZE; xx++) {
-            if (!getPieceAt({ x: xx, y: yy })) {
-              pieces.push({
-                sprite: scene.add.image(0,0,'nintendo'),
-                type: 'nintendo',
-                x: xx, y: yy, player: p.id
-              });
-              placed = true;
-              break outerTop;
-            }
-          }
-        }
-      } else {
-        outerBottom: for (let yy = GRID_SIZE - 1; yy >= 0; yy--) {
-          for (let xx = GRID_SIZE - 1; xx >= 0; xx--) {
-            if (!getPieceAt({ x: xx, y: yy })) {
-              pieces.push({
-                sprite: scene.add.image(0,0,'nintendo'),
-                type: 'nintendo',
-                x: xx, y: yy, player: p.id
-              });
-              placed = true;
-              break outerBottom;
-            }
-          }
-        }
-      }
-    }
+    const side = getPlayerSide(i);
+    const slots = getBlockSlotsForSide(side);
+    let si = 0;
+    p.army.forEach((charKey) => {
+      // avancer jusqu'à trouver un slot libre
+      while (si < slots.length && getPieceAt(slots[si])) si++;
+      if (si >= slots.length) return; // plus de place dans le bloc
+      const pos = slots[si];
+      pieces.push({ sprite: scene.add.image(0,0,charKey), type: charKey, x: pos.x, y: pos.y, player: p.id });
+      si++;
+    });
   });
 
   updatePieces();
