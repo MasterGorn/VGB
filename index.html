@@ -44,6 +44,8 @@ let playerNameTexts = [];
 let turnIcon;
 let currentChoicesFaction = null;
 let choiceListBottomY = 0;
+let pendingPlayerIndex = 0;
+let playerSetupDiv = null;
 
 // Factions et teintes
 const brandTints = {
@@ -178,20 +180,69 @@ function setupPlayerCountUI(scene) {
 
 function selectPlayerCount(scene, n) {
   players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [], name: '', faction: 'nintendo' }));
-  // demander les noms
-  for (let i = 0; i < n; i++) {
-    const provided = window.prompt(`Nom du Joueur ${i+1} :`, `Joueur ${i+1}`);
-    players[i].name = (provided && provided.trim()) ? provided.trim() : `Joueur ${i+1}`;
-    const f = window.prompt(`Faction du Joueur ${i+1} (Nintendo/SEGA/PlayStation/Xbox) :`, `Nintendo`);
-    players[i].faction = parseFactionInput(f);
-  }
   currentPlayer = 0;
   // nettoyer UI de sélection
   playerCountBtns.forEach(b => b.destroy());
   playerCountBtns = [];
-  // lancer l'UI de draft
-  setupDraftUI(scene);
-  updateDraftUI();
+  // lancer le formulaire séquentiel Nom + Faction
+  pendingPlayerIndex = 0;
+  showPlayerSetupForm(scene);
+}
+
+function showPlayerSetupForm(scene) {
+  if (!playerSetupDiv) {
+    playerSetupDiv = document.createElement('div');
+    playerSetupDiv.id = 'player-setup';
+    playerSetupDiv.style.position = 'fixed';
+    playerSetupDiv.style.left = '20px';
+    playerSetupDiv.style.top = '20px';
+    playerSetupDiv.style.zIndex = '9999';
+    playerSetupDiv.style.background = 'rgba(255,255,255,0.95)';
+    playerSetupDiv.style.border = '1px solid #ccc';
+    playerSetupDiv.style.padding = '12px';
+    playerSetupDiv.style.borderRadius = '6px';
+    playerSetupDiv.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+    document.body.appendChild(playerSetupDiv);
+  }
+  const idx = pendingPlayerIndex;
+  const formHtml = `
+    <div style="font:16px Arial; margin-bottom:8px;">Configuration du Joueur ${idx+1}</div>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <label style="font:14px Arial;">Nom</label>
+      <input id="pset-name" type="text" value="${players[idx].name || `Joueur ${idx+1}`}" style="font:14px Arial; padding:4px;" />
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+      <label style="font:14px Arial;">Faction</label>
+      <select id="pset-faction" style="font:14px Arial; padding:4px;">
+        <option ${players[idx].faction==='nintendo'?'selected':''} value="nintendo">Nintendo</option>
+        <option ${players[idx].faction==='sega'?'selected':''} value="sega">SEGA</option>
+        <option ${players[idx].faction==='playstation'?'selected':''} value="playstation">PlayStation</option>
+        <option ${players[idx].faction==='xbox'?'selected':''} value="xbox">Xbox</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button id="pset-validate" style="font:14px Arial; padding:6px 10px;">Valider</button>
+    </div>
+  `;
+  playerSetupDiv.innerHTML = formHtml;
+  const btn = document.getElementById('pset-validate');
+  btn.onclick = () => {
+    const name = (document.getElementById('pset-name').value || '').trim() || `Joueur ${idx+1}`;
+    const faction = (document.getElementById('pset-faction').value || 'nintendo');
+    players[idx].name = name;
+    players[idx].faction = faction;
+    pendingPlayerIndex++;
+    if (pendingPlayerIndex >= players.length) {
+      // terminé
+      playerSetupDiv.remove();
+      playerSetupDiv = null;
+      infoText.setText("");
+      setupDraftUI(scene);
+      updateDraftUI();
+    } else {
+      showPlayerSetupForm(scene);
+    }
+  };
 }
 
 function setupDraftUI(scene) {
