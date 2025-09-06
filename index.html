@@ -26,7 +26,9 @@ const config = {
   scene: { preload, create, update }
 };
 
-const TILE_SIZE = 60;
+const GRID_OFFSET_X = 60; // marge gauche
+const GRID_OFFSET_Y = 60; // marge haut
+const TILE_SIZE = 52;     // 15 * 52 = 780px, laisse 60px de marge de chaque côté dans 900px
 const GRID_SIZE = 15;
 
 let grid = [];
@@ -38,6 +40,8 @@ let highlightedTiles = [];
 let turnText;
 let moveCount = 0;
 let adRotationIndex = 0;
+let playerNameTexts = [];
+let turnIcon;
 
 // --- BUDGET / DRAFT ---
 let players = [];
@@ -95,7 +99,12 @@ function setupPlayerCountUI(scene) {
 }
 
 function selectPlayerCount(scene, n) {
-  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [] }));
+  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [], name: '' }));
+  // demander les noms
+  for (let i = 0; i < n; i++) {
+    const provided = window.prompt(`Nom du Joueur ${i+1} :`, `Joueur ${i+1}`);
+    players[i].name = (provided && provided.trim()) ? provided.trim() : `Joueur ${i+1}`;
+  }
   currentPlayer = 0;
   // nettoyer UI de sélection
   playerCountBtns.forEach(b => b.destroy());
@@ -249,7 +258,7 @@ function endDraft(scene) {
 function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
-  infoText.setText("Début de la partie !");
+  infoText.setText("");
   // cacher l'UI de draft
   choiceButtons.forEach(btn => btn.setVisible(false));
   if (endDraftBtn) endDraftBtn.setVisible(false);
@@ -280,8 +289,8 @@ function startGame(scene) {
     for (let x=0; x<GRID_SIZE; x++) {
       const baseColor = (x+y)%2===0 ? 0xffffff : 0xcccccc;
       const rect = scene.add.rectangle(
-        x*TILE_SIZE + TILE_SIZE/2,
-        y*TILE_SIZE + TILE_SIZE/2,
+        GRID_OFFSET_X + x*TILE_SIZE + TILE_SIZE/2,
+        GRID_OFFSET_Y + y*TILE_SIZE + TILE_SIZE/2,
         TILE_SIZE-2, TILE_SIZE-2,
         baseColor
       ).setStrokeStyle(1,0x000000).setInteractive();
@@ -374,17 +383,39 @@ function startGame(scene) {
   });
 
   updatePieces();
-  // Créer un texte dédié pour le tour, centré en haut et au-dessus de tout
-  turnText = scene.add.text(config.width/2, 10, "", { font: "18px Arial", fill: "#000", backgroundColor: "#fff" })
+  // Bandeau "Début de la partie" en haut de la grille
+  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 26, "Début de la partie !", { font: "20px Arial", fill: "#000", backgroundColor: "#fff" })
     .setOrigin(0.5, 0)
     .setDepth(2000);
+  scene.time.delayedCall(1500, () => { startText.destroy(); });
+
+  // Textes des noms des joueurs hors de la grille
+  playerNameTexts.forEach(t => t && t.destroy());
+  playerNameTexts = [];
+  const midNames = Math.floor(GRID_SIZE / 2);
+  const margin = 12;
+  players.forEach((p,i) => {
+    const side = (i===0)?'top':(i===1)?'bottom':(i===2)?'left':'right';
+    let nx = 0, ny = 0;
+    if (side === 'top') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y - 18; }
+    if (side === 'bottom') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y + GRID_SIZE*TILE_SIZE + 6; }
+    if (side === 'left') { nx = GRID_OFFSET_X - 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
+    if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
+    const txt = scene.add.text(nx, ny, p.name, { font: "18px Arial", fill: "#000" }).setOrigin(0.5);
+    txt.setDepth(1500);
+    playerNameTexts.push(txt);
+  });
+
+  // Indicateur de tour (icône)
+  if (turnIcon) { turnIcon.destroy(); }
+  turnIcon = scene.add.text(0,0,"🎮", { font: "22px Arial" }).setDepth(2000);
   updateTurnUI();
 }
 
 function updatePieces() {
   for (let p of pieces) {
-    p.sprite.x = p.x*TILE_SIZE + TILE_SIZE/2;
-    p.sprite.y = p.y*TILE_SIZE + TILE_SIZE/2;
+    p.sprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
+    p.sprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
     // ajuster la taille pour remplir la case moins une marge de bordure
     const margin = 4; // 2px de chaque côté
     const targetSize = TILE_SIZE - margin;
@@ -508,10 +539,12 @@ function highlightPositions(positions) {
 }
 
 function updateTurnUI() {
-  if (turnText) {
-    turnText.setText(`Tour du Joueur ${currentPlayer+1}`);
-  } else if (infoText) {
-    infoText.setText(`Tour du Joueur ${currentPlayer+1}`);
+  const mid = Math.floor(GRID_SIZE / 2);
+  // Positionner l'icône de tour à côté du nom du joueur actif
+  if (turnIcon && playerNameTexts[currentPlayer]) {
+    const t = playerNameTexts[currentPlayer];
+    turnIcon.x = t.x - t.displayWidth/2 - 16;
+    turnIcon.y = t.y - t.displayHeight/2;
   }
 }
 
