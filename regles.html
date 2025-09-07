@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Chesstendo - Les règles</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<style>
+  body { margin:0; font:16px Arial; color:#111; }
+  .container { max-width:800px; margin:0 auto; padding:16px; }
+  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); border-bottom:1px solid #e5e5e5; }
+  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
+  header a { color:#111; text-decoration:none; }
+  nav a { font:14px Arial; padding:6px 10px; border-radius:6px; }
+  h1 { font-size:22px; margin:18px 0; }
+  ul { line-height:1.6; }
+</style>
+</head>
+<body>
+<header style="overflow:visible; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); position:sticky; top:0; z-index:5000;">
+  <div class="inner" style="position:relative; height:64px; display:flex; align-items:center; justify-content:space-between;">
+    <nav>
+      <a href="index.html">Jouer</a>
+      <a href="pieces.html">Les pièces</a>
+      <a href="regles.html">Les règles</a>
+      <a href="credits.html">Crédits</a>
+    </nav>
+    <a href="index.html" aria-label="Accueil" style="position:absolute; left:50%; top:64px; transform:translateX(-50%); display:inline-flex; align-items:center;">
+      <img src="public/images/site/logo-video-games-battle-256.png" alt="Video Games Battle" style="height:128px; width:128px; object-fit:contain; display:block;" />
+    </a>
+    <a href="login.html">Se connecter</a>
+  </div>
+</header>
+<main class="container" style="padding-top:144px;">
+  <h1>Les règles</h1>
+  <ul>
+    <li>Objectif: dernier roi survivant.</li>
+    <li>Draft en tour par tour, budget limité.</li>
+    <li>Déplacements selon les pièces; captures classiques.</li>
+    <li>Caisses d’objets: récupérées en marchant dessus, réapparaissent périodiquement.</li>
+    <li>Items: un par tour, affichés près du nom du joueur.</li>
+    <li>Timers: temps par joueur selon la taille de la grille.</li>
+  </ul>
+</main>
+</body>
+</html>
+
+
