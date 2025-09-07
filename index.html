@@ -183,7 +183,10 @@ function preload() {
   // Items
   this.load.setPath('public/images/items/');
   this.load.image('item-crate', 'box-item-mario-kart.png');
-  this.load.image('bomb', 'bobomb.png');
+  this.load.image('bobomb', 'bobomb.png');
+  // Sons (par item)
+  this.load.setPath('public/sounds/items/');
+  this.load.audio('bobomb', 'bobomb.mp3');
 }
 
 function create() {
@@ -981,7 +984,7 @@ function tryUseItem(playerId) {
   if (arr.length === 0) return;
   const icon = arr[0];
   if (!icon || !icon.item) return;
-  if (icon.item === 'bomb') {
+  if (icon.item === 'bobomb') {
     // Activer mode pose de bombe: prochain clic sur une case pose et résout l'effet
     currentItemAction = { playerId, type: 'bomb', active: true };
     if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour poser la bombe`);
@@ -1019,6 +1022,18 @@ function canPlaceBombAt(pos, playerId) {
 }
 
 function detonateBombAt(pos) {
+  // Effets visuels et sonores
+  const scene = infoText.scene;
+  try { scene.sound.play('bobomb', { volume: 0.6 }); } catch(e) {}
+  // flash rouge sur la zone
+  const centerX = GRID_OFFSET_X + pos.x*TILE_SIZE + TILE_SIZE/2;
+  const centerY = GRID_OFFSET_Y + pos.y*TILE_SIZE + TILE_SIZE/2;
+  const flash = scene.add.rectangle(centerX, centerY, TILE_SIZE*3, TILE_SIZE*3, 0xff5252).setAlpha(0.4).setDepth(3000);
+  scene.tweens.add({ targets: flash, alpha: 0, duration: 220, onComplete: () => flash.destroy() });
+  // onde circulaire
+  const ring = scene.add.circle(centerX, centerY, 6, 0xff1744).setAlpha(0.7).setDepth(3001);
+  scene.tweens.add({ targets: ring, radius: TILE_SIZE*1.2, alpha: 0, duration: 300, onComplete: () => ring.destroy() });
+
   // Détruire pièces sur la case et les 8 adjacentes (zone 3x3)
   const deltas = [];
   for (let dx=-1; dx<=1; dx++) {
@@ -1079,8 +1094,8 @@ function maybeRespawnCrate(scene) {
 }
 
 function rollRandomItem() {
-  // Pour l’instant, toujours 'bomb'. Ajoute d’autres items ici plus tard.
-  return 'bomb';
+  // Pour l’instant, toujours 'bobomb'. Ajoute d’autres items ici plus tard.
+  return 'bobomb';
 }
 
 function clearHighlights() {
