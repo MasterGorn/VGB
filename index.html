@@ -57,6 +57,11 @@ let lastCrateEventMove = 0; // obsolète (conservé si besoin)
 let roundCounter = 0;
 let lastCrateRound = 0;
 let itemUsedThisTurn = false;
+// Timers
+let playerTimersMs = [];
+let timerTexts = [];
+let timerEvent = null;
+let timerBlinkToggle = false;
 
 // Factions et teintes
 const brandTints = {
@@ -645,6 +650,21 @@ function startGame(scene) {
     .setDepth(2000);
   scene.time.delayedCall(1500, () => { startText.destroy(); });
 
+  // Timers: init par taille
+  const baseMinutes = (GRID_SIZE === 9) ? 5 : (GRID_SIZE === 11) ? 10 : 15;
+  playerTimersMs = players.map(() => baseMinutes * 60 * 1000);
+  // Créer/mettre à jour les textes timers près des noms
+  if (timerTexts.length) { timerTexts.forEach(t => t && t.destroy()); }
+  timerTexts = players.map((p,i) => {
+    const nameText = playerNameTexts[i];
+    const t = scene.add.text(0,0, formatMs(playerTimersMs[i]), { font: "14px Arial", fill: "#333", backgroundColor: "#fff" }).setDepth(1600);
+    positionTimerTextNearName(t, nameText);
+    return t;
+  });
+  // Lancer tick
+  if (timerEvent) timerEvent.remove(false);
+  timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
+
   // Textes des noms des joueurs hors de la grille
   playerNameTexts.forEach(t => t && t.destroy());
   playerNameTexts = [];
@@ -803,6 +823,12 @@ function handleClick(scene, pos) {
         itemUsedThisTurn = false;
         maybeRespawnCrate(scene);
         updateTurnUI();
+        // repositionner tous les timers
+        if (timerTexts && playerNameTexts) {
+          for (let i=0;i<timerTexts.length;i++) {
+            if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+          }
+        }
         return;
       }
       // Case vide
@@ -822,6 +848,12 @@ function handleClick(scene, pos) {
       itemUsedThisTurn = false;
       maybeRespawnCrate(scene);
       updateTurnUI();
+      // repositionner tous les timers
+      if (timerTexts && playerNameTexts) {
+        for (let i=0;i<timerTexts.length;i++) {
+          if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+        }
+      }
     } else {
       // Clic non valide: nettoyer la sélection pour éviter la confusion
       clearHighlights();
@@ -1046,6 +1078,64 @@ function updateTurnUI() {
 }
 
 function update() {}
+
+function positionTimerTextNearName(timerText, nameText) {
+  if (!timerText || !nameText) return;
+  timerText.x = nameText.x + nameText.displayWidth/2 + 54;
+  timerText.y = nameText.y - (nameText.displayHeight/2);
+}
+
+function formatMs(ms) {
+  const s = Math.max(0, Math.floor(ms/1000));
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${mm}:${ss}`;
+}
+
+function tickTimer(scene) {
+  if (!gameStarted) return;
+  if (players.length === 0) return;
+  const nowIdx = currentPlayer;
+  playerTimersMs[nowIdx] = Math.max(0, playerTimersMs[nowIdx] - 250);
+  // MAJ texte
+  if (timerTexts[nowIdx]) timerTexts[nowIdx].setText(formatMs(playerTimersMs[nowIdx]));
+  // feedback visuel sous 10s
+  const under10 = playerTimersMs[nowIdx] <= 10000;
+  if (timerTexts[nowIdx]) {
+    if (under10) {
+      timerBlinkToggle = !timerBlinkToggle;
+      timerTexts[nowIdx].setColor('#b00020');
+      timerTexts[nowIdx].setAlpha(timerBlinkToggle ? 1 : 0.4);
+    } else {
+      timerTexts[nowIdx].setColor('#333333');
+      timerTexts[nowIdx].setAlpha(1);
+    }
+  }
+  // repositionner (si layout bouge)
+  if (timerTexts[nowIdx] && playerNameTexts[nowIdx]) positionTimerTextNearName(timerTexts[nowIdx], playerNameTexts[nowIdx]);
+  // Défaite sur timeout
+  if (playerTimersMs[nowIdx] === 0) {
+    // éliminer le roi de this player si encore présent pour provoquer la fin
+    const king = pieces.find(pp => pp.type === 'king' && pp.player === nowIdx);
+    if (king) {
+      king.sprite.destroy();
+      pieces = pieces.filter(p => p !== king);
+      if (!eliminationOrder.includes(nowIdx)) eliminationOrder.push(nowIdx);
+    }
+    // vérifier fin
+    const remainingKings = pieces.filter(pp => pp.type === 'king').length;
+    if (remainingKings <= 1) {
+      let winnerId = null;
+      const kingPiece = pieces.find(pp => pp.type === 'king');
+      if (kingPiece) winnerId = kingPiece.player;
+      let ranking = [];
+      if (winnerId !== null) ranking.push(winnerId);
+      const rest = eliminationOrder.slice().reverse();
+      for (let pid of rest) if (winnerId === null || pid !== winnerId) ranking.push(pid);
+      endGameWithRanking(ranking);
+    }
+  }
+}
 
 new Phaser.Game(config);
 
