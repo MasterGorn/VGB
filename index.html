@@ -46,6 +46,7 @@ let currentChoicesFaction = null;
 let choiceListBottomY = 0;
 let pendingPlayerIndex = 0;
 let playerSetupDiv = null;
+let adIntervalId = null;
 
 // Factions et teintes
 const brandTints = {
@@ -631,6 +632,7 @@ function handleClick(scene, pos) {
         }
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
+        updateAdInfo();
         currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
         updateTurnUI();
         return;
@@ -643,6 +645,7 @@ function handleClick(scene, pos) {
       selectedPiece = null;
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
+      updateAdInfo();
       currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
       updateTurnUI();
     } else {
@@ -756,6 +759,15 @@ function rotateAds() {
   const s2 = document.getElementById('ad-slot-2');
   if (s1) s1.textContent = data.a1;
   if (s2) s2.textContent = data.a2;
+  updateAdInfo(true);
+}
+
+function updateAdInfo(reset = false) {
+  const info = document.getElementById('ad-info');
+  if (!info) return;
+  const nextIn = reset ? 5 : (5 - (moveCount % 5));
+  const plural = nextIn >= 2 ? 's' : '';
+  info.textContent = `Mise à jour dans ${nextIn} action${plural} (toutes les 5 actions)`;
 }
 
 /* https://www.reddit.com/r/retrogaming/comments/1hkzmcw/i_redrew_some_nes_sprites_of_various_nintendo/?tl=fr */
