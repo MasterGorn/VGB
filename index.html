@@ -49,8 +49,8 @@ let playerSetupDiv = null;
 let adIntervalId = null;
 let eliminationOrder = [];
 let gridSizeUIElems = [];
-// Items & caisse
-let itemCrate = null; // { x, y, sprite, active }
+// Items & caisses
+let itemCrates = []; // [{ x, y, sprite, active, lastRound }]
 let playerItemIcons = []; // par joueur: tableau d'icônes [{ sprite, item }]
 let currentItemAction = null; // { playerId, type: 'bomb', active: true }
 let lastCrateEventMove = 0; // obsolète (conservé si besoin)
@@ -550,16 +550,27 @@ function startGame(scene) {
     }
   }
 
-  // Placer la caisse d'objets au centre pour 9x9 uniquement
+  // Placer les caisses d'objets selon la taille de grille
+  itemCrates = [];
+  const cratePositions = [];
   if (GRID_SIZE === 9) {
     const cx = Math.floor(GRID_SIZE/2);
     const cy = Math.floor(GRID_SIZE/2);
-    itemCrate = { x: cx, y: cy, sprite: scene.add.image(0,0,'item-crate'), active: true };
-    itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
-    itemCrate.sprite.setAlpha(1);
-    lastCrateEventMove = moveCount;
-  } else {
-    itemCrate = null;
+    cratePositions.push({ x: cx, y: cy });
+  } else if (GRID_SIZE === 11) {
+    // Positions demandées (1-based): [5,5], [5,7], [7,5], [7,7]
+    // Conversion 0-based:
+    cratePositions.push({ x: 4, y: 4 }, { x: 4, y: 6 }, { x: 6, y: 4 }, { x: 6, y: 6 });
+  } else if (GRID_SIZE === 15) {
+    // Positions demandées (1-based): [6,6], [6,10], [8,8], [10,6], [10,10]
+    // Conversion 0-based:
+    cratePositions.push({ x: 5, y: 5 }, { x: 5, y: 9 }, { x: 7, y: 7 }, { x: 9, y: 5 }, { x: 9, y: 9 });
+  }
+  for (const pos of cratePositions) {
+    const sprite = scene.add.image(0,0,'item-crate');
+    sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+    sprite.setAlpha(1);
+    itemCrates.push({ x: pos.x, y: pos.y, sprite, active: true, lastRound: roundCounter });
   }
 
   // Helpers placement
@@ -732,9 +743,13 @@ function updatePieces() {
     const targetSize = TILE_SIZE - margin;
     p.sprite.setDisplaySize(targetSize, targetSize);
   }
-  if (itemCrate && itemCrate.sprite) {
-    itemCrate.sprite.x = GRID_OFFSET_X + itemCrate.x*TILE_SIZE + TILE_SIZE/2;
-    itemCrate.sprite.y = GRID_OFFSET_Y + itemCrate.y*TILE_SIZE + TILE_SIZE/2;
+  if (itemCrates && itemCrates.length) {
+    for (const c of itemCrates) {
+      if (c.sprite) {
+        c.sprite.x = GRID_OFFSET_X + c.x*TILE_SIZE + TILE_SIZE/2;
+        c.sprite.y = GRID_OFFSET_Y + c.y*TILE_SIZE + TILE_SIZE/2;
+      }
+    }
   }
   // positionner les icônes d'objets à côté des noms
   if (playerItemIcons.length) {
@@ -952,16 +967,16 @@ function endGameWithRanking(ranking) {
 }
 
 function maybePickupItem(piece) {
-  if (!itemCrate || !itemCrate.active) return;
-  // empêcher une nouvelle prise si moins de 3 tours se sont écoulés
-  if ((roundCounter - lastCrateRound) < 0) return;
-  if (piece.x === itemCrate.x && piece.y === itemCrate.y) {
-    const item = rollRandomItem();
-    giveItemToPlayer(piece.player, item);
-    itemCrate.active = false;
-    if (itemCrate.sprite) { itemCrate.sprite.setAlpha(0.25); }
-    // mémoriser le round de l'interaction
-    lastCrateRound = roundCounter;
+  if (!itemCrates || !itemCrates.length) return;
+  for (const c of itemCrates) {
+    if (!c.active) continue;
+    if (piece.x === c.x && piece.y === c.y) {
+      const item = rollRandomItem();
+      giveItemToPlayer(piece.player, item);
+      c.active = false;
+      if (c.sprite) { c.sprite.setAlpha(0.25); }
+      c.lastRound = roundCounter;
+    }
   }
 }
 
@@ -1077,20 +1092,21 @@ function detonateBombAt(pos) {
 }
 
 function maybeRespawnCrate(scene) {
-  if (GRID_SIZE !== 9) return;
-  if (!itemCrate) return;
-  if (itemCrate.active) return;
-  // Réapparaît tous les 3 tours (chaque joueur a joué) depuis la dernière interaction
-  if ((roundCounter - lastCrateRound) >= 3) {
-    itemCrate.active = true;
-    if (!itemCrate.sprite) {
-      itemCrate.sprite = scene.add.image(0,0,'item-crate');
-      itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+  if (!itemCrates || !itemCrates.length) return;
+  // Réapparaît tous les 3 tours depuis la dernière interaction de chaque caisse
+  for (const c of itemCrates) {
+    if (c.active) continue;
+    if ((roundCounter - c.lastRound) >= 3) {
+      c.active = true;
+      if (!c.sprite) {
+        c.sprite = scene.add.image(0,0,'item-crate');
+        c.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+      }
+      c.sprite.setAlpha(1);
+      // pas besoin de recaler x/y ici, updatePieces() le fera
     }
-    itemCrate.sprite.setAlpha(1);
-    updatePieces();
-    lastCrateRound = roundCounter;
   }
+  updatePieces();
 }
 
 function rollRandomItem() {
