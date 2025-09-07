@@ -49,6 +49,11 @@ let playerSetupDiv = null;
 let adIntervalId = null;
 let eliminationOrder = [];
 let gridSizeUIElems = [];
+// Items & caisse
+let itemCrate = null; // { x, y, sprite, active }
+let playerItemIcons = []; // par joueur, icône d'objet à côté du nom
+let currentItemAction = null; // { playerId, type: 'bomb', active: true }
+let lastCrateEventMove = 0;
 
 // Factions et teintes
 const brandTints = {
@@ -166,6 +171,11 @@ function preload() {
   this.load.image('nathan-drake', 'nathan-drake.png');
   this.load.image('kratos', 'kratos.png');
   this.load.image('astro-bot', 'astro-bot.png');
+
+  // Items
+  this.load.setPath('public/images/items/');
+  this.load.image('item-crate', 'box-item-mario-kart.png');
+  this.load.image('bomb', 'bobomb.png');
 }
 
 function create() {
@@ -529,6 +539,17 @@ function startGame(scene) {
     }
   }
 
+  // Placer la caisse d'objets au centre pour 9x9 uniquement
+  if (GRID_SIZE === 9) {
+    const cx = Math.floor(GRID_SIZE/2);
+    const cy = Math.floor(GRID_SIZE/2);
+    itemCrate = { x: cx, y: cy, sprite: scene.add.image(0,0,'item-crate'), active: true };
+    itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+    lastCrateEventMove = moveCount;
+  } else {
+    itemCrate = null;
+  }
+
   // Helpers placement
   const getPlayerSide = (index) => {
     if (index === 0) return 'top';
@@ -684,11 +705,40 @@ function updatePieces() {
     const targetSize = TILE_SIZE - margin;
     p.sprite.setDisplaySize(targetSize, targetSize);
   }
+  if (itemCrate && itemCrate.sprite) {
+    itemCrate.sprite.x = GRID_OFFSET_X + itemCrate.x*TILE_SIZE + TILE_SIZE/2;
+    itemCrate.sprite.y = GRID_OFFSET_Y + itemCrate.y*TILE_SIZE + TILE_SIZE/2;
+  }
+  // positionner les icônes d'objets à côté des noms
+  if (playerItemIcons.length) {
+    for (let i=0; i<playerItemIcons.length; i++) {
+      const iconEntry = playerItemIcons[i];
+      const nameText = playerNameTexts[i];
+      if (iconEntry && iconEntry.sprite && nameText) {
+        iconEntry.sprite.x = nameText.x + nameText.displayWidth/2 + 14;
+        iconEntry.sprite.y = nameText.y;
+      }
+    }
+  }
 }
 
 function handleClick(scene, pos) {
   if (!gameStarted) return;
   const clickedPiece = getPieceAt(pos);
+  // Si un item est actif (ex: bombe), gérer l'effet et retourner
+  if (currentItemAction && currentItemAction.active && currentItemAction.playerId === currentPlayer) {
+    if (currentItemAction.type === 'bomb') {
+      detonateBombAt(pos);
+      currentItemAction.active = false;
+      // consommer l'item
+      if (playerItemIcons[currentPlayer]) {
+        playerItemIcons[currentPlayer].item = null;
+        playerItemIcons[currentPlayer].sprite.setVisible(false);
+      }
+      updatePieces();
+      return;
+    }
+  }
 
   // Sélection d'une pièce du joueur courant
   if (clickedPiece && clickedPiece.player === currentPlayer) {
@@ -712,6 +762,8 @@ function handleClick(scene, pos) {
         // Déplacer la pièce du joueur sur la case capturée
         selectedPiece.x = pos.x;
         selectedPiece.y = pos.y;
+        // Récupération de la caisse
+        maybePickupItem(selectedPiece);
         updatePieces();
         clearHighlights();
         selectedPiece = null;
@@ -747,12 +799,16 @@ function handleClick(scene, pos) {
       // Case vide
       selectedPiece.x = pos.x;
       selectedPiece.y = pos.y;
+      // Récupération de la caisse
+      maybePickupItem(selectedPiece);
       updatePieces();
       clearHighlights();
       selectedPiece = null;
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
       updateAdInfo();
+      maybeRespawnCrate(scene);
+      maybeRespawnCrate(scene);
       currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
       updateTurnUI();
     } else {
@@ -846,6 +902,102 @@ function endGameWithRanking(ranking) {
   document.body.appendChild(btn);
 }
 
+function maybePickupItem(piece) {
+  if (!itemCrate || !itemCrate.active) return;
+  if (piece.x === itemCrate.x && piece.y === itemCrate.y) {
+    // attribuer un objet (pour l'instant toujours une bombe)
+    const item = rollRandomItem();
+    giveItemToPlayer(piece.player, item);
+    itemCrate.active = false;
+    if (itemCrate.sprite) itemCrate.sprite.setVisible(false);
+    lastCrateEventMove = moveCount;
+  }
+}
+
+function giveItemToPlayer(playerId, itemKey) {
+  const scene = infoText.scene;
+  // créer une icône si besoin
+  if (!playerItemIcons[playerId]) {
+    const nameText = playerNameTexts[playerId];
+    const icon = scene.add.image(0,0,itemKey).setDisplaySize(18,18).setInteractive();
+    icon.on('pointerdown', () => tryUseItem(playerId));
+    playerItemIcons[playerId] = { sprite: icon, item: itemKey };
+  } else {
+    // remplacer l'item existant
+    playerItemIcons[playerId].item = itemKey;
+    playerItemIcons[playerId].sprite.setTexture(itemKey);
+  }
+  updatePieces();
+}
+
+function tryUseItem(playerId) {
+  if (!gameStarted) return;
+  if (playerId !== currentPlayer) return; // utiliser à son tour
+  const icon = playerItemIcons[playerId];
+  if (!icon || !icon.item) return;
+  if (icon.item === 'bomb') {
+    // Activer mode pose de bombe: prochain clic sur une case pose et résout l'effet
+    currentItemAction = { playerId, type: 'bomb', active: true };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour poser la bombe`);
+  }
+}
+
+function detonateBombAt(pos) {
+  // Détruire pièces sur la case et les 4 adjacentes
+  const deltas = [ {x:0,y:0}, {x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1} ];
+  for (let d of deltas) {
+    const tx = pos.x + d.x;
+    const ty = pos.y + d.y;
+    if (tx < 0 || ty < 0 || tx >= GRID_SIZE || ty >= GRID_SIZE) continue;
+    const victim = getPieceAt({ x: tx, y: ty });
+    if (victim) {
+      // empêcher classement immédiat si roi détruit: on applique même logique que capture
+      const wasKing = victim.type === 'king';
+      victim.sprite.destroy();
+      pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
+      if (wasKing) {
+        if (!eliminationOrder.includes(victim.player)) eliminationOrder.push(victim.player);
+      }
+    }
+  }
+  updatePieces();
+  // Vérifier condition de fin
+  const remainingKings = pieces.filter(pp => pp.type === 'king').length;
+  if (infoText) infoText.setText("");
+  if (remainingKings <= 1) {
+    let winnerId = null;
+    const kingPiece = pieces.find(pp => pp.type === 'king');
+    if (kingPiece) winnerId = kingPiece.player;
+    let ranking = [];
+    if (winnerId !== null) ranking.push(winnerId);
+    const rest = eliminationOrder.slice().reverse();
+    for (let pid of rest) if (winnerId === null || pid !== winnerId) ranking.push(pid);
+    endGameWithRanking(ranking);
+  }
+}
+
+function maybeRespawnCrate(scene) {
+  if (GRID_SIZE !== 9) return;
+  if (!itemCrate) return;
+  if (itemCrate.active) return;
+  // Réapparaît tous les 3 actions globales depuis la dernière interaction (prise ou spawn)
+  if ((moveCount - lastCrateEventMove) >= 3) {
+    itemCrate.active = true;
+    if (!itemCrate.sprite) {
+      itemCrate.sprite = scene.add.image(0,0,'item-crate');
+      itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+    }
+    itemCrate.sprite.setVisible(true);
+    updatePieces();
+    lastCrateEventMove = moveCount;
+  }
+}
+
+function rollRandomItem() {
+  // Pour l’instant, toujours 'bomb'. Ajoute d’autres items ici plus tard.
+  return 'bomb';
+}
+
 function clearHighlights() {
   for (let tile of highlightedTiles) {
     tile.setFillStyle(tile.baseColor);
@@ -873,6 +1025,8 @@ function updateTurnUI() {
     const side = (currentPlayer===0)?'top':(currentPlayer===1)?'bottom':(currentPlayer===2)?'left':'right';
     if (side === 'left') turnIcon.setAngle(-90); else if (side === 'right') turnIcon.setAngle(90); else turnIcon.setAngle(0);
   }
+  // Mettre à jour la position des icônes d'objets à côté des noms
+  updatePieces();
 }
 
 function update() {}
