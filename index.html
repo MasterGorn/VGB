@@ -28,8 +28,8 @@ const config = {
 
 const GRID_OFFSET_X = 60; // marge gauche
 const GRID_OFFSET_Y = 60; // marge haut
-const TILE_SIZE = 52;     // 15 * 52 = 780px, laisse 60px de marge de chaque côté dans 900px
-const GRID_SIZE = 15;
+let TILE_SIZE = 52;       // recalculé selon GRID_SIZE
+let GRID_SIZE = 15;       // configurable (9, 12, 15)
 
 let grid = [];
 let pieces = [];
@@ -48,6 +48,7 @@ let pendingPlayerIndex = 0;
 let playerSetupDiv = null;
 let adIntervalId = null;
 let eliminationOrder = [];
+let gridSizeUIElems = [];
 
 // Factions et teintes
 const brandTints = {
@@ -63,6 +64,13 @@ function parseFactionInput(input) {
   if (v.includes('play') || v.includes('sony') || v.includes('ps')) return 'playstation';
   if (v.includes('xbox') || v.includes('xb')) return 'xbox';
   return 'nintendo';
+}
+
+function getFactionDisplayName(faction) {
+  if (faction === 'sega') return 'SEGA';
+  if (faction === 'playstation') return 'PlayStation';
+  if (faction === 'xbox') return 'Xbox';
+  return 'Nintendo';
 }
 
 function applyFactionTintByPlayerId(playerId, sprite) {
@@ -163,7 +171,57 @@ function preload() {
 function create() {
   infoText = this.add.text(10, 10, "", { font: "16px Arial", fill: "#000" });
   infoText.setDepth(1000);
-  setupPlayerCountUI(this);
+  // Démarrage avec preset mémorisé ?
+  const wantsPreset = localStorage.getItem('vgb_start_with_preset') === '1';
+  if (wantsPreset && loadPresetAndStart(this)) {
+    localStorage.removeItem('vgb_start_with_preset');
+    return;
+  }
+  setupGridSizeUI(this);
+}
+
+function setupGridSizeUI(scene) {
+  const last = parseInt(localStorage.getItem('vgb_grid_size') || '0', 10);
+  infoText.setText("Choisissez la taille du plateau (9x9 / 12x12 / 15x15)");
+  const options = [9,11,15];
+  let x = 10;
+  let y = 40;
+  options.forEach(size => {
+    const isDefault = (last === size);
+    const label = isDefault ? `${size} x ${size} (défaut)` : `${size} x ${size}`;
+    const btn = scene.add.text(x, y, label, { font: "16px Arial", fill: "#000", backgroundColor: isDefault ? "#bdf" : "#ddd" })
+      .setInteractive()
+      .on("pointerdown", () => selectGridSize(scene, size));
+    gridSizeUIElems.push(btn);
+    y += 30;
+  });
+  // Bouton pour utiliser directement la taille par défaut mémorisée
+  if (options.includes(last)) {
+    const defBtn = scene.add.text(x, y + 10, `➡️ Utiliser la taille par défaut (${last}x${last})`, { font: "16px Arial", fill: "#000", backgroundColor: "#cfc" })
+      .setInteractive()
+      .on("pointerdown", () => selectGridSize(scene, last));
+    gridSizeUIElems.push(defBtn);
+  }
+}
+
+function selectGridSize(scene, size) {
+  GRID_SIZE = size;
+  // ajuster automatiquement la taille de tuile pour tenir dans 900x900 avec les offsets
+  const available = 900 - 2*GRID_OFFSET_Y; // carré
+  TILE_SIZE = Math.floor(available / GRID_SIZE);
+  // mémoriser le choix
+  try { localStorage.setItem('vgb_grid_size', String(size)); } catch(e) {}
+  // passer au choix du nombre de joueurs
+  gridSizeUIElems.forEach(e => e && e.setVisible(false));
+  setupPlayerCountUI(scene);
+}
+
+function getKingCenterIndex(gridSize) {
+  // 15x15 -> 8e case (index 7), 11x11 -> 6e (index 5), 9x9 -> 5e (index 4)
+  if (gridSize === 15) return 7;
+  if (gridSize === 11) return 5;
+  if (gridSize === 9) return 4;
+  return Math.floor(gridSize / 2);
 }
 
 function setupPlayerCountUI(scene) {
@@ -439,6 +497,7 @@ function startGame(scene) {
     });
   }
   if (clearAllBtn) clearAllBtn.setVisible(false);
+  // cacher l'aperçu des équipes pendant la partie
   if (armyLabels && armyLabels.length) {
     armyLabels.forEach(lbl => lbl && lbl.setVisible(false));
   }
@@ -477,7 +536,7 @@ function startGame(scene) {
     if (index === 2) return 'left';
     return 'right';
   };
-  const mid = Math.floor(GRID_SIZE / 2);
+  const mid = getKingCenterIndex(GRID_SIZE);
 
   const getBlockSlotsForSide = (side) => {
     // Générer une spirale en coordonnées locales (autour de 0,0) puis mapper vers la grille
@@ -564,7 +623,7 @@ function startGame(scene) {
   // Textes des noms des joueurs hors de la grille
   playerNameTexts.forEach(t => t && t.destroy());
   playerNameTexts = [];
-  const midNames = Math.floor(GRID_SIZE / 2);
+  const midNames = getKingCenterIndex(GRID_SIZE);
   const margin = 12;
   players.forEach((p,i) => {
     const side = (i===0)?'top':(i===1)?'bottom':(i===2)?'left':'right';
@@ -574,7 +633,9 @@ function startGame(scene) {
     if (side === 'left') { nx = GRID_OFFSET_X - 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
     if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 12; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
     const tintColor = brandTints[p.faction || 'nintendo'] || 0x000000;
-    const txt = scene.add.text(nx, ny, p.name, { font: "18px Arial", fill: `#${tintColor.toString(16).padStart(6,'0')}` }).setOrigin(0.5);
+    const factionLabel = getFactionDisplayName(p.faction || 'nintendo');
+    const label = `${p.name} (${factionLabel})`;
+    const txt = scene.add.text(nx, ny, label, { font: "18px Arial", fill: `#${tintColor.toString(16).padStart(6,'0')}` }).setOrigin(0.5);
     if (side === 'left') txt.setAngle(-90);
     if (side === 'right') txt.setAngle(90);
     txt.setDepth(1500);
@@ -585,6 +646,33 @@ function startGame(scene) {
   if (turnIcon) { turnIcon.destroy(); }
   turnIcon = scene.add.text(0,0,"🎮", { font: "22px Arial" }).setDepth(2000);
   updateTurnUI();
+}
+
+function savePreset() {
+  try {
+    const preset = {
+      gridSize: GRID_SIZE,
+      players: players.map(p => ({ name: p.name, faction: p.faction }))
+    };
+    localStorage.setItem('vgb_preset', JSON.stringify(preset));
+  } catch(e) {}
+}
+
+function loadPresetAndStart(scene) {
+  try {
+    const raw = localStorage.getItem('vgb_preset');
+    if (!raw) return false;
+    const preset = JSON.parse(raw);
+    if (!preset || !preset.gridSize || !Array.isArray(preset.players) || preset.players.length < 2) return false;
+    GRID_SIZE = preset.gridSize;
+    const available = 900 - 2*GRID_OFFSET_Y;
+    TILE_SIZE = Math.floor(available / GRID_SIZE);
+    players = preset.players.map((pp, i) => ({ id: i, points: 20, army: [], name: pp.name || `Joueur ${i+1}`, faction: pp.faction || 'nintendo' }));
+    currentPlayer = 0;
+    setupDraftUI(scene);
+    updateDraftUI();
+    return true;
+  } catch(e) { return false; }
 }
 
 function updatePieces() {
@@ -734,6 +822,28 @@ function endGameWithRanking(ranking) {
   } else if (infoText) {
     infoText.setText(msg);
   }
+  // Mémoriser les réglages actuels pour relancer facilement
+  savePreset();
+  // Bouton DOM pour relancer avec les mêmes réglages
+  let btn = document.getElementById('restart-same-settings');
+  if (btn) btn.remove();
+  btn = document.createElement('button');
+  btn.id = 'restart-same-settings';
+  btn.textContent = 'Démarrer une nouvelle partie avec les mêmes réglages';
+  btn.style.position = 'fixed';
+  btn.style.right = '20px';
+  btn.style.bottom = '20px';
+  btn.style.zIndex = '9999';
+  btn.style.padding = '10px 12px';
+  btn.style.font = '14px Arial';
+  btn.style.background = '#cfc';
+  btn.style.border = '1px solid #9c9';
+  btn.style.borderRadius = '6px';
+  btn.onclick = () => {
+    try { localStorage.setItem('vgb_start_with_preset', '1'); } catch(e) {}
+    window.location.reload();
+  };
+  document.body.appendChild(btn);
 }
 
 function clearHighlights() {
@@ -753,7 +863,7 @@ function highlightPositions(positions) {
 }
 
 function updateTurnUI() {
-  const mid = Math.floor(GRID_SIZE / 2);
+  const mid = getKingCenterIndex(GRID_SIZE);
   // Positionner l'icône de tour à côté du nom du joueur actif
   if (turnIcon && playerNameTexts[currentPlayer]) {
     const t = playerNameTexts[currentPlayer];
