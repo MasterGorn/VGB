@@ -51,9 +51,12 @@ let eliminationOrder = [];
 let gridSizeUIElems = [];
 // Items & caisse
 let itemCrate = null; // { x, y, sprite, active }
-let playerItemIcons = []; // par joueur, icône d'objet à côté du nom
+let playerItemIcons = []; // par joueur: tableau d'icônes [{ sprite, item }]
 let currentItemAction = null; // { playerId, type: 'bomb', active: true }
-let lastCrateEventMove = 0;
+let lastCrateEventMove = 0; // obsolète (conservé si besoin)
+let roundCounter = 0;
+let lastCrateRound = 0;
+let itemUsedThisTurn = false;
 
 // Factions et teintes
 const brandTints = {
@@ -545,6 +548,7 @@ function startGame(scene) {
     const cy = Math.floor(GRID_SIZE/2);
     itemCrate = { x: cx, y: cy, sprite: scene.add.image(0,0,'item-crate'), active: true };
     itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
+    itemCrate.sprite.setAlpha(1);
     lastCrateEventMove = moveCount;
   } else {
     itemCrate = null;
@@ -712,11 +716,16 @@ function updatePieces() {
   // positionner les icônes d'objets à côté des noms
   if (playerItemIcons.length) {
     for (let i=0; i<playerItemIcons.length; i++) {
-      const iconEntry = playerItemIcons[i];
+      const entries = playerItemIcons[i] || [];
       const nameText = playerNameTexts[i];
-      if (iconEntry && iconEntry.sprite && nameText) {
-        iconEntry.sprite.x = nameText.x + nameText.displayWidth/2 + 14;
-        iconEntry.sprite.y = nameText.y;
+      if (nameText && entries.length) {
+        for (let k=0; k<entries.length; k++) {
+          const e = entries[k];
+          if (e && e.sprite) {
+            e.sprite.x = nameText.x + nameText.displayWidth/2 + 14 + k*20;
+            e.sprite.y = nameText.y;
+          }
+        }
       }
     }
   }
@@ -730,11 +739,7 @@ function handleClick(scene, pos) {
     if (currentItemAction.type === 'bomb') {
       detonateBombAt(pos);
       currentItemAction.active = false;
-      // consommer l'item
-      if (playerItemIcons[currentPlayer]) {
-        playerItemIcons[currentPlayer].item = null;
-        playerItemIcons[currentPlayer].sprite.setVisible(false);
-      }
+      itemUsedThisTurn = true;
       updatePieces();
       return;
     }
@@ -792,7 +797,11 @@ function handleClick(scene, pos) {
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
         updateAdInfo();
+        // fin de tour
+        if (currentPlayer === players.length - 1) { roundCounter++; }
         currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        itemUsedThisTurn = false;
+        maybeRespawnCrate(scene);
         updateTurnUI();
         return;
       }
@@ -807,9 +816,11 @@ function handleClick(scene, pos) {
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
       updateAdInfo();
-      maybeRespawnCrate(scene);
-      maybeRespawnCrate(scene);
+      // fin de tour
+      if (currentPlayer === players.length - 1) { roundCounter++; }
       currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+      itemUsedThisTurn = false;
+      maybeRespawnCrate(scene);
       updateTurnUI();
     } else {
       // Clic non valide: nettoyer la sélection pour éviter la confusion
@@ -904,36 +915,36 @@ function endGameWithRanking(ranking) {
 
 function maybePickupItem(piece) {
   if (!itemCrate || !itemCrate.active) return;
+  // empêcher une nouvelle prise si moins de 3 tours se sont écoulés
+  if ((roundCounter - lastCrateRound) < 0) return;
   if (piece.x === itemCrate.x && piece.y === itemCrate.y) {
-    // attribuer un objet (pour l'instant toujours une bombe)
     const item = rollRandomItem();
     giveItemToPlayer(piece.player, item);
     itemCrate.active = false;
-    if (itemCrate.sprite) itemCrate.sprite.setVisible(false);
-    lastCrateEventMove = moveCount;
+    if (itemCrate.sprite) { itemCrate.sprite.setAlpha(0.25); }
+    // mémoriser le round de l'interaction
+    lastCrateRound = roundCounter;
   }
 }
 
 function giveItemToPlayer(playerId, itemKey) {
   const scene = infoText.scene;
-  // créer une icône si besoin
-  if (!playerItemIcons[playerId]) {
-    const nameText = playerNameTexts[playerId];
-    const icon = scene.add.image(0,0,itemKey).setDisplaySize(18,18).setInteractive();
-    icon.on('pointerdown', () => tryUseItem(playerId));
-    playerItemIcons[playerId] = { sprite: icon, item: itemKey };
-  } else {
-    // remplacer l'item existant
-    playerItemIcons[playerId].item = itemKey;
-    playerItemIcons[playerId].sprite.setTexture(itemKey);
-  }
+  // créer une icône (empilement jusqu'à 3 max)
+  if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
+  if (playerItemIcons[playerId].length >= 3) return; // limite 3 objets
+  const icon = scene.add.image(0,0,itemKey).setDisplaySize(18,18).setInteractive();
+  icon.on('pointerdown', () => tryUseItem(playerId));
+  playerItemIcons[playerId].push({ sprite: icon, item: itemKey });
   updatePieces();
 }
 
 function tryUseItem(playerId) {
   if (!gameStarted) return;
   if (playerId !== currentPlayer) return; // utiliser à son tour
-  const icon = playerItemIcons[playerId];
+  if (itemUsedThisTurn) return; // un seul objet par tour
+  const arr = playerItemIcons[playerId] || [];
+  if (arr.length === 0) return;
+  const icon = arr[0];
   if (!icon || !icon.item) return;
   if (icon.item === 'bomb') {
     // Activer mode pose de bombe: prochain clic sur une case pose et résout l'effet
@@ -960,6 +971,11 @@ function detonateBombAt(pos) {
       }
     }
   }
+  // consommer le premier item du joueur courant (FIFO)
+  if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+    const used = playerItemIcons[currentPlayer].shift();
+    if (used && used.sprite) used.sprite.destroy();
+  }
   updatePieces();
   // Vérifier condition de fin
   const remainingKings = pieces.filter(pp => pp.type === 'king').length;
@@ -980,16 +996,16 @@ function maybeRespawnCrate(scene) {
   if (GRID_SIZE !== 9) return;
   if (!itemCrate) return;
   if (itemCrate.active) return;
-  // Réapparaît tous les 3 actions globales depuis la dernière interaction (prise ou spawn)
-  if ((moveCount - lastCrateEventMove) >= 3) {
+  // Réapparaît tous les 3 tours (chaque joueur a joué) depuis la dernière interaction
+  if ((roundCounter - lastCrateRound) >= 3) {
     itemCrate.active = true;
     if (!itemCrate.sprite) {
       itemCrate.sprite = scene.add.image(0,0,'item-crate');
       itemCrate.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
     }
-    itemCrate.sprite.setVisible(true);
+    itemCrate.sprite.setAlpha(1);
     updatePieces();
-    lastCrateEventMove = moveCount;
+    lastCrateRound = roundCounter;
   }
 }
 
