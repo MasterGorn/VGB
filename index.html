@@ -757,6 +757,9 @@ function handleClick(scene, pos) {
   // Si un item est actif (ex: bombe), gérer l'effet et retourner
   if (currentItemAction && currentItemAction.active && currentItemAction.playerId === currentPlayer) {
     if (currentItemAction.type === 'bomb') {
+      // Limite de placement: à <=3 cases d'une pièce du joueur
+      const canPlace = canPlaceBombAt(pos, currentPlayer);
+      if (!canPlace) return;
       detonateBombAt(pos);
       currentItemAction.active = false;
       itemUsedThisTurn = true;
@@ -982,19 +985,53 @@ function tryUseItem(playerId) {
     // Activer mode pose de bombe: prochain clic sur une case pose et résout l'effet
     currentItemAction = { playerId, type: 'bomb', active: true };
     if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour poser la bombe`);
+    // Highlight des cases possibles
+    const allowed = getBombPlacablePositions(playerId);
+    highlightPositions(allowed, 0xff8a80); // rouge/rosé
   }
 }
 
+function getBombPlacablePositions(playerId) {
+  const positions = [];
+  // toutes cases à distance de Manhattan <= 2 d'au moins une pièce du joueur
+  const myPieces = pieces.filter(p => p.player === playerId);
+  const seen = new Set();
+  for (let mp of myPieces) {
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const x = mp.x + dx;
+        const y = mp.y + dy;
+        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) continue;
+        const manhattan = Math.abs(dx) + Math.abs(dy);
+        if (manhattan <= 2) {
+          const key = x+","+y;
+          if (!seen.has(key)) { positions.push({ x, y }); seen.add(key); }
+        }
+      }
+    }
+  }
+  return positions;
+}
+
+function canPlaceBombAt(pos, playerId) {
+  const allowed = getBombPlacablePositions(playerId);
+  return allowed.some(p => p.x === pos.x && p.y === pos.y);
+}
+
 function detonateBombAt(pos) {
-  // Détruire pièces sur la case et les 4 adjacentes
-  const deltas = [ {x:0,y:0}, {x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1} ];
+  // Détruire pièces sur la case et les 8 adjacentes (zone 3x3)
+  const deltas = [];
+  for (let dx=-1; dx<=1; dx++) {
+    for (let dy=-1; dy<=1; dy++) {
+      deltas.push({x:dx,y:dy});
+    }
+  }
   for (let d of deltas) {
     const tx = pos.x + d.x;
     const ty = pos.y + d.y;
     if (tx < 0 || ty < 0 || tx >= GRID_SIZE || ty >= GRID_SIZE) continue;
     const victim = getPieceAt({ x: tx, y: ty });
     if (victim) {
-      // empêcher classement immédiat si roi détruit: on applique même logique que capture
       const wasKing = victim.type === 'king';
       victim.sprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
@@ -1053,11 +1090,11 @@ function clearHighlights() {
   highlightedTiles = [];
 }
 
-function highlightPositions(positions) {
+function highlightPositions(positions, color = 0xfff59d) {
   clearHighlights();
   for (let pos of positions) {
     const tile = grid[pos.y][pos.x];
-    tile.setFillStyle(0xfff59d); // jaune clair
+    tile.setFillStyle(color);
     highlightedTiles.push(tile);
   }
 }
@@ -1100,7 +1137,7 @@ function tickTimer(scene) {
   // MAJ texte
   if (timerTexts[nowIdx]) timerTexts[nowIdx].setText(formatMs(playerTimersMs[nowIdx]));
   // feedback visuel sous 10s
-  const under10 = playerTimersMs[nowIdx] <= 10000;
+  const under10 = playerTimersMs[nowIdx] <= 30000;
   if (timerTexts[nowIdx]) {
     if (under10) {
       timerBlinkToggle = !timerBlinkToggle;
