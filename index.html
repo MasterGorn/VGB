@@ -47,6 +47,7 @@ let choiceListBottomY = 0;
 let pendingPlayerIndex = 0;
 let playerSetupDiv = null;
 let adIntervalId = null;
+let eliminationOrder = [];
 
 // Factions et teintes
 const brandTints = {
@@ -617,7 +618,7 @@ function handleClick(scene, pos) {
       // Capture éventuelle sur la case cible
       const target = getPieceAt(pos);
       if (target && target.player !== selectedPiece.player) {
-        const capturedNintendo = target.type === 'nintendo';
+        const capturedKing = target.type === 'king';
         target.sprite.destroy();
         pieces = pieces.filter(p => p !== target);
         // Déplacer la pièce du joueur sur la case capturée
@@ -626,9 +627,27 @@ function handleClick(scene, pos) {
         updatePieces();
         clearHighlights();
         selectedPiece = null;
-        if (capturedNintendo) {
-          endGame(currentPlayer);
-          return;
+        // Gestion élimination et condition de fin
+        if (capturedKing) {
+          if (!eliminationOrder.includes(target.player)) {
+            eliminationOrder.push(target.player);
+          }
+          const remainingKings = pieces.filter(pp => pp.type === 'king').length;
+          if (remainingKings <= 1) {
+            // déterminer le vainqueur (roi encore vivant)
+            let winnerId = null;
+            const kingPiece = pieces.find(pp => pp.type === 'king');
+            if (kingPiece) winnerId = kingPiece.player;
+            // construire classement
+            let ranking = [];
+            if (winnerId !== null) ranking.push(winnerId);
+            const rest = eliminationOrder.slice().reverse();
+            for (let pid of rest) {
+              if (winnerId === null || pid !== winnerId) ranking.push(pid);
+            }
+            endGameWithRanking(ranking);
+            return;
+          }
         }
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
@@ -701,13 +720,19 @@ function getRuleForPiece(piece) {
   return entry ? { moves: entry.moves, range: entry.range } : { moves: [], range: 0 };
 }
 
-function endGame(winnerPlayerIndex) {
+function endGameWithRanking(ranking) {
   gameStarted = false;
   clearHighlights();
+  let msg = '';
+  if (Array.isArray(ranking) && ranking.length > 0) {
+    msg = 'Classement final:\n' + ranking.map((pid, idx) => `${idx+1}. Joueur ${pid+1}`).join('\n');
+  } else {
+    msg = 'Partie terminée.';
+  }
   if (turnText) {
-    turnText.setText(`Le Joueur ${winnerPlayerIndex+1} gagne !`);
+    turnText.setText(msg);
   } else if (infoText) {
-    infoText.setText(`Le Joueur ${winnerPlayerIndex+1} gagne !`);
+    infoText.setText(msg);
   }
 }
 
