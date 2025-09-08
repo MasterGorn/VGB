@@ -22,13 +22,17 @@
     </div>
   </div>
 </header>
-<div id="app" style="display:flex; gap:16px; align-items:flex-start; padding-top:48px;">
+<div id="app" style="display:flex; gap:16px; align-items:flex-start; padding-top:96px;">
   <div id="game-root"></div>
   <div id="ads-panel" style="width:280px;">
     <div id="ads-title" style="font:16px Arial; margin-bottom:8px;">Publicités</div>
     <div id="ad-slot-1" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 1</div>
     <div id="ad-slot-2" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 2</div>
     <div id="ad-info" style="font:12px Arial; color:#555;">Mise à jour toutes les 5 actions</div>
+    <div id="rules-panel" style="margin-top:14px;">
+      <div style="font:16px Arial; margin-bottom:6px;">Pièces en jeu</div>
+      <div id="rules-list" style="font:12px Arial; color:#222; line-height:1.5;"></div>
+    </div>
   </div>
 </div>
 <script>
@@ -39,7 +43,13 @@ const config = {
   height: 900,
   backgroundColor: '#ececec',
   parent: 'game-root',
-  scene: { preload, create, update }
+  scene: { preload, create, update },
+  render: {
+    antialias: true,
+    pixelArt: false,
+    roundPixels: false,
+    mipmapFilter: Phaser.Textures.FilterMode.LINEAR
+  }
 };
 
 const GRID_OFFSET_X = 60; // marge gauche
@@ -160,12 +170,17 @@ let clearAllBtn;
 let playerCountBtns = [];
 
 function preload() {
+  // Activer un filtrage linéaire pour toutes les textures pour un rendu lisse
+  if (this.textures && this.textures.on) {
+    this.textures.on(Phaser.Textures.Events.ADD, (key, texture) => {
+      if (texture && texture.setFilter) texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    });
+  }
   // Nintendo existants (actuels)
   this.load.setPath('public/images/nintendo/characters/');
   this.load.image('mario', 'mario.png');
   this.load.image('link', 'link.png');
-  // zelda utilise temporairement le sprite de samus
-  this.load.image('zelda', 'samus.png');
+  this.load.image('zelda', 'zelda.png');
   // nintendo utilise le sprite de pit (fallback)
   this.load.image('nintendo', 'pit.png');
 
@@ -519,6 +534,48 @@ function endDraft(scene) {
   }
 }
 
+function rulesTextForEntry(entry) {
+  const name = getDisplayNameForKey(entry.key || entry.type || '');
+  const moves = (entry.moves || []).map(m => `(${m[0]},${m[1]})`).join(', ');
+  const range = typeof entry.range === 'number' ? entry.range : 0;
+  return `${name}: déplacements ${moves || '—'} portée ${range || 0}`;
+}
+
+function buildRulesCatalog() {
+  const map = new Map();
+  // Ajouter les rois
+  for (const f of Object.keys(kings)) {
+    const k = kings[f];
+    map.set(k.key, { key: k.key, moves: k.moves, range: k.range });
+  }
+  // Ajouter les pièces des factions
+  for (const f of Object.keys(factionCatalogs)) {
+    const cat = factionCatalogs[f];
+    for (const key of Object.keys(cat)) {
+      const it = cat[key];
+      map.set(key, { key, moves: it.moves, range: it.range });
+    }
+  }
+  return map;
+}
+
+function updateRulesSidebar() {
+  const el = document.getElementById('rules-list');
+  if (!el) return;
+  const rulesMap = buildRulesCatalog();
+  const present = new Set();
+  for (const p of pieces) {
+    const k = (p.type === 'king') ? (kings[players[p.player].faction].key) : p.type;
+    present.add(k);
+  }
+  const lines = [];
+  present.forEach(k => {
+    const entry = rulesMap.get(k);
+    if (entry) lines.push(rulesTextForEntry(entry));
+  });
+  el.innerHTML = lines.length ? lines.map(t => `<div style="margin-bottom:6px;">${t}</div>`).join('') : '<div style="color:#666;">Aucune pièce en jeu</div>';
+}
+
 function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
@@ -721,6 +778,7 @@ function startGame(scene) {
   if (turnIcon) { turnIcon.destroy(); }
   turnIcon = scene.add.text(0,0,"🎮", { font: "22px Arial" }).setDepth(2000);
   updateTurnUI();
+  updateRulesSidebar();
 }
 
 function savePreset() {
@@ -755,9 +813,12 @@ function updatePieces() {
     p.sprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
     p.sprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
     // ajuster la taille pour remplir la case moins une marge de bordure
-    const margin = 4; // 2px de chaque côté
+    const margin = 2; // marge réduite pour plus de surface utile
     const targetSize = TILE_SIZE - margin;
     p.sprite.setDisplaySize(targetSize, targetSize);
+    if (p.sprite.texture && p.sprite.texture.setFilter) {
+      p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
   }
   if (itemCrates && itemCrates.length) {
     for (const c of itemCrates) {
@@ -783,6 +844,7 @@ function updatePieces() {
       }
     }
   }
+  updateRulesSidebar();
 }
 
 function handleClick(scene, pos) {
