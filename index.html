@@ -896,7 +896,9 @@ function handleClick(scene, pos) {
       if (!canPlace) return;
       detonateBombAt(pos);
       currentItemAction.active = false;
+      currentItemAction = null; // sortir du mode pose de bombe
       itemUsedThisTurn = true;
+      clearHighlights(); // retirer l'indicateur de placement
       updatePieces();
       return;
     }
