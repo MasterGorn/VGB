@@ -971,6 +971,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
+      if (infoText) infoText.setText("");
       // consommer l'item portals sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (currentItemAction && typeof currentItemAction.inventoryIndex === 'number') ? currentItemAction.inventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'portals');
