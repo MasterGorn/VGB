@@ -66,6 +66,7 @@ let selectedPiece = null;
 let highlightedTiles = [];
 let turnText;
 let moveCount = 0;
+// plus de garde: décrément à chaque fin de tour
 let adRotationIndex = 0;
 let playerNameTexts = [];
 let turnIcon;
@@ -92,8 +93,9 @@ let portalOrange = null; // { x, y, sprite }
 let portalBlue = null;   // { x, y, sprite }
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
-  bobomb: 2,
-  portals: 2,
+  bobomb: 4,
+  portals: 4,
+  lightning: 1,
 };
 // Timers
 let playerTimersMs = [];
@@ -230,6 +232,7 @@ function preload() {
   this.load.image('portals', 'portals.png'); // icône inventaire
   this.load.image('portal-orange', 'portal-orange.png');
   this.load.image('portal-blue', 'portal-blue.png');
+  this.load.image('lightning', 'Lightning.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -631,7 +634,7 @@ function startGame(scene) {
   portalOrange = null;
   portalBlue = null;
   infoText.setText("");
-  // cacher widget d’option timer s'il existe côté Phaser
+  // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
   // cacher l'UI de draft
   choiceButtons.forEach(btn => btn.setVisible(false));
@@ -870,7 +873,7 @@ function updatePieces() {
     // ajuster la taille pour remplir la case moins une marge de bordure
     const targetSize = TILE_SIZE; // utiliser toute la case
     p.sprite.setDisplaySize(targetSize, targetSize);
-    // Forcer une mise à l’échelle entière pour éviter tout flou sous-pixel
+    // Forcer une mise à l'échelle entière pour éviter tout flou sous-pixel
     p.sprite.setOrigin(0.5, 0.5);
     if (p.sprite.texture && p.sprite.texture.setFilter) p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   }
@@ -907,6 +910,20 @@ function updatePieces() {
           if (e && e.sprite) {
             e.sprite.x = nameText.x + nameText.displayWidth/2 + 14 + k*20;
             e.sprite.y = nameText.y;
+            // overlay du compteur pour lightning
+            if (e.item === 'lightning') {
+              if (!e.counterText) {
+                e.counterText = nameText.scene.add.text(0,0, '', { font: '12px Arial', fill: '#000', backgroundColor: '#fff' }).setDepth(2001);
+              }
+              const txt = (e.chargeTurns && e.chargeTurns > 0) ? String(e.chargeTurns) : '';
+              e.counterText.setText(txt);
+              e.counterText.x = e.sprite.x + 10;
+              e.counterText.y = e.sprite.y - 10;
+              e.sprite.setAlpha((e.chargeTurns && e.chargeTurns > 0) ? 0.6 : 1);
+            } else if (e.counterText) {
+              e.counterText.destroy();
+              e.counterText = null;
+            }
           }
         }
       }
@@ -1031,15 +1048,17 @@ function handleClick(scene, pos) {
               if (winnerId === null || pid !== winnerId) ranking.push(pid);
             }
             endGameWithRanking(ranking);
-            return;
-          }
+          return;
+        }
         }
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
         updateAdInfo();
         // fin de tour
+        let oldRound = roundCounter;
         if (currentPlayer === players.length - 1) { roundCounter++; }
         currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        if (roundCounter !== oldRound) decrementLightningCharges();
         itemUsedThisTurn = false;
         maybeRespawnCrate(scene);
         updateTurnUI();
@@ -1063,8 +1082,11 @@ function handleClick(scene, pos) {
       if (moveCount % 5 === 0) rotateAds();
       updateAdInfo();
       // fin de tour
+      let oldRound = roundCounter;
       if (currentPlayer === players.length - 1) { roundCounter++; }
       currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+      // décrémenter les charges uniquement quand un round complet vient de s’achever
+      if (roundCounter !== oldRound) decrementLightningCharges();
       itemUsedThisTurn = false;
       maybeRespawnCrate(scene);
       updateTurnUI();
@@ -1222,7 +1244,10 @@ function giveItemToPlayer(playerId, itemKey) {
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(0,0,textureKey).setDisplaySize(18,18).setInteractive();
   icon.on('pointerdown', () => tryUseItem(playerId, icon));
-  playerItemIcons[playerId].push({ sprite: icon, item: itemKey });
+  // Pour lightning: ajouter compteur 4 tours complets avant utilisation
+  const entry = { sprite: icon, item: itemKey };
+  if (itemKey === 'lightning') entry.chargeTurns = 5;
+  playerItemIcons[playerId].push(entry);
   updatePieces();
 }
 
@@ -1252,6 +1277,39 @@ function tryUseItem(playerId, clickedIconSprite) {
     if (infoText) infoText.setText(`Joueur ${playerId+1}: placez le portail ORANGE`);
     const allowed = getAllEmptyCells();
     highlightPositions(allowed, 0xffcc80); // orange pâle
+  }
+  if (icon.item === 'lightning') {
+    // Non utilisable tant que charge > 0
+    if (icon.chargeTurns && icon.chargeTurns > 0) return;
+    // Déclencher effet éclair
+    triggerLightningEffect();
+    // Tuer toutes les pièces sur cases blanches
+    applyLightningKill();
+    // Consommer l'item sélectionné
+    const useIdx = idx;
+    if (playerItemIcons[playerId] && playerItemIcons[playerId].length && useIdx >= 0) {
+      const used = playerItemIcons[playerId].splice(useIdx, 1)[0];
+      if (used && used.sprite) used.sprite.destroy();
+      if (used && used.counterText) used.counterText.destroy();
+    }
+    itemUsedThisTurn = true;
+    updatePieces();
+    // Fin de tour après usage de l'éclair
+    moveCount++;
+    if (moveCount % 5 === 0) rotateAds();
+    updateAdInfo();
+    if (currentPlayer === players.length - 1) { roundCounter++; }
+    currentPlayer = (currentPlayer+1) % players.length;
+    itemUsedThisTurn = false;
+    decrementLightningCharges();
+    maybeRespawnCrate(infoText.scene);
+    updateTurnUI();
+    // repositionner timers si présents
+    if (timerTexts && playerNameTexts) {
+      for (let i=0;i<timerTexts.length;i++) {
+        if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+      }
+    }
   }
 }
 
@@ -1407,6 +1465,58 @@ function updateTurnUI() {
   }
   // Mettre à jour la position des icônes d'objets à côté des noms
   updatePieces();
+}
+
+function decrementLightningCharges() {
+  for (let i=0; i<playerItemIcons.length; i++) {
+    const arr = playerItemIcons[i] || [];
+    for (const e of arr) {
+      if (e && e.item === 'lightning' && e.chargeTurns && e.chargeTurns > 0) {
+        e.chargeTurns = Math.max(0, e.chargeTurns - 1);
+      }
+    }
+  }
+  updatePieces();
+}
+
+function triggerLightningEffect() {
+  const scene = infoText.scene;
+  // flash global
+  const flash = scene.add.rectangle(GRID_OFFSET_X + GRID_SIZE*TILE_SIZE/2, GRID_OFFSET_Y + GRID_SIZE*TILE_SIZE/2, GRID_SIZE*TILE_SIZE, GRID_SIZE*TILE_SIZE, 0xffff8d).setAlpha(0.35).setDepth(2900);
+  scene.tweens.add({ targets: flash, alpha: 0, duration: 250, onComplete: () => flash.destroy() });
+}
+
+function isWhiteSquare(x, y) {
+  // même logique que baseColor (x+y)%2===0 blanc
+  return ((x + y) % 2) === 0;
+}
+
+function applyLightningKill() {
+  // Supprimer toutes les pièces sur cases blanches (y compris celles du lanceur)
+  const victims = pieces.filter(p => isWhiteSquare(p.x, p.y));
+  let kingDied = false;
+  for (const v of victims) {
+    if (v && v.sprite) v.sprite.destroy();
+    if (v.type === 'king') {
+      kingDied = true;
+      if (!eliminationOrder.includes(v.player)) eliminationOrder.push(v.player);
+    }
+  }
+  pieces = pieces.filter(p => !isWhiteSquare(p.x, p.y));
+  updatePieces();
+  if (kingDied) {
+    const remainingKings = pieces.filter(pp => pp.type === 'king').length;
+    if (remainingKings <= 1) {
+      let winnerId = null;
+      const kingPiece = pieces.find(pp => pp.type === 'king');
+      if (kingPiece) winnerId = kingPiece.player;
+      let ranking = [];
+      if (winnerId !== null) ranking.push(winnerId);
+      const rest = eliminationOrder.slice().reverse();
+      for (let pid of rest) if (winnerId === null || pid !== winnerId) ranking.push(pid);
+      endGameWithRanking(ranking);
+    }
+  }
 }
 
 function update() {}
