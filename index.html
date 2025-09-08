@@ -213,7 +213,7 @@ function preload() {
 
   // Items
   this.load.setPath('public/images/items/');
-  this.load.image('item-crate', 'box-item-mario-kart.png');
+  this.load.svg('item-crate', 'box-item-mario-kart.svg');
   this.load.image('bobomb', 'bobomb.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
@@ -563,17 +563,39 @@ function updateRulesSidebar() {
   const el = document.getElementById('rules-list');
   if (!el) return;
   const rulesMap = buildRulesCatalog();
-  const present = new Set();
+  // Helper pour trouver la source d'image selon faction et type
+  const getImgSrc = (faction, type, isKing) => {
+    const file = isKing ? 'king' : type;
+    return `public/images/${faction}/characters/${file}.png`;
+  };
+  // Dédupliquer par (faction::keyAfficher)
+  const presentByKey = new Map();
   for (const p of pieces) {
-    const k = (p.type === 'king') ? (kings[players[p.player].faction].key) : p.type;
-    present.add(k);
+    const faction = players[p.player] && players[p.player].faction ? players[p.player].faction : 'nintendo';
+    const isKing = p.type === 'king';
+    const ruleKey = isKing ? (kings[faction].key) : p.type;
+    const uniq = `${faction}::${ruleKey}`;
+    if (!presentByKey.has(uniq)) {
+      const entry = rulesMap.get(ruleKey);
+      if (entry) {
+        const text = rulesTextForEntry(entry);
+        const img = getImgSrc(faction, isKing ? 'king' : p.type, isKing);
+        presentByKey.set(uniq, { img, text });
+      }
+    }
   }
-  const lines = [];
-  present.forEach(k => {
-    const entry = rulesMap.get(k);
-    if (entry) lines.push(rulesTextForEntry(entry));
+  if (presentByKey.size === 0) {
+    el.innerHTML = '<div style="color:#666;">Aucune pièce en jeu</div>';
+    return;
+  }
+  const rows = [];
+  presentByKey.forEach((v) => {
+    rows.push(`<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <img src="${v.img}" alt="" style="width:24px; height:24px; object-fit:contain; display:block;" />
+      <div>${v.text}</div>
+    </div>`);
   });
-  el.innerHTML = lines.length ? lines.map(t => `<div style="margin-bottom:6px;">${t}</div>`).join('') : '<div style="color:#666;">Aucune pièce en jeu</div>';
+  el.innerHTML = rows.join('');
 }
 
 function startGame(scene) {
