@@ -41,6 +41,7 @@ const config = {
   type: Phaser.AUTO,
   width: 900,
   height: 900,
+  resolution: (window.devicePixelRatio || 1),
   backgroundColor: '#ececec',
   parent: 'game-root',
   scene: { preload, create, update },
@@ -75,6 +76,9 @@ let playerSetupDiv = null;
 let adIntervalId = null;
 let eliminationOrder = [];
 let gridSizeUIElems = [];
+// Options de partie
+let timerEnabled = true;
+let timerOptionEl = null;
 // Items & caisses
 let itemCrates = []; // [{ x, y, sprite, active, lastRound }]
 let playerItemIcons = []; // par joueur: tableau d'icônes [{ sprite, item }]
@@ -281,6 +285,14 @@ function setupPlayerCountUI(scene) {
   const options = [2,3,4];
   let x = 10;
   let y = 40;
+  // toggle timer option à côté des boutons
+  const timerText = scene.add.text(x, y, `Activer le timer`, { font: "14px Arial", fill: "#000", backgroundColor: "#eee" })
+    .setInteractive()
+    .on('pointerdown', () => {
+      timerEnabled = !timerEnabled;
+      timerText.setBackgroundColor(timerEnabled?"#cfc":"#fdd");
+    });
+  y += 28;
   options.forEach(n => {
     const btn = scene.add.text(x, y, `${n} joueurs`, { font: "16px Arial", fill: "#000", backgroundColor: "#ddd" })
       .setInteractive()
@@ -291,7 +303,8 @@ function setupPlayerCountUI(scene) {
 }
 
 function selectPlayerCount(scene, n) {
-  players = Array.from({ length: n }, (_, i) => ({ id: i, points: 20, army: [], name: '', faction: 'nintendo' }));
+  const budget = (GRID_SIZE === 9) ? 20 : (GRID_SIZE === 11) ? 30 : 50;
+  players = Array.from({ length: n }, (_, i) => ({ id: i, points: budget, army: [], name: '', faction: 'nintendo' }));
   currentPlayer = 0;
   // nettoyer UI de sélection
   playerCountBtns.forEach(b => b.destroy());
@@ -602,6 +615,8 @@ function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
   infoText.setText("");
+  // cacher widget d’option timer s'il existe côté Phaser
+  if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
   // cacher l'UI de draft
   choiceButtons.forEach(btn => btn.setVisible(false));
   if (endDraftBtn) endDraftBtn.setVisible(false);
@@ -770,9 +785,11 @@ function startGame(scene) {
     positionTimerTextNearName(t, nameText);
     return t;
   });
-  // Lancer tick
+  // Lancer tick si activé
   if (timerEvent) timerEvent.remove(false);
-  timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
+  if (timerEnabled) {
+    timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
+  }
 
   // Textes des noms des joueurs hors de la grille
   playerNameTexts.forEach(t => t && t.destroy());
@@ -835,12 +852,11 @@ function updatePieces() {
     p.sprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
     p.sprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
     // ajuster la taille pour remplir la case moins une marge de bordure
-    const margin = 2; // marge réduite pour plus de surface utile
-    const targetSize = TILE_SIZE - margin;
+    const targetSize = TILE_SIZE; // utiliser toute la case
     p.sprite.setDisplaySize(targetSize, targetSize);
-    if (p.sprite.texture && p.sprite.texture.setFilter) {
-      p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-    }
+    // Forcer une mise à l’échelle entière pour éviter tout flou sous-pixel
+    p.sprite.setOrigin(0.5, 0.5);
+    if (p.sprite.texture && p.sprite.texture.setFilter) p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   }
   if (itemCrates && itemCrates.length) {
     for (const c of itemCrates) {
@@ -1261,7 +1277,7 @@ function formatMs(ms) {
 }
 
 function tickTimer(scene) {
-  if (!gameStarted) return;
+  if (!gameStarted || !timerEnabled) return;
   if (players.length === 0) return;
   const nowIdx = currentPlayer;
   playerTimersMs[nowIdx] = Math.max(0, playerTimersMs[nowIdx] - 250);
