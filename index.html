@@ -90,6 +90,11 @@ let itemUsedThisTurn = false;
 // Portails
 let portalOrange = null; // { x, y, sprite }
 let portalBlue = null;   // { x, y, sprite }
+// Poids d'apparition des objets de caisse
+const ITEM_WEIGHTS = {
+  bobomb: 2,
+  portals: 2,
+};
 // Timers
 let playerTimersMs = [];
 let timerTexts = [];
@@ -1347,9 +1352,16 @@ function maybeRespawnCrate(scene) {
 }
 
 function rollRandomItem() {
-  // Aléatoire entre bobomb et portals
-  const pool = ['bobomb', 'portals'];
-  return pool[Math.floor(Math.random() * pool.length)];
+  // Tirage pondéré selon ITEM_WEIGHTS
+  const entries = Object.entries(ITEM_WEIGHTS);
+  const total = entries.reduce((s, [,w]) => s + (w||0), 0);
+  if (total <= 0) return 'bobomb';
+  let r = Math.random() * total;
+  for (const [key, weight] of entries) {
+    r -= weight;
+    if (r <= 0) return key;
+  }
+  return entries[entries.length-1][0];
 }
 
 function clearHighlights() {
