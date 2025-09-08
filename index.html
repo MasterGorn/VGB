@@ -87,6 +87,9 @@ let lastCrateEventMove = 0; // obsolète (conservé si besoin)
 let roundCounter = 0;
 let lastCrateRound = 0;
 let itemUsedThisTurn = false;
+// Portails
+let portalOrange = null; // { x, y, sprite }
+let portalBlue = null;   // { x, y, sprite }
 // Timers
 let playerTimersMs = [];
 let timerTexts = [];
@@ -219,6 +222,9 @@ function preload() {
   this.load.setPath('public/images/items/');
   this.load.svg('item-crate', 'box-item-mario-kart.svg');
   this.load.image('bobomb', 'bobomb.png');
+  this.load.image('portals', 'portals.png'); // icône inventaire
+  this.load.image('portal-orange', 'portal-orange.png');
+  this.load.image('portal-blue', 'portal-blue.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -614,6 +620,11 @@ function updateRulesSidebar() {
 function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
+  // reset portails
+  if (portalOrange && portalOrange.sprite) { portalOrange.sprite.destroy(); }
+  if (portalBlue && portalBlue.sprite) { portalBlue.sprite.destroy(); }
+  portalOrange = null;
+  portalBlue = null;
   infoText.setText("");
   // cacher widget d’option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -866,6 +877,20 @@ function updatePieces() {
       }
     }
   }
+  // Portails: positionner leurs sprites si présents
+  const scene = infoText && infoText.scene;
+  if (portalOrange && portalOrange.sprite) {
+    portalOrange.sprite.x = GRID_OFFSET_X + portalOrange.x*TILE_SIZE + TILE_SIZE/2;
+    portalOrange.sprite.y = GRID_OFFSET_Y + portalOrange.y*TILE_SIZE + TILE_SIZE/2;
+    portalOrange.sprite.setDisplaySize(TILE_SIZE*0.8, TILE_SIZE*0.8);
+    portalOrange.sprite.setAlpha(1);
+  }
+  if (portalBlue && portalBlue.sprite) {
+    portalBlue.sprite.x = GRID_OFFSET_X + portalBlue.x*TILE_SIZE + TILE_SIZE/2;
+    portalBlue.sprite.y = GRID_OFFSET_Y + portalBlue.y*TILE_SIZE + TILE_SIZE/2;
+    portalBlue.sprite.setDisplaySize(TILE_SIZE*0.8, TILE_SIZE*0.8);
+    portalBlue.sprite.setAlpha(1);
+  }
   // positionner les icônes d'objets à côté des noms
   if (playerItemIcons.length) {
     for (let i=0; i<playerItemIcons.length; i++) {
@@ -885,6 +910,19 @@ function updatePieces() {
   updateRulesSidebar();
 }
 
+function placePortal(color, pos) {
+  const scene = infoText.scene;
+  if (color === 'orange') {
+    if (portalOrange && portalOrange.sprite) portalOrange.sprite.destroy();
+    const spr = scene.add.image(0,0,'portal-orange');
+    portalOrange = { x: pos.x, y: pos.y, sprite: spr };
+  } else {
+    if (portalBlue && portalBlue.sprite) portalBlue.sprite.destroy();
+    const spr = scene.add.image(0,0,'portal-blue');
+    portalBlue = { x: pos.x, y: pos.y, sprite: spr };
+  }
+}
+
 function handleClick(scene, pos) {
   if (!gameStarted) return;
   const clickedPiece = getPieceAt(pos);
@@ -899,6 +937,35 @@ function handleClick(scene, pos) {
       currentItemAction = null; // sortir du mode pose de bombe
       itemUsedThisTurn = true;
       clearHighlights(); // retirer l'indicateur de placement
+      updatePieces();
+      return;
+    }
+    if (currentItemAction.type === 'portal_orange' && currentItemAction.stage === 'orange') {
+      if (getPieceAt(pos)) return; // doit être vide
+      placePortal('orange', pos);
+      currentItemAction.type = 'portal_blue';
+      currentItemAction.stage = 'blue';
+      if (infoText) infoText.setText(`Joueur ${currentPlayer+1}: placez le portail BLEU`);
+      const allowed = getAllEmptyCells();
+      highlightPositions(allowed, 0x90caf9); // bleu pâle
+      updatePieces();
+      return;
+    }
+    if (currentItemAction.type === 'portal_blue' && currentItemAction.stage === 'blue') {
+      if (getPieceAt(pos)) return; // doit être vide
+      placePortal('blue', pos);
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      // consommer l'item portals (FIFO)
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const idx = playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'portals');
+        if (idx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(idx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
       updatePieces();
       return;
     }
@@ -1013,12 +1080,43 @@ function getPieceAt(pos) {
 function getReachablePositions(piece) {
   const positions = [];
   const rule = getRuleForPiece(piece);
-  for (let dir of rule.moves) {
-    for (let step = 1; step <= rule.range; step++) {
-      const nx = piece.x + dir[0] * step;
-      const ny = piece.y + dir[1] * step;
+
+  const isPortalPos = (x, y, color) => {
+    if (color === 'orange' && portalOrange) return portalOrange.x === x && portalOrange.y === y;
+    if (color === 'blue' && portalBlue) return portalBlue.x === x && portalBlue.y === y;
+    return false;
+  };
+
+  const iterateFrom = (startX, startY, dir, maxSteps, usedTeleport) => {
+    for (let step = 1; step <= maxSteps; step++) {
+      const nx = startX + dir[0] * step;
+      const ny = startY + dir[1] * step;
       if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) break;
       const occ = getPieceAt({ x: nx, y: ny });
+
+      // Portail: si on touche ORANGE et BLUE existe, on permet de poursuivre depuis BLUE
+      if (!usedTeleport && isPortalPos(nx, ny, 'orange') && portalBlue) {
+        // On peut s'arrêter sur orange si vide
+        if (!occ) positions.push({ x: nx, y: ny });
+        // Calculer pas restants après avoir atteint orange
+        const remaining = maxSteps - step;
+        // Si la case BLEUE est occupée
+        const occBlue = getPieceAt({ x: portalBlue.x, y: portalBlue.y });
+        if (occBlue) {
+          // Si ennemi: on peut capturer BLEU puis on s'arrête
+          if (occBlue.player !== piece.player) positions.push({ x: portalBlue.x, y: portalBlue.y });
+          break;
+        } else {
+          // Ajouter la case BLEUE comme atteignable et poursuivre au-delà
+          positions.push({ x: portalBlue.x, y: portalBlue.y });
+          if (remaining > 0) {
+            // continuer depuis BLEU dans la même direction
+            iterateFrom(portalBlue.x, portalBlue.y, dir, remaining, true);
+          }
+          break;
+        }
+      }
+
       if (!occ) {
         positions.push({ x: nx, y: ny });
         continue;
@@ -1029,6 +1127,10 @@ function getReachablePositions(piece) {
       }
       break;
     }
+  };
+
+  for (let dir of rule.moves) {
+    iterateFrom(piece.x, piece.y, dir, rule.range, false);
   }
   return positions;
 }
@@ -1103,7 +1205,8 @@ function giveItemToPlayer(playerId, itemKey) {
   // créer une icône (empilement jusqu'à 3 max)
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
   if (playerItemIcons[playerId].length >= 3) return; // limite 3 objets
-  const icon = scene.add.image(0,0,itemKey).setDisplaySize(18,18).setInteractive();
+  const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
+  const icon = scene.add.image(0,0,textureKey).setDisplaySize(18,18).setInteractive();
   icon.on('pointerdown', () => tryUseItem(playerId));
   playerItemIcons[playerId].push({ sprite: icon, item: itemKey });
   updatePieces();
@@ -1124,6 +1227,12 @@ function tryUseItem(playerId) {
     // Highlight des cases possibles
     const allowed = getBombPlacablePositions(playerId);
     highlightPositions(allowed, 0xff8a80); // rouge/rosé
+  }
+  if (icon.item === 'portals') {
+    currentItemAction = { playerId, type: 'portal_orange', active: true, stage: 'orange' };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: placez le portail ORANGE`);
+    const allowed = getAllEmptyCells();
+    highlightPositions(allowed, 0xffcc80); // orange pâle
   }
 }
 
@@ -1152,6 +1261,16 @@ function getBombPlacablePositions(playerId) {
 function canPlaceBombAt(pos, playerId) {
   const allowed = getBombPlacablePositions(playerId);
   return allowed.some(p => p.x === pos.x && p.y === pos.y);
+}
+
+function getAllEmptyCells() {
+  const cells = [];
+  for (let y=0; y<GRID_SIZE; y++) {
+    for (let x=0; x<GRID_SIZE; x++) {
+      if (!getPieceAt({x,y})) cells.push({x,y});
+    }
+  }
+  return cells;
 }
 
 function detonateBombAt(pos) {
@@ -1228,8 +1347,9 @@ function maybeRespawnCrate(scene) {
 }
 
 function rollRandomItem() {
-  // Pour l’instant, toujours 'bobomb'. Ajoute d’autres items ici plus tard.
-  return 'bobomb';
+  // Aléatoire entre bobomb et portals
+  const pool = ['bobomb', 'portals'];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function clearHighlights() {
