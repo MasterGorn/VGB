@@ -942,6 +942,14 @@ function handleClick(scene, pos) {
       currentItemAction = null; // sortir du mode pose de bombe
       itemUsedThisTurn = true;
       clearHighlights(); // retirer l'indicateur de placement
+      // consommer l'item bombe sélectionné
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (currentItemAction && typeof currentItemAction.inventoryIndex === 'number') ? currentItemAction.inventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'bobomb');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
       updatePieces();
       return;
     }
@@ -963,11 +971,11 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      // consommer l'item portals (FIFO)
+      // consommer l'item portals sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
-        const idx = playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'portals');
-        if (idx >= 0) {
-          const used = playerItemIcons[currentPlayer].splice(idx, 1)[0];
+        const useIdx = (currentItemAction && typeof currentItemAction.inventoryIndex === 'number') ? currentItemAction.inventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'portals');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
           if (used && used.sprite) used.sprite.destroy();
         }
       }
@@ -1212,29 +1220,34 @@ function giveItemToPlayer(playerId, itemKey) {
   if (playerItemIcons[playerId].length >= 3) return; // limite 3 objets
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(0,0,textureKey).setDisplaySize(18,18).setInteractive();
-  icon.on('pointerdown', () => tryUseItem(playerId));
+  icon.on('pointerdown', () => tryUseItem(playerId, icon));
   playerItemIcons[playerId].push({ sprite: icon, item: itemKey });
   updatePieces();
 }
 
-function tryUseItem(playerId) {
+function tryUseItem(playerId, clickedIconSprite) {
   if (!gameStarted) return;
   if (playerId !== currentPlayer) return; // utiliser à son tour
   if (itemUsedThisTurn) return; // un seul objet par tour
   const arr = playerItemIcons[playerId] || [];
   if (arr.length === 0) return;
-  const icon = arr[0];
+  let idx = 0;
+  if (clickedIconSprite) {
+    const found = arr.findIndex(e => e && e.sprite === clickedIconSprite);
+    if (found >= 0) idx = found;
+  }
+  const icon = arr[idx];
   if (!icon || !icon.item) return;
   if (icon.item === 'bobomb') {
     // Activer mode pose de bombe: prochain clic sur une case pose et résout l'effet
-    currentItemAction = { playerId, type: 'bomb', active: true };
+    currentItemAction = { playerId, type: 'bomb', active: true, inventoryIndex: idx };
     if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour poser la bombe`);
     // Highlight des cases possibles
     const allowed = getBombPlacablePositions(playerId);
     highlightPositions(allowed, 0xff8a80); // rouge/rosé
   }
   if (icon.item === 'portals') {
-    currentItemAction = { playerId, type: 'portal_orange', active: true, stage: 'orange' };
+    currentItemAction = { playerId, type: 'portal_orange', active: true, stage: 'orange', inventoryIndex: idx };
     if (infoText) infoText.setText(`Joueur ${playerId+1}: placez le portail ORANGE`);
     const allowed = getAllEmptyCells();
     highlightPositions(allowed, 0xffcc80); // orange pâle
