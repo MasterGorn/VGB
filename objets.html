@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Chesstendo - Les objets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body { margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111; }
+  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); overflow:visible; }
+  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:relative; height:64px; }
+  nav a { color:#111; text-decoration:none; padding:6px 10px; border-radius:6px; }
+  main { max-width:1200px; margin:0 auto; padding:144px 16px 32px; }
+  h1 { margin:0 0 16px; font:24px Arial, sans-serif; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+  .card { background:#fff; border:1px solid #e5e5e5; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  .card h2 { margin:0 0 8px; font:18px Arial, sans-serif; }
+  .card img { width:96px; height:96px; object-fit:contain; image-rendering:auto; display:block; margin:8px auto; }
+  .row { display:flex; gap:12px; align-items:flex-start; }
+  .muted { color:#555; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef; color:#223; font:12px/18px Arial; margin-left:6px; }
+  .note { margin-top:24px; color:#444; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <nav style="display:flex; gap:14px; align-items:center;">
+      <a href="index.html">Jouer</a>
+      <a href="pieces.html">Les pièces</a>
+      <a href="regles.html">Les règles</a>
+      <a href="objets.html" style="background:#dde8ff;">Les objets</a>
+      <a href="credits.html">Crédits</a>
+    </nav>
+    <a href="index.html" aria-label="Accueil" style="position:absolute; left:50%; top:0; transform:translateX(-50%); display:inline-flex; align-items:center;">
+      <img src="public/images/site/logo-video-games-battle-256.png" alt="Video Games Battle" style="height:128px; width:128px; object-fit:contain; display:block;" />
+    </a>
+    <div>
+      <a href="login.html">Se connecter</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h1>Objets disponibles</h1>
+  <div class="note">
+    Règles communes:
+    <ul>
+      <li>Chaque joueur peut conserver jusqu’à <strong>3 objets</strong> en réserve.</li>
+      <li>On ne peut utiliser <strong>qu’un objet par tour</strong>.</li>
+      <li>Les pondérations peuvent évoluer au fil des équilibrages.</li>
+    </ul>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Caisse d'objets</h2>
+      <img src="public/images/items/box-item-mario-kart.svg" alt="Caisse d'objets" />
+      <div class="muted">Réapparaît toutes les 3 manches complètes.</div>
+      <div>Ramassez-la en vous arrêtant dessus pour obtenir un objet aléatoire selon une pondération (poids).</div>
+    </div>
+
+    <div class="card">
+      <h2>Bob-omb <span class="pill">Poids: 4</span></h2>
+      <img src="public/images/items/bobomb.png" alt="Bob-omb" />
+      <div>À votre tour, placez-la sur une case située à une distance de Manhattan ≤ 2 de l’une de vos pièces.</div>
+      <div>Explose en 3×3 (case visée + 8 adjacentes) et détruit toutes les pièces dans la zone. Joue un son d’explosion.</div>
+    </div>
+
+    <div class="card">
+      <h2>Portails <span class="pill">Poids: 4</span></h2>
+      <img src="public/images/items/portals.png" alt="Portails" />
+      <div>Placez d’abord un portail ORANGE sur une case vide, puis un portail BLEU sur une autre case vide.</div>
+      <div>En entrant par ORANGE, la pièce ressort par BLEU et peut poursuivre son mouvement dans la même direction. Les portails restent en place jusqu’à la nouvelle partie.</div>
+      <div class="muted">Icône d’inventaire: portals.png — Portails posés: portal-orange.png / portal-blue.png</div>
+    </div>
+
+    <div class="card">
+      <h2>Éclair <span class="pill">Poids: 1</span></h2>
+      <img src="public/images/items/Lightning.png" alt="Éclair" />
+      <div>Arrive avec <strong>5 charges</strong>. À chaque manche complète, le compteur diminue de 1. Utilisable quand il atteint 0.</div>
+      <div>Effet: flash global, détruit toutes les pièces sur les cases blanches (y compris les vôtres), sauf celles protégées par l’étoile.</div>
+    </div>
+
+    <div class="card">
+      <h2>Étoile <span class="pill">Poids: 2</span></h2>
+      <img src="public/images/items/star.png" alt="Étoile" />
+      <div>Active une <strong>invincibilité</strong> pour un tour complet (jusqu’à ce que chaque joueur ait joué).</div>
+      <div>Vos pièces ne peuvent pas être capturées et sont immunisées contre l’Éclair pendant la durée. Un fond arc‑en‑ciel apparaît sous vos pièces. Joue un son spécifique.</div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
+
+
