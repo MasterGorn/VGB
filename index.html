@@ -5,7 +5,7 @@
 <title>Chesstendo - Draft + Plateau</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
 </head>
-<body>
+<body style="margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111;">
 <div id="header-root"></div>
 <div id="app" style="display:flex; gap:16px; align-items:flex-start; padding-top:96px;">
   <div id="game-root"></div>
@@ -138,24 +138,24 @@ const kings = {
 // catalogues par faction (draftables)
 const factionCatalogs = {
   nintendo: {
-    link: { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
-    mario: { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-    zelda: { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+    link: { cost: 5, tier: 2, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // moyen
+    mario: { cost: 3, tier: 1, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // faible
+    zelda: { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
   },
   xbox: {
-    'masterchief': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
-    'marcus-fenix': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-    'joanna-dark': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+    'masterchief': { cost: 5, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // faible
+    'marcus-fenix': { cost: 3, tier: 2, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // moyen
+    'joanna-dark': { cost: 7, tier: 4, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // unique
   },
   sega: {
-    'sonic': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
-    'ryo': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-    'joe-musashi': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+    'sonic': { cost: 5, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // faible
+    'ryo': { cost: 3, tier: 2, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // moyen
+    'joe-musashi': { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
   },
   playstation: {
-    'nathan-drake': { cost: 5, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
-    'kratos': { cost: 3, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-    'astro-bot': { cost: 7, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }
+    'nathan-drake': { cost: 5, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // faible
+    'kratos': { cost: 3, tier: 2, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // moyen
+    'astro-bot': { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
   }
 };
 
@@ -765,11 +765,29 @@ function startGame(scene) {
   });
 
   // 2) Placer les autres pièces en partant du bord propre à chaque joueur
+  // Trier par force: faible < moyen < fort < unique
+  const getPieceTier = (charKey, faction) => {
+    const catalog = getCatalogForFaction(faction);
+    const entry = catalog[charKey];
+    if (!entry) return 1; // par défaut faible
+    
+    // Utiliser la propriété tier définie dans le catalogue
+    return entry.tier || 1; // 1=faible, 2=moyen, 3=fort, 4=unique
+  };
+  
   players.forEach((p,i) => {
     const side = getPlayerSide(i);
     const slots = getBlockSlotsForSide(side);
+    
+    // Trier l'armée par force (plus fort = plus proche du roi)
+    const sortedArmy = [...p.army].sort((a, b) => {
+      const tierA = getPieceTier(a, p.faction);
+      const tierB = getPieceTier(b, p.faction);
+      return tierB - tierA; // décroissant: fort vers faible
+    });
+    
     let si = 0;
-    p.army.forEach((charKey) => {
+    sortedArmy.forEach((charKey) => {
       // avancer jusqu'à trouver un slot libre
       while (si < slots.length && getPieceAt(slots[si])) si++;
       if (si >= slots.length) return; // plus de place dans le bloc
@@ -932,6 +950,9 @@ function updatePieces() {
       }
     }
   }
+  
+  // Nettoyer les compteurs orphelins (compteurs sans sprite associé)
+  cleanupOrphanedCounters();
   updateRulesSidebar();
 }
 
@@ -1013,6 +1034,21 @@ function clearStarOverlays() {
   starTileOverlays.clear();
 }
 
+function cleanupOrphanedCounters() {
+  // Nettoyer les compteurs de lightning orphelins (sans sprite associé)
+  for (let i=0; i<playerItemIcons.length; i++) {
+    const entries = playerItemIcons[i] || [];
+    for (let k=0; k<entries.length; k++) {
+      const e = entries[k];
+      if (e && e.counterText && (!e.sprite || e.sprite.destroyed)) {
+        // Le sprite n'existe plus ou est détruit, supprimer le compteur
+        e.counterText.destroy();
+        e.counterText = null;
+      }
+    }
+  }
+}
+
 function placePortal(color, pos) {
   const scene = infoText.scene;
   if (color === 'orange') {
@@ -1036,13 +1072,14 @@ function handleClick(scene, pos) {
       const canPlace = canPlaceBombAt(pos, currentPlayer);
       if (!canPlace) return;
       detonateBombAt(pos);
+      const bombInventoryIndex = currentItemAction.inventoryIndex;
       currentItemAction.active = false;
       currentItemAction = null; // sortir du mode pose de bombe
       itemUsedThisTurn = true;
       clearHighlights(); // retirer l'indicateur de placement
       // consommer l'item bombe sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
-        const useIdx = (currentItemAction && typeof currentItemAction.inventoryIndex === 'number') ? currentItemAction.inventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'bobomb');
+        const useIdx = (typeof bombInventoryIndex === 'number') ? bombInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'bobomb');
         if (useIdx >= 0) {
           const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
           if (used && used.sprite) used.sprite.destroy();
@@ -1250,8 +1287,10 @@ function getReachablePositions(piece) {
         // Si la case BLEUE est occupée
         const occBlue = getPieceAt({ x: portalBlue.x, y: portalBlue.y });
         if (occBlue) {
-          // Si ennemi: on peut capturer BLEU puis on s'arrête
-          if (occBlue.player !== piece.player) positions.push({ x: portalBlue.x, y: portalBlue.y });
+        // Si ennemi: on peut capturer BLEU puis on s'arrête (si pas protégé par étoile)
+        if (occBlue.player !== piece.player && !(starInvincible && starInvincible.playerId === occBlue.player && starInvincible.untilRound > roundCounter)) {
+          positions.push({ x: portalBlue.x, y: portalBlue.y });
+        }
           break;
         } else {
           // Ajouter la case BLEUE comme atteignable et poursuivre au-delà
@@ -1270,7 +1309,10 @@ function getReachablePositions(piece) {
       }
       // Case occupée: on peut capturer un ennemi mais on s'arrête ensuite
       if (occ.player !== piece.player) {
-        positions.push({ x: nx, y: ny });
+        // Vérifier si la pièce cible est protégée par l'étoile
+        if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilRound > roundCounter)) {
+          positions.push({ x: nx, y: ny });
+        }
       }
       break;
     }
@@ -1438,7 +1480,7 @@ function tryUseItem(playerId, clickedIconSprite) {
     starInvincible = { playerId, untilRound: currentRound + 1 };
     startStarBlink(playerId);
     try {
-      // Arrêter un éventuel son précédent et jouer celui de l’étoile
+      // Arrêter un éventuel son précédent et jouer celui de l'étoile
       const s = infoText.scene.sound;
       if (s && s.stopAll) s.stopAll();
       s.play('star', { volume: 0.7, loop: true });
@@ -1451,6 +1493,35 @@ function tryUseItem(playerId, clickedIconSprite) {
     }
     itemUsedThisTurn = true;
     updatePieces();
+    // Fin de tour après usage de l'étoile
+    moveCount++;
+    if (moveCount % 5 === 0) rotateAds();
+    updateAdInfo();
+    let oldRound = roundCounter;
+    if (currentPlayer === players.length - 1) { roundCounter++; }
+    currentPlayer = (currentPlayer+1) % players.length;
+    if (roundCounter !== oldRound) {
+      decrementLightningCharges();
+      // Fin d'effet étoile si nécessaire
+      if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilRound <= roundCounter) {
+        stopStarBlink(starInvincible.playerId);
+        clearStarOverlays();
+        try {
+          const s = infoText.scene.sound;
+          if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
+        } catch(e) {}
+        starInvincible = { playerId: -1, untilRound: -1 };
+      }
+    }
+    itemUsedThisTurn = false;
+    maybeRespawnCrate(infoText.scene);
+    updateTurnUI();
+    // repositionner timers si présents
+    if (timerTexts && playerNameTexts) {
+      for (let i=0;i<timerTexts.length;i++) {
+        if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+      }
+    }
     return;
   }
 }
@@ -1518,6 +1589,10 @@ function detonateBombAt(pos) {
     if (tx < 0 || ty < 0 || tx >= GRID_SIZE || ty >= GRID_SIZE) continue;
     const victim = getPieceAt({ x: tx, y: ty });
     if (victim) {
+      // Vérifier si la pièce est protégée par l'étoile
+      if (starInvincible && starInvincible.playerId === victim.player && starInvincible.untilRound > roundCounter) {
+        continue; // Pièce immunisée, passer à la suivante
+      }
       const wasKing = victim.type === 'king';
       victim.sprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
@@ -1526,11 +1601,7 @@ function detonateBombAt(pos) {
       }
     }
   }
-  // consommer le premier item du joueur courant (FIFO)
-  if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
-    const used = playerItemIcons[currentPlayer].shift();
-    if (used && used.sprite) used.sprite.destroy();
-  }
+  // L'item bombe est déjà consommé dans handleClick, pas besoin de le refaire ici
   updatePieces();
   // Vérifier condition de fin
   const remainingKings = pieces.filter(pp => pp.type === 'king').length;
