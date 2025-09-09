@@ -6,16 +6,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:," />
 <style>
-  body { margin:0; font:16px Arial; color:#111; }
-  .container { max-width:1000px; margin:0 auto; padding:16px; }
-  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); border-bottom:1px solid #e5e5e5; }
+  body { margin:0; font:16px Arial; color:#111; background:#f7f7f7; }
+  .container { max-width:1200px; margin:0 auto; padding:16px; }
+  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); }
   header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
   header a { color:#111; text-decoration:none; }
   nav a { font:14px Arial; padding:6px 10px; border-radius:6px; }
-  h1 { font-size:22px; margin:18px 0; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:14px; }
-  .card { border:1px solid #e5e5e5; border-radius:8px; padding:12px; background:#fff; }
-  .card h3 { margin:8px 0 6px; font-size:16px; }
+  h1 { font-size:24px; margin:18px 0; }
+  h2 { font-size:20px; margin:22px 4px 10px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+  .card { border:1px solid #e5e5e5; border-radius:10px; padding:14px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  .card h3 { margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .card img { width:96px; height:96px; object-fit:contain; image-rendering:auto; display:block; margin:8px auto; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef; color:#223; font:12px/18px Arial; }
+  .pill.tier { color:#222; }
+  .tier-king { background:#d9d9d9; }
+  .tier-low { background:#ffeb3b; }
+  .tier-mid { background:#ffb74d; }
+  .tier-high { background:#ef5350; color:#fff; }
+  .tier-unique { background:#9c27b0; color:#fff; }
 </style>
 </head>
 <body>
@@ -35,12 +44,102 @@
 </header>
 <main class="container" style="padding-top:144px;">
   <h1>Les pièces</h1>
-  <p>Liste des pièces par faction (exemples; mettez vos visuels dans <code>public/images/&lt;faction&gt;/characters/</code>).</p>
+  <p>Liste des pièces par faction. Les coûts et paliers de puissance sont indicatifs.</p>
+
+  <h2>Nintendo</h2>
   <div class="grid">
-    <div class="card"><h3>Nintendo</h3><div>Mario, Link, Zelda…</div></div>
-    <div class="card"><h3>SEGA</h3><div>Sonic, Ryo, Joe Musashi…</div></div>
-    <div class="card"><h3>PlayStation</h3><div>Nathan Drake, Kratos, Astro Bot…</div></div>
-    <div class="card"><h3>Xbox</h3><div>Masterchief, Marcus Fenix, Joanna Dark…</div></div>
+    <div class="card">
+      <h3>Roi Nintendo <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
+      <img src="public/images/nintendo/characters/king.png" alt="Roi Nintendo" />
+      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
+    </div>
+    <div class="card">
+      <h3>Mario <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 3</span></h3>
+      <img src="public/images/nintendo/characters/mario.png" alt="Mario" />
+      <div>Déplacements diagonaux courts (portée 2).</div>
+    </div>
+    <div class="card">
+      <h3>Link <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 5</span></h3>
+      <img src="public/images/nintendo/characters/link.png" alt="Link" />
+      <div>Déplacements orthogonaux (portée 3).</div>
+    </div>
+    <div class="card">
+      <h3>Zelda <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
+      <img src="public/images/nintendo/characters/zelda.png" alt="Zelda" />
+      <div>Déplacements dans toutes les directions (portée 8).</div>
+    </div>
+  </div>
+
+  <h2>SEGA</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Roi SEGA <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
+      <img src="public/images/sega/characters/king.png" alt="Roi SEGA" />
+      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
+    </div>
+    <div class="card">
+      <h3>Sonic <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
+      <img src="public/images/sega/characters/sonic.png" alt="Sonic" />
+      <div>Déplacements orthogonaux (portée 3).</div>
+    </div>
+    <div class="card">
+      <h3>Ryo <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
+      <img src="public/images/sega/characters/ryo.png" alt="Ryo" />
+      <div>Déplacements diagonaux courts (portée 2).</div>
+    </div>
+    <div class="card">
+      <h3>Joe Musashi <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
+      <img src="public/images/sega/characters/joe-musashi.png" alt="Joe Musashi" />
+      <div>Déplacements dans toutes les directions (portée 8).</div>
+    </div>
+  </div>
+
+  <h2>PlayStation</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Roi PlayStation <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
+      <img src="public/images/playstation/characters/king.png" alt="Roi PlayStation" />
+      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
+    </div>
+    <div class="card">
+      <h3>Nathan Drake <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
+      <img src="public/images/playstation/characters/nathan-drake.png" alt="Nathan Drake" />
+      <div>Déplacements orthogonaux (portée 3).</div>
+    </div>
+    <div class="card">
+      <h3>Kratos <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
+      <img src="public/images/playstation/characters/kratos.png" alt="Kratos" />
+      <div>Déplacements diagonaux courts (portée 2).</div>
+    </div>
+    <div class="card">
+      <h3>Astro Bot <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
+      <img src="public/images/playstation/characters/astro-bot.png" alt="Astro Bot" />
+      <div>Déplacements dans toutes les directions (portée 8).</div>
+    </div>
+  </div>
+
+  <h2>Xbox</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Roi Xbox <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
+      <img src="public/images/xbox/characters/king.png" alt="Roi Xbox" />
+      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
+    </div>
+    <div class="card">
+      <h3>Masterchief <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
+      <img src="public/images/xbox/characters/masterchief.png" alt="Masterchief" />
+      <div>Déplacements orthogonaux (portée 3).</div>
+    </div>
+    <div class="card">
+      <h3>Marcus Fenix <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
+      <img src="public/images/xbox/characters/marcus-fenix.png" alt="Marcus Fenix" />
+      <div>Déplacements diagonaux courts (portée 2).</div>
+    </div>
+    <div class="card">
+      <h3>Joanna Dark <span class="pill tier tier-unique">Unique</span> <span class="pill">Coût: 7</span></h3>
+      <img src="public/images/xbox/characters/joanna-dark.png" alt="Joanna Dark" />
+      <div>Déplacements dans toutes les directions (portée 8).</div>
+    </div>
   </div>
 </main>
 </body>
