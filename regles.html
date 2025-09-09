@@ -17,20 +17,7 @@
 </style>
 </head>
 <body>
-<header style="overflow:visible; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); position:sticky; top:0; z-index:5000;">
-  <div class="inner" style="position:relative; height:64px; display:flex; align-items:center; justify-content:space-between;">
-    <nav>
-      <a href="index.html">Jouer</a>
-      <a href="pieces.html">Les pièces</a>
-      <a href="regles.html">Les règles</a>
-      <a href="credits.html">Crédits</a>
-    </nav>
-    <a href="index.html" aria-label="Accueil" style="position:absolute; left:50%; top:64px; transform:translateX(-50%); display:inline-flex; align-items:center;">
-      <img src="public/images/site/logo-video-games-battle-256.png" alt="Video Games Battle" style="height:128px; width:128px; object-fit:contain; display:block;" />
-    </a>
-    <a href="login.html">Se connecter</a>
-  </div>
-</header>
+<div id="header-root"></div>
 <main class="container" style="padding-top:144px;">
   <h1>Les règles</h1>
   <ul>
@@ -42,6 +29,8 @@
     <li>Timers: temps par joueur selon la taille de la grille.</li>
   </ul>
 </main>
+<script src="public/js/header.js"></script>
+<script>VGBHeader.injectHeader('regles');</script>
 </body>
 </html>
 
