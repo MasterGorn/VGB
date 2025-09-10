@@ -79,7 +79,7 @@ let itemUsedThisTurn = false;
 let portalOrange = null; // { x, y, sprite }
 let portalBlue = null;   // { x, y, sprite }
 // Étoile d'invincibilité
-let starInvincible = { playerId: -1, untilRound: -1 };
+let starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
 let starPhase = 0; // pour l’effet arc-en-ciel
 let starTileOverlays = new Map(); // key "x,y" -> Image overlay arc-en-ciel
 // Poids d'apparition des objets de caisse
@@ -975,8 +975,11 @@ function updatePieces() {
 }
 
 function startStarBlink(playerId) {
-  // Initialiser la phase de l’effet. Le rendu est géré dans updatePieces().
+  // Initialiser la phase de l'effet et s'assurer que la texture arc-en-ciel existe
   starPhase = 0;
+  if (infoText && infoText.scene) {
+    ensureRainbowTileTexture(infoText.scene);
+  }
 }
 
 function stopStarBlink(playerId) {
@@ -1014,6 +1017,11 @@ function updateStarOverlays(scene) {
   if (!starInvincible || starInvincible.playerId < 0) { clearStarOverlays(); return; }
   const key = ensureRainbowTileTexture(scene);
   const desired = new Set();
+  
+  // Animation de l'effet arc-en-ciel
+  starPhase += 0.1;
+  const hue = (starPhase * 50) % 360;
+  
   for (const p of pieces) {
     if (p.player === starInvincible.playerId) {
       const k = p.x + ',' + p.y;
@@ -1033,6 +1041,8 @@ function updateStarOverlays(scene) {
         img.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
         img.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
         img.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
+        // Appliquer l'effet de couleur arc-en-ciel
+        img.setTint(Phaser.Display.Color.HSVToRGB(hue/360, 0.8, 1).color);
       }
     }
   }
@@ -1155,7 +1165,7 @@ function handleClick(scene, pos) {
       const target = getPieceAt(pos);
       if (target && target.player !== selectedPiece.player) {
         // Protection étoile: impossible de capturer si la cible est protégée
-        if (starInvincible && starInvincible.playerId === target.player && starInvincible.untilRound > roundCounter) {
+        if (starInvincible && starInvincible.playerId === target.player && starInvincible.untilPlayerTurn) {
           // annuler la capture
           return;
         }
@@ -1201,17 +1211,7 @@ function handleClick(scene, pos) {
         currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
         if (roundCounter !== oldRound) {
           decrementLightningCharges();
-          // Fin d’effet étoile si nécessaire
-          if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilRound <= roundCounter) {
-            stopStarBlink(starInvincible.playerId);
-            clearStarOverlays();
-            // arrêter le son étoile
-            try {
-              const s = infoText.scene.sound;
-              if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
-            } catch(e) {}
-            starInvincible = { playerId: -1, untilRound: -1 };
-          }
+          // L'effet étoile est maintenant géré dans updateTurnUI()
         }
         itemUsedThisTurn = false;
         maybeRespawnCrate(scene);
@@ -1242,16 +1242,7 @@ function handleClick(scene, pos) {
       // décrémenter les charges uniquement quand un round complet vient de s'achever
       if (roundCounter !== oldRound) {
         decrementLightningCharges();
-        // Fin d’effet étoile si nécessaire
-        if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilRound <= roundCounter) {
-          stopStarBlink(starInvincible.playerId);
-          clearStarOverlays();
-          try {
-            const s = infoText.scene.sound;
-            if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
-          } catch(e) {}
-          starInvincible = { playerId: -1, untilRound: -1 };
-        }
+        // L'effet étoile est maintenant géré dans updateTurnUI()
       }
       itemUsedThisTurn = false;
       maybeRespawnCrate(scene);
@@ -1306,7 +1297,7 @@ function getReachablePositions(piece) {
         const occBlue = getPieceAt({ x: portalBlue.x, y: portalBlue.y });
         if (occBlue) {
         // Si ennemi: on peut capturer BLEU puis on s'arrête (si pas protégé par étoile)
-        if (occBlue.player !== piece.player && !(starInvincible && starInvincible.playerId === occBlue.player && starInvincible.untilRound > roundCounter)) {
+        if (occBlue.player !== piece.player && !(starInvincible && starInvincible.playerId === occBlue.player && starInvincible.untilPlayerTurn)) {
           positions.push({ x: portalBlue.x, y: portalBlue.y });
         }
           break;
@@ -1328,7 +1319,7 @@ function getReachablePositions(piece) {
       // Case occupée: on peut capturer un ennemi mais on s'arrête ensuite
       if (occ.player !== piece.player) {
         // Vérifier si la pièce cible est protégée par l'étoile
-        if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilRound > roundCounter)) {
+        if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn)) {
           positions.push({ x: nx, y: ny });
         }
       }
@@ -1473,16 +1464,7 @@ function tryUseItem(playerId, clickedIconSprite) {
     currentPlayer = (currentPlayer+1) % players.length;
     itemUsedThisTurn = false;
     decrementLightningCharges();
-    // Fin d’effet étoile si nécessaire (si un round vient d’avancer au passage ci-dessus)
-    if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilRound <= roundCounter) {
-      stopStarBlink(starInvincible.playerId);
-      clearStarOverlays();
-      try {
-        const s = infoText.scene.sound;
-        if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
-      } catch(e) {}
-      starInvincible = { playerId: -1, untilRound: -1 };
-    }
+    // L'effet étoile est maintenant géré dans updateTurnUI()
     maybeRespawnCrate(infoText.scene);
     updateTurnUI();
     // repositionner timers si présents
@@ -1493,9 +1475,8 @@ function tryUseItem(playerId, clickedIconSprite) {
     }
   }
   if (icon.item === 'star') {
-    // Activer invincibilité pour un round complet
-    const currentRound = roundCounter;
-    starInvincible = { playerId, untilRound: currentRound + 1 };
+    // Activer invincibilité jusqu'à ce que le joueur rejoue
+    starInvincible = { playerId, untilRound: -1, untilPlayerTurn: true };
     startStarBlink(playerId);
     try {
       // Arrêter un éventuel son précédent et jouer celui de l'étoile
@@ -1503,6 +1484,8 @@ function tryUseItem(playerId, clickedIconSprite) {
       if (s && s.stopAll) s.stopAll();
       s.play('star', { volume: 0.7, loop: true });
     } catch(e) {}
+    // Forcer la mise à jour immédiate de l'effet visuel
+    updatePieces();
     // Consommer l'item sélectionné
     const useIdx = idx;
     if (playerItemIcons[playerId] && playerItemIcons[playerId].length && useIdx >= 0) {
@@ -1520,18 +1503,10 @@ function tryUseItem(playerId, clickedIconSprite) {
     currentPlayer = (currentPlayer+1) % players.length;
     if (roundCounter !== oldRound) {
       decrementLightningCharges();
-      // Fin d'effet étoile si nécessaire
-      if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilRound <= roundCounter) {
-        stopStarBlink(starInvincible.playerId);
-        clearStarOverlays();
-        try {
-          const s = infoText.scene.sound;
-          if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
-        } catch(e) {}
-        starInvincible = { playerId: -1, untilRound: -1 };
-      }
+      // L'effet étoile est maintenant géré dans updateTurnUI()
     }
     itemUsedThisTurn = false;
+    decrementLightningCharges();
     maybeRespawnCrate(infoText.scene);
     updateTurnUI();
     // repositionner timers si présents
@@ -1540,7 +1515,6 @@ function tryUseItem(playerId, clickedIconSprite) {
         if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
       }
     }
-    return;
   }
 }
 
@@ -1608,7 +1582,7 @@ function detonateBombAt(pos) {
     const victim = getPieceAt({ x: tx, y: ty });
     if (victim) {
       // Vérifier si la pièce est protégée par l'étoile
-      if (starInvincible && starInvincible.playerId === victim.player && starInvincible.untilRound > roundCounter) {
+      if (starInvincible && starInvincible.playerId === victim.player && starInvincible.untilPlayerTurn) {
         continue; // Pièce immunisée, passer à la suivante
       }
       const wasKing = victim.type === 'king';
@@ -1683,8 +1657,24 @@ function highlightPositions(positions, color = 0xfff59d) {
   }
 }
 
+function checkStarEffect() {
+  // Vérifier si l'effet de l'étoile doit se terminer
+  if (starInvincible && starInvincible.playerId >= 0 && starInvincible.untilPlayerTurn && starInvincible.playerId === currentPlayer) {
+    // L'étoile se termine car le joueur qui l'a utilisée rejoue
+    stopStarBlink(starInvincible.playerId);
+    clearStarOverlays();
+    try {
+      const s = infoText.scene.sound;
+      if (s && s.stopByKey) s.stopByKey('star'); else if (s && s.stopAll) s.stopAll();
+    } catch(e) {}
+    starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
+  }
+}
+
 function updateTurnUI() {
   const mid = getKingCenterIndex(GRID_SIZE);
+  // Vérifier si l'effet de l'étoile doit se terminer
+  checkStarEffect();
   // Positionner l'icône de tour à côté du nom du joueur actif
   if (turnIcon && playerNameTexts[currentPlayer]) {
     const t = playerNameTexts[currentPlayer];
@@ -1741,7 +1731,7 @@ function isWhiteSquare(x, y) {
 
 function applyLightningKill() {
   // Supprimer toutes les pièces sur cases blanches (y compris celles du lanceur)
-  const victims = pieces.filter(p => isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilRound > roundCounter));
+  const victims = pieces.filter(p => isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn));
   let kingDied = false;
   for (const v of victims) {
     if (v && v.sprite) v.sprite.destroy();
@@ -1751,7 +1741,7 @@ function applyLightningKill() {
     }
   }
   // Conserver les pièces protégées par l'étoile même si elles sont sur case blanche
-  pieces = pieces.filter(p => !(isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilRound > roundCounter)));
+  pieces = pieces.filter(p => !(isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn)));
   updatePieces();
   if (kingDied) {
     const remainingKings = pieces.filter(pp => pp.type === 'king').length;
