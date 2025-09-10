@@ -932,12 +932,12 @@ function updatePieces() {
             // Positionnement selon le côté du joueur
             if (side === 'top') {
               // Joueur du haut : objets à droite du nom, alignés horizontalement
-              e.sprite.x = nameText.x + nameText.displayWidth/2 + 20 + k*25;
-              e.sprite.y = nameText.y;
+              e.sprite.x = nameText.x + 38 + k*25;
+              e.sprite.y = nameText.y - 20;
             } else if (side === 'bottom') {
               // Joueur du bas : objets en dessous du nom, alignés horizontalement
-              e.sprite.x = nameText.x - nameText.displayWidth/2 + 20 + k*25;
-              e.sprite.y = nameText.y + nameText.displayHeight + 15;
+              e.sprite.x = nameText.x + 38 + k*25;
+              e.sprite.y = nameText.y + 20;
             } else if (side === 'left') {
               // Joueur de gauche : objets à gauche du nom, alignés verticalement
               e.sprite.x = nameText.x - nameText.displayWidth - 30;
@@ -1413,7 +1413,7 @@ function giveItemToPlayer(playerId, itemKey) {
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
   if (playerItemIcons[playerId].length >= 3) return; // limite 3 objets
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
-  const icon = scene.add.image(0,0,textureKey).setDisplaySize(18,18).setInteractive();
+  const icon = scene.add.image(0,0,textureKey).setDisplaySize(24,24).setInteractive();
   icon.on('pointerdown', () => tryUseItem(playerId, icon));
   // Pour lightning: ajouter compteur 4 tours complets avant utilisation
   const entry = { sprite: icon, item: itemKey };
