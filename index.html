@@ -84,6 +84,8 @@ let starPhase = 0; // pour l'effet arc-en-ciel
 let starTileOverlays = new Map(); // key "x,y" -> Image overlay arc-en-ciel
 // Tetriminos (murs)
 let tetriminos = []; // array de { x, y, sprite } pour les murs tetrimino
+// Bananes (pièges)
+let bananas = []; // array de { x, y, sprite } pour les bananes
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -91,7 +93,8 @@ const ITEM_WEIGHTS = {
   lightning: 1,
   star: 2,
   tetrimino: 3,
-  tornado: 2
+  tornado: 2,
+  banana: 5
 };
 // Timers
 let playerTimersMs = [];
@@ -232,6 +235,7 @@ function preload() {
   this.load.image('star', 'star.png');
   this.load.image('tetrimino', 'tetrimino.png');
   this.load.image('tornado', 'tornado.png');
+  this.load.image('banana', 'banana.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -638,6 +642,12 @@ function startGame(scene) {
     if (t.sprite) t.sprite.destroy();
   }
   tetriminos = [];
+  
+  // reset bananes
+  for (const b of bananas) {
+    if (b.sprite) b.sprite.destroy();
+  }
+  bananas = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -927,7 +937,7 @@ function updatePieces() {
   // Effet étoile: afficher un overlay dégradé sous les pièces protégées
   if (starInvincible && starInvincible.playerId >= 0 && scene) {
     updateStarOverlays(scene);
-  } else {
+      } else {
     clearStarOverlays();
     for (const p of pieces) if (p.sprite) { p.sprite.clearTint && p.sprite.clearTint(); p.sprite.setAlpha && p.sprite.setAlpha(1); }
   }
@@ -1200,6 +1210,27 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'banana') {
+      // Vérifier si la banane peut être placée à cette position
+      if (!canPlaceBananaAt(pos.x, pos.y)) return;
+      placeBanana(pos);
+      const bananaInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      if (infoText) infoText.setText("");
+      // consommer l'item banane sélectionné
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof bananaInventoryIndex === 'number') ? bananaInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'banana');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
   // Sélection d'une pièce du joueur courant
@@ -1226,6 +1257,19 @@ function handleClick(scene, pos) {
         const capturedKing = target.type === 'king';
         target.sprite.destroy();
         pieces = pieces.filter(p => p !== target);
+        // Vérifier si la pièce trébuche sur une banane
+        if (checkBananaTrip(selectedPiece, pos)) {
+          // La pièce trébuche, elle est déplacée sur la case de la banane
+          updatePieces();
+          clearHighlights();
+          selectedPiece = null;
+          // Terminer le tour et passer au joueur suivant
+          moveCount++;
+          if (moveCount % 5 === 0) rotateAds();
+          currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+          updateTurnUI();
+          return;
+        }
         // Déplacer la pièce du joueur sur la case capturée
         selectedPiece.x = pos.x;
         selectedPiece.y = pos.y;
@@ -1276,6 +1320,19 @@ function handleClick(scene, pos) {
             if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
           }
         }
+        return;
+      }
+      // Vérifier si la pièce trébuche sur une banane
+      if (checkBananaTrip(selectedPiece, pos)) {
+        // La pièce trébuche, elle est déplacée sur la case de la banane
+        updatePieces();
+        clearHighlights();
+        selectedPiece = null;
+        // Terminer le tour et passer au joueur suivant
+        moveCount++;
+        if (moveCount % 5 === 0) rotateAds();
+        currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        updateTurnUI();
         return;
       }
       // Case vide
@@ -1394,7 +1451,7 @@ function getReachablePositions(piece) {
       if (occ.player !== piece.player) {
         // Vérifier si la pièce cible est protégée par l'étoile
         if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn)) {
-          positions.push({ x: nx, y: ny });
+        positions.push({ x: nx, y: ny });
         }
       }
       break;
@@ -1631,6 +1688,109 @@ function tryUseItem(playerId, clickedIconSprite) {
     const allowed = getTornadoTeleportPositions();
     highlightPositions(allowed, 0x81c784); // vert pâle
   }
+  if (icon.item === 'banana') {
+    // Activer mode pose de banane: prochain clic sur une case vide pose la banane
+    currentItemAction = { playerId, type: 'banana', active: true, inventoryIndex: idx };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case vide pour placer la banane`);
+    // Highlight des cases possibles (cases vides)
+    const allowed = getBananaPlacablePositions();
+    highlightPositions(allowed, 0xffd54f); // jaune pâle
+  }
+}
+
+function getBananaPlacablePositions() {
+  const positions = [];
+  // Vérifier toutes les cases vides
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      // Vérifier si la banane peut être placée à cette position
+      if (canPlaceBananaAt(x, y)) {
+        positions.push({ x, y });
+      }
+    }
+  }
+  return positions;
+}
+
+function canPlaceBananaAt(x, y) {
+  // Vérifier que la case est dans la grille
+  if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de pièce sur cette case
+  if (getPieceAt({ x, y })) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de caisse d'objet sur cette case
+  if (itemCrates.some(c => c.x === x && c.y === y)) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de tetrimino sur cette case
+  if (tetriminos.some(t => t.x === x && t.y === y)) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas déjà une banane sur cette case
+  if (bananas.some(b => b.x === x && b.y === y)) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de portail sur cette case
+  if ((portalOrange && portalOrange.x === x && portalOrange.y === y) ||
+      (portalBlue && portalBlue.x === x && portalBlue.y === y)) {
+    return false;
+  }
+  return true;
+}
+
+function placeBanana(pos) {
+  const scene = infoText.scene;
+  const sprite = scene.add.image(
+    GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE/2,
+    GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE/2,
+    'banana'
+  );
+  sprite.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
+  sprite.setDepth(150); // au-dessus des cases mais sous les pièces
+  bananas.push({ x: pos.x, y: pos.y, sprite });
+}
+
+function checkBananaTrip(piece, destination) {
+  // Vérifier si la pièce traverse une banane sur son chemin
+  const path = getPathBetween(piece.x, piece.y, destination.x, destination.y);
+  
+  for (const pos of path) {
+    const banana = bananas.find(b => b.x === pos.x && b.y === pos.y);
+    if (banana) {
+      // 33% de chance de trébucher
+      if (Math.random() < 0.33) {
+        // La pièce trébuche, la déplacer sur la case de la banane
+        piece.x = banana.x;
+        piece.y = banana.y;
+        // Supprimer la banane
+        if (banana.sprite) banana.sprite.destroy();
+        const index = bananas.indexOf(banana);
+        if (index > -1) bananas.splice(index, 1);
+        return true; // trébuché
+      }
+    }
+  }
+  return false; // pas trébuché
+}
+
+function getPathBetween(x1, y1, x2, y2) {
+  const path = [];
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  
+  if (steps === 0) return path;
+  
+  for (let i = 1; i <= steps; i++) {
+    const x = x1 + Math.round((dx * i) / steps);
+    const y = y1 + Math.round((dy * i) / steps);
+    path.push({ x, y });
+  }
+  
+  return path;
 }
 
 function getTornadoTeleportPositions() {
