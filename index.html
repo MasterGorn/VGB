@@ -90,7 +90,8 @@ const ITEM_WEIGHTS = {
   portals: 4,
   lightning: 1,
   star: 2,
-  tetrimino: 3
+  tetrimino: 3,
+  tornado: 2
 };
 // Timers
 let playerTimersMs = [];
@@ -230,6 +231,7 @@ function preload() {
   this.load.image('lightning', 'Lightning.png');
   this.load.image('star', 'star.png');
   this.load.image('tetrimino', 'tetrimino.png');
+  this.load.image('tornado', 'tornado.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -1177,6 +1179,27 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'tornado') {
+      // Vérifier si le roi peut être téléporté à cette position
+      if (!canTeleportKingTo(pos.x, pos.y)) return;
+      teleportKingTo(currentPlayer, pos);
+      const tornadoInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      if (infoText) infoText.setText("");
+      // consommer l'item tornado sélectionné
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof tornadoInventoryIndex === 'number') ? tornadoInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'tornado');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
   // Sélection d'une pièce du joueur courant
@@ -1599,6 +1622,64 @@ function tryUseItem(playerId, clickedIconSprite) {
     // Highlight des cases possibles
     const allowed = getTetriminoPlacablePositions();
     highlightPositions(allowed, 0xce93d8); // violet pâle
+  }
+  if (icon.item === 'tornado') {
+    // Activer mode téléportation du roi: prochain clic sur une case vide téléporte le roi
+    currentItemAction = { playerId, type: 'tornado', active: true, inventoryIndex: idx };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case vide pour téléporter votre roi`);
+    // Highlight des cases possibles (cases vides sauf caisses d'objets)
+    const allowed = getTornadoTeleportPositions();
+    highlightPositions(allowed, 0x81c784); // vert pâle
+  }
+}
+
+function getTornadoTeleportPositions() {
+  const positions = [];
+  // Vérifier toutes les cases vides (sauf caisses d'objets)
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      // Vérifier si la case est vide et peut recevoir le roi
+      if (canTeleportKingTo(x, y)) {
+        positions.push({ x, y });
+      }
+    }
+  }
+  return positions;
+}
+
+function canTeleportKingTo(x, y) {
+  // Vérifier que la case est dans la grille
+  if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de pièce sur cette case
+  if (getPieceAt({ x, y })) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de caisse d'objet sur cette case
+  if (itemCrates.some(c => c.x === x && c.y === y)) {
+    return false;
+  }
+  // Vérifier qu'il n'y a pas de tetrimino sur cette case
+  if (tetriminos.some(t => t.x === x && t.y === y)) {
+    return false;
+  }
+  return true;
+}
+
+function teleportKingTo(playerId, newPos) {
+  // Trouver le roi du joueur
+  const king = pieces.find(p => p.player === playerId && p.type === 'king');
+  if (!king) return;
+  
+  // Mettre à jour la position du roi
+  king.x = newPos.x;
+  king.y = newPos.y;
+  
+  // Mettre à jour la position visuelle du sprite
+  if (king.sprite) {
+    king.sprite.x = GRID_OFFSET_X + newPos.x * TILE_SIZE + TILE_SIZE/2;
+    king.sprite.y = GRID_OFFSET_Y + newPos.y * TILE_SIZE + TILE_SIZE/2;
   }
 }
 
