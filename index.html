@@ -80,14 +80,17 @@ let portalOrange = null; // { x, y, sprite }
 let portalBlue = null;   // { x, y, sprite }
 // Étoile d'invincibilité
 let starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
-let starPhase = 0; // pour l’effet arc-en-ciel
+let starPhase = 0; // pour l'effet arc-en-ciel
 let starTileOverlays = new Map(); // key "x,y" -> Image overlay arc-en-ciel
+// Tetriminos (murs)
+let tetriminos = []; // array de { x, y, sprite } pour les murs tetrimino
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
   portals: 4,
   lightning: 1,
   star: 2,
+  tetrimino: 3
 };
 // Timers
 let playerTimersMs = [];
@@ -226,6 +229,7 @@ function preload() {
   this.load.image('portal-blue', 'portal-blue.png');
   this.load.image('lightning', 'Lightning.png');
   this.load.image('star', 'star.png');
+  this.load.image('tetrimino', 'tetrimino.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -626,6 +630,12 @@ function startGame(scene) {
   if (portalBlue && portalBlue.sprite) { portalBlue.sprite.destroy(); }
   portalOrange = null;
   portalBlue = null;
+  
+  // reset tetriminos
+  for (const t of tetriminos) {
+    if (t.sprite) t.sprite.destroy();
+  }
+  tetriminos = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -1146,6 +1156,27 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'tetrimino') {
+      // Vérifier si le tetrimino peut être placé à cette position
+      if (!canPlaceTetriminoAt(pos.x, pos.y)) return;
+      placeTetrimino(pos);
+      const tetriminoInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      if (infoText) infoText.setText("");
+      // consommer l'item tetrimino sélectionné
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof tetriminoInventoryIndex === 'number') ? tetriminoInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'tetrimino');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
   // Sélection d'une pièce du joueur courant
@@ -1280,11 +1311,31 @@ function getReachablePositions(piece) {
     return false;
   };
 
+  const isTetriminoPos = (x, y) => {
+    return tetriminos.some(t => t.x === x && t.y === y);
+  };
+
   const iterateFrom = (startX, startY, dir, maxSteps, usedTeleport) => {
     for (let step = 1; step <= maxSteps; step++) {
       const nx = startX + dir[0] * step;
       const ny = startY + dir[1] * step;
       if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) break;
+      
+      // Vérifier si la case contient un tetrimino (mur)
+      if (isTetriminoPos(nx, ny)) {
+        // Les cavaliers peuvent sauter par-dessus les tetriminos
+        // Un cavalier se déplace en L (2+1 ou 1+2), donc range = 1 et step = 1
+        const isKnightMove = (rule.range === 1 && step === 1 && 
+          (Math.abs(dir[0]) === 2 && Math.abs(dir[1]) === 1) || 
+          (Math.abs(dir[0]) === 1 && Math.abs(dir[1]) === 2));
+        
+        if (isKnightMove) {
+          continue; // continuer le mouvement (sauter par-dessus)
+        } else {
+          break; // s'arrêter pour les autres pièces
+        }
+      }
+      
       const occ = getPieceAt({ x: nx, y: ny });
 
       // Portail: si on touche ORANGE et BLUE existe, on permet de poursuivre depuis BLUE
@@ -1327,8 +1378,33 @@ function getReachablePositions(piece) {
     }
   };
 
+  // Gestion spéciale pour les cavaliers (mouvements en L)
+  const isKnightMove = (dir) => {
+    return rule.range === 1 && (
+      (Math.abs(dir[0]) === 2 && Math.abs(dir[1]) === 1) || 
+      (Math.abs(dir[0]) === 1 && Math.abs(dir[1]) === 2)
+    );
+  };
+
   for (let dir of rule.moves) {
-    iterateFrom(piece.x, piece.y, dir, rule.range, false);
+    if (isKnightMove(dir)) {
+      // Mouvement de cavalier : sauter directement à la case de destination
+      const nx = piece.x + dir[0];
+      const ny = piece.y + dir[1];
+      if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+        const occ = getPieceAt({ x: nx, y: ny });
+        if (!occ) {
+          positions.push({ x: nx, y: ny });
+        } else if (occ.player !== piece.player) {
+          // Vérifier si la pièce cible est protégée par l'étoile
+          if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn)) {
+            positions.push({ x: nx, y: ny });
+          }
+        }
+      }
+    } else {
+      iterateFrom(piece.x, piece.y, dir, rule.range, false);
+    }
   }
   return positions;
 }
@@ -1515,6 +1591,86 @@ function tryUseItem(playerId, clickedIconSprite) {
         if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
       }
     }
+  }
+  if (icon.item === 'tetrimino') {
+    // Activer mode pose de tetrimino: prochain clic sur une case pose le mur
+    currentItemAction = { playerId, type: 'tetrimino', active: true, inventoryIndex: idx };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour placer le tetrimino`);
+    // Highlight des cases possibles
+    const allowed = getTetriminoPlacablePositions();
+    highlightPositions(allowed, 0xce93d8); // violet pâle
+  }
+}
+
+function getTetriminoPlacablePositions() {
+  const positions = [];
+  // Vérifier toutes les positions possibles pour le tetrimino (forme T inversé)
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      // Vérifier si le tetrimino peut être placé à cette position
+      if (canPlaceTetriminoAt(x, y)) {
+        positions.push({ x, y });
+      }
+    }
+  }
+  return positions;
+}
+
+function canPlaceTetriminoAt(centerX, centerY) {
+  // Forme T inversé : 3 cases horizontales + 1 case en dessous du milieu
+  const positions = [
+    { x: centerX - 1, y: centerY },     // gauche
+    { x: centerX, y: centerY },         // centre
+    { x: centerX + 1, y: centerY },     // droite
+    { x: centerX, y: centerY + 1 }      // en dessous du centre
+  ];
+  
+  // Vérifier que toutes les positions sont dans la grille
+  for (const pos of positions) {
+    if (pos.x < 0 || pos.x >= GRID_SIZE || pos.y < 0 || pos.y >= GRID_SIZE) {
+      return false;
+    }
+    // Vérifier qu'il n'y a pas de pièce sur cette case
+    if (getPieceAt(pos)) {
+      return false;
+    }
+    // Vérifier qu'il n'y a pas déjà un tetrimino sur cette case
+    if (tetriminos.some(t => t.x === pos.x && t.y === pos.y)) {
+      return false;
+    }
+    // Vérifier qu'il n'y a pas de caisse d'objet sur cette case
+    if (itemCrates.some(c => c.x === pos.x && c.y === pos.y)) {
+      return false;
+    }
+    // Vérifier qu'il n'y a pas de portail sur cette case
+    if ((portalOrange && portalOrange.x === pos.x && portalOrange.y === pos.y) ||
+        (portalBlue && portalBlue.x === pos.x && portalBlue.y === pos.y)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function placeTetrimino(centerPos) {
+  const scene = infoText.scene;
+  const positions = [
+    { x: centerPos.x - 1, y: centerPos.y },     // gauche
+    { x: centerPos.x, y: centerPos.y },         // centre
+    { x: centerPos.x + 1, y: centerPos.y },     // droite
+    { x: centerPos.x, y: centerPos.y + 1 }      // en dessous du centre
+  ];
+  
+  // Créer des rectangles violets pour chaque case du tetrimino
+  for (const pos of positions) {
+    const rect = scene.add.rectangle(
+      GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE/2,
+      GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE/2,
+      TILE_SIZE-2,
+      TILE_SIZE-2,
+      0x9c27b0 // violet
+    );
+    rect.setDepth(100); // au-dessus des cases mais sous les pièces
+    tetriminos.push({ x: pos.x, y: pos.y, sprite: rect });
   }
 }
 
