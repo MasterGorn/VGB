@@ -86,6 +86,8 @@ let starTileOverlays = new Map(); // key "x,y" -> Image overlay arc-en-ciel
 let tetriminos = []; // array de { x, y, sprite } pour les murs tetrimino
 // Bananes (pièges)
 let bananas = []; // array de { x, y, sprite } pour les bananes
+// Pièces perdues par joueur (pour la queue de phoenix)
+let playerLostPieces = []; // array de { playerId, piece } pour chaque joueur
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -94,7 +96,8 @@ const ITEM_WEIGHTS = {
   star: 2,
   tetrimino: 3,
   tornado: 2,
-  banana: 5
+  banana: 5,
+  phoenix: 10
 };
 // Timers
 let playerTimersMs = [];
@@ -236,6 +239,7 @@ function preload() {
   this.load.image('tetrimino', 'tetrimino.png');
   this.load.image('tornado', 'tornado.png');
   this.load.image('banana', 'banana.png');
+  this.load.image('phoenix', 'phoenix-down.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -648,6 +652,9 @@ function startGame(scene) {
     if (b.sprite) b.sprite.destroy();
   }
   bananas = [];
+  
+  // reset pièces perdues
+  playerLostPieces = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -1255,6 +1262,8 @@ function handleClick(scene, pos) {
           return;
         }
         const capturedKing = target.type === 'king';
+        // Enregistrer la pièce perdue pour la queue de phoenix
+        playerLostPieces.push({ playerId: target.player, piece: { ...target } });
         target.sprite.destroy();
         pieces = pieces.filter(p => p !== target);
         // Vérifier si la pièce trébuche sur une banane
@@ -1696,6 +1705,23 @@ function tryUseItem(playerId, clickedIconSprite) {
     const allowed = getBananaPlacablePositions();
     highlightPositions(allowed, 0xffd54f); // jaune pâle
   }
+  if (icon.item === 'phoenix') {
+    // Utiliser la queue de phoenix pour ressusciter la dernière pièce perdue
+    if (tryResurrectLastPiece(playerId)) {
+      // Consommer l'item
+      if (playerItemIcons[playerId] && playerItemIcons[playerId].length) {
+        const used = playerItemIcons[playerId].splice(idx, 1)[0];
+        if (used && used.sprite) used.sprite.destroy();
+      }
+      updatePieces();
+    } else {
+      // Aucune pièce à ressusciter
+      if (infoText) infoText.setText(`Joueur ${playerId+1}: aucune pièce perdue à ressusciter`);
+      setTimeout(() => {
+        if (infoText) infoText.setText("");
+      }, 2000);
+    }
+  }
 }
 
 function getBananaPlacablePositions() {
@@ -1791,6 +1817,124 @@ function getPathBetween(x1, y1, x2, y2) {
   }
   
   return path;
+}
+
+function tryResurrectLastPiece(playerId) {
+  // Trouver la dernière pièce perdue par ce joueur
+  const playerLostPiecesList = playerLostPieces.filter(lp => lp.playerId === playerId);
+  if (playerLostPiecesList.length === 0) {
+    return false; // Aucune pièce perdue
+  }
+  
+  // Prendre la dernière pièce perdue (la plus récente)
+  const lastLostPiece = playerLostPiecesList[playerLostPiecesList.length - 1];
+  
+  // Trouver une case libre près du roi
+  const king = pieces.find(p => p.player === playerId && p.type === 'king');
+  if (!king) {
+    return false; // Pas de roi trouvé
+  }
+  
+  const resurrectionPos = findNearestEmptyPosition(king.x, king.y);
+  if (!resurrectionPos) {
+    return false; // Aucune case libre trouvée
+  }
+  
+  // Ressusciter la pièce
+  const resurrectedPiece = {
+    ...lastLostPiece.piece,
+    x: resurrectionPos.x,
+    y: resurrectionPos.y,
+    player: playerId,
+    name: lastLostPiece.piece.name || lastLostPiece.piece.type
+  };
+  
+  // Créer le sprite pour la pièce ressuscitée
+  const scene = infoText.scene;
+  const faction = players[playerId].faction;
+  let spriteKey;
+  
+  if (resurrectedPiece.type === 'king') {
+    spriteKey = `king-${faction}`;
+  } else {
+    // Utiliser le nom de la pièce tel qu'il est défini dans le catalogue
+    spriteKey = resurrectedPiece.type;
+  }
+  
+  const sprite = scene.add.image(
+    GRID_OFFSET_X + resurrectedPiece.x * TILE_SIZE + TILE_SIZE/2,
+    GRID_OFFSET_Y + resurrectedPiece.y * TILE_SIZE + TILE_SIZE/2,
+    spriteKey
+  );
+  sprite.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
+  sprite.setDepth(200);
+  sprite.setInteractive();
+  sprite.on('pointerdown', () => handleClick(scene, { x: resurrectedPiece.x, y: resurrectedPiece.y }));
+  
+  // Ajouter le sprite à la pièce
+  resurrectedPiece.sprite = sprite;
+  
+  // Ajouter la pièce au tableau des pièces
+  pieces.push(resurrectedPiece);
+  
+  // Supprimer la pièce de la liste des pièces perdues
+  const index = playerLostPieces.findIndex(lp => lp === lastLostPiece);
+  if (index > -1) {
+    playerLostPieces.splice(index, 1);
+  }
+  
+  if (infoText) infoText.setText(`Joueur ${playerId+1}: ${resurrectedPiece.name} ressuscitée !`);
+  setTimeout(() => {
+    if (infoText) infoText.setText("");
+  }, 2000);
+  
+  return true;
+}
+
+function findNearestEmptyPosition(kingX, kingY) {
+  // Chercher dans un rayon croissant autour du roi
+  for (let radius = 1; radius <= 3; radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        // Ignorer les cases en dehors du rayon actuel
+        if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+        
+        const x = kingX + dx;
+        const y = kingY + dy;
+        
+        // Vérifier que la position est dans la grille
+        if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) continue;
+        
+        // Vérifier que la case est libre
+        if (isPositionEmpty(x, y)) {
+          return { x, y };
+        }
+      }
+    }
+  }
+  return null; // Aucune case libre trouvée
+}
+
+function isPositionEmpty(x, y) {
+  // Vérifier qu'il n'y a pas de pièce sur cette case
+  if (getPieceAt({ x, y })) return false;
+  
+  // Vérifier qu'il n'y a pas de caisse d'objet sur cette case
+  if (itemCrates.some(c => c.x === x && c.y === y)) return false;
+  
+  // Vérifier qu'il n'y a pas de tetrimino sur cette case
+  if (tetriminos.some(t => t.x === x && t.y === y)) return false;
+  
+  // Vérifier qu'il n'y a pas de banane sur cette case
+  if (bananas.some(b => b.x === x && b.y === y)) return false;
+  
+  // Vérifier qu'il n'y a pas de portail sur cette case
+  if ((portalOrange && portalOrange.x === x && portalOrange.y === y) ||
+      (portalBlue && portalBlue.x === x && portalBlue.y === y)) {
+    return false;
+  }
+  
+  return true;
 }
 
 function getTornadoTeleportPositions() {
@@ -1983,6 +2127,8 @@ function detonateBombAt(pos) {
         continue; // Pièce immunisée, passer à la suivante
       }
       const wasKing = victim.type === 'king';
+      // Enregistrer la pièce perdue pour la queue de phoenix
+      playerLostPieces.push({ playerId: victim.player, piece: { ...victim } });
       victim.sprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
       if (wasKing) {
@@ -2131,6 +2277,8 @@ function applyLightningKill() {
   const victims = pieces.filter(p => isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn));
   let kingDied = false;
   for (const v of victims) {
+    // Enregistrer la pièce perdue pour la queue de phoenix
+    playerLostPieces.push({ playerId: v.player, piece: { ...v } });
     if (v && v.sprite) v.sprite.destroy();
     if (v.type === 'king') {
       kingDied = true;
