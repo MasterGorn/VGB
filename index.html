@@ -88,6 +88,8 @@ let tetriminos = []; // array de { x, y, sprite } pour les murs tetrimino
 let bananas = []; // array de { x, y, sprite } pour les bananes
 // Pièces perdues par joueur (pour la queue de phoenix)
 let playerLostPieces = []; // array de { playerId, piece } pour chaque joueur
+// Pièces possédées par le curseur Sims
+let possessedPieces = []; // array de { piece, cursorSprite, originalPlayer, houseBounds }
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -97,7 +99,8 @@ const ITEM_WEIGHTS = {
   tetrimino: 3,
   tornado: 2,
   banana: 5,
-  phoenix: 2
+  phoenix: 2,
+  cursor: 20
 };
 // Timers
 let playerTimersMs = [];
@@ -240,6 +243,7 @@ function preload() {
   this.load.image('tornado', 'tornado.png');
   this.load.image('banana', 'banana.png');
   this.load.image('phoenix', 'phoenix-down.png');
+  this.load.image('cursor', 'cursor-sims.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -655,6 +659,12 @@ function startGame(scene) {
   
   // reset pièces perdues
   playerLostPieces = [];
+  
+  // reset pièces possédées
+  for (const pp of possessedPieces) {
+    if (pp.cursorSprite) pp.cursorSprite.destroy();
+  }
+  possessedPieces = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -940,6 +950,13 @@ function updatePieces() {
     portalBlue.sprite.y = GRID_OFFSET_Y + portalBlue.y*TILE_SIZE + TILE_SIZE/2;
     portalBlue.sprite.setDisplaySize(TILE_SIZE*0.8, TILE_SIZE*0.8);
     portalBlue.sprite.setAlpha(1);
+  }
+  // Curseurs Sims: positionner les curseurs au-dessus des pièces possédées
+  for (const pp of possessedPieces) {
+    if (pp.cursorSprite && pp.piece) {
+      pp.cursorSprite.x = GRID_OFFSET_X + pp.piece.x * TILE_SIZE + TILE_SIZE/2 + 15;
+      pp.cursorSprite.y = GRID_OFFSET_Y + pp.piece.y * TILE_SIZE + TILE_SIZE/2 - 15;
+    }
   }
   // Effet étoile: afficher un overlay dégradé sous les pièces protégées
   if (starInvincible && starInvincible.playerId >= 0 && scene) {
@@ -1238,9 +1255,31 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'cursor') {
+      // Vérifier si une pièce peut être possédée à cette position
+      const targetPiece = getPieceAt(pos);
+      if (!targetPiece || !canPossessPiece(targetPiece, currentPlayer)) return;
+      possessPiece(targetPiece, currentPlayer);
+      const cursorInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      if (infoText) infoText.setText("");
+      // consommer l'item curseur sélectionné
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof cursorInventoryIndex === 'number') ? cursorInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'cursor');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
-  // Sélection d'une pièce du joueur courant
+  // Sélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
   if (clickedPiece && clickedPiece.player === currentPlayer) {
     selectedPiece = clickedPiece;
     const reachable = getReachablePositions(selectedPiece);
@@ -1393,6 +1432,44 @@ function getPieceAt(pos) {
 function getReachablePositions(piece) {
   const positions = [];
   const rule = getRuleForPiece(piece);
+  
+  // Vérifier si la pièce est possédée et limiter ses mouvements à sa "maison"
+  const possessed = possessedPieces.find(pp => pp.piece === piece);
+  if (possessed) {
+    // Limiter les mouvements aux limites de la maison
+    const houseBounds = possessed.houseBounds;
+    const iterateFrom = (startX, startY, dir, maxSteps, usedTeleport) => {
+      for (let step = 1; step <= maxSteps; step++) {
+        const nx = startX + dir[0] * step;
+        const ny = startY + dir[1] * step;
+        
+        // Vérifier les limites de la maison
+        if (nx < houseBounds.startX || nx > houseBounds.endX || 
+            ny < houseBounds.startY || ny > houseBounds.endY) {
+          break; // Sortir des limites de la maison
+        }
+        
+        const occ = getPieceAt({ x: nx, y: ny });
+        if (occ && occ.player === piece.player) break; // Pièce alliée
+        if (occ && occ.player !== piece.player) {
+          // Vérifier protection étoile
+          if (starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn) {
+            continue; // Pièce protégée, continuer
+          }
+          positions.push({ x: nx, y: ny }); // Capturer
+          break;
+        }
+        positions.push({ x: nx, y: ny }); // Case vide
+      }
+    };
+    
+    // Appliquer les mouvements selon les règles
+    for (const dir of rule.moves) {
+      iterateFrom(piece.x, piece.y, dir, rule.range, false);
+    }
+    
+    return positions;
+  }
 
   const isPortalPos = (x, y, color) => {
     if (color === 'orange' && portalOrange) return portalOrange.x === x && portalOrange.y === y;
@@ -1722,6 +1799,14 @@ function tryUseItem(playerId, clickedIconSprite) {
       }, 2000);
     }
   }
+  if (icon.item === 'cursor') {
+    // Activer mode possession: prochain clic sur une pièce faible/moyenne adverse la possède
+    currentItemAction = { playerId, type: 'cursor', active: true, inventoryIndex: idx };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une pièce faible ou moyenne adverse à posséder`);
+    // Highlight des pièces possibles (faibles et moyennes adverses)
+    const allowed = getPossessablePieces(playerId);
+    highlightPieces(allowed, 0xff9800); // orange
+  }
 }
 
 function getBananaPlacablePositions() {
@@ -1935,6 +2020,145 @@ function isPositionEmpty(x, y) {
   }
   
   return true;
+}
+
+function getPossessablePieces(playerId) {
+  const pieces = [];
+  for (const piece of window.pieces || []) {
+    if (canPossessPiece(piece, playerId)) {
+      pieces.push(piece);
+    }
+  }
+  return pieces;
+}
+
+function canPossessPiece(piece, playerId) {
+  // Ne peut pas posséder ses propres pièces
+  if (piece.player === playerId) return false;
+  
+  // Ne peut pas posséder les rois
+  if (piece.type === 'king') return false;
+  
+  // Vérifier le tier de la pièce (faible ou moyen)
+  const faction = players[piece.player] && players[piece.player].faction ? players[piece.player].faction : 'nintendo';
+  const catalog = getCatalogForFaction(faction);
+  const pieceData = catalog[piece.type];
+  
+  if (!pieceData) return false;
+  
+  // Seulement les pièces de tier 1 (faible) ou 2 (moyen)
+  return pieceData.tier === 1 || pieceData.tier === 2;
+}
+
+function possessPiece(piece, playerId) {
+  const scene = infoText.scene;
+  const originalPlayer = piece.player;
+  
+  // NE PAS changer le propriétaire de la pièce - elle reste contrôlée par son joueur d'origine
+  
+  // Déplacer la pièce près du roi du joueur d'ORIGINE
+  const originalKing = pieces.find(p => p.player === originalPlayer && p.type === 'king');
+  if (originalKing) {
+    const newPos = findPositionNearKing(originalKing.x, originalKing.y);
+    if (newPos) {
+      piece.x = newPos.x;
+      piece.y = newPos.y;
+      if (piece.sprite) {
+        piece.sprite.x = GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2;
+        piece.sprite.y = GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2;
+      }
+    }
+  }
+  
+  // Créer le curseur au-dessus de la pièce
+  const cursorSprite = scene.add.image(
+    GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2 + 15,
+    GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2 - 15,
+    'cursor'
+  );
+  cursorSprite.setDisplaySize(16, 16);
+  cursorSprite.setDepth(300);
+  
+  // Calculer les limites de la "maison" basée sur le roi d'ORIGINE
+  const houseBounds = calculateHouseBounds(originalKing ? originalKing.x : piece.x, originalKing ? originalKing.y : piece.y);
+  
+  // Enregistrer la possession
+  possessedPieces.push({
+    piece: piece,
+    cursorSprite: cursorSprite,
+    originalPlayer: originalPlayer,
+    possessorPlayer: playerId,
+    houseBounds: houseBounds
+  });
+  
+  if (infoText) infoText.setText(`Joueur ${playerId+1}: ${piece.type} possédée !`);
+  setTimeout(() => {
+    if (infoText) infoText.setText("");
+  }, 2000);
+}
+
+function findPositionNearKing(kingX, kingY) {
+  // Chercher une case libre près du roi
+  for (let radius = 1; radius <= 2; radius++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        
+        const x = kingX + dx;
+        const y = kingY + dy;
+        
+        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && isPositionEmpty(x, y)) {
+          return { x, y };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function calculateHouseBounds(kingX, kingY) {
+  let width, height;
+  
+  if (GRID_SIZE === 9) {
+    width = 5; height = 3;
+  } else if (GRID_SIZE === 11) {
+    width = 5; height = 4;
+  } else { // 15x15
+    width = 7; height = 5;
+  }
+  
+  const startX = Math.max(0, kingX - Math.floor(width / 2));
+  const endX = Math.min(GRID_SIZE - 1, startX + width - 1);
+  const startY = Math.max(0, kingY - Math.floor(height / 2));
+  const endY = Math.min(GRID_SIZE - 1, startY + height - 1);
+  
+  return { startX, endX, startY, endY };
+}
+
+function isWithinHouseBounds(x, y, houseBounds) {
+  return x >= houseBounds.startX && x <= houseBounds.endX && 
+         y >= houseBounds.startY && y <= houseBounds.endY;
+}
+
+function highlightPieces(pieces, color) {
+  clearHighlights();
+  for (const piece of pieces) {
+    if (piece && piece.sprite) {
+      const highlight = piece.sprite.scene.add.rectangle(
+        GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2,
+        GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2,
+        TILE_SIZE,
+        TILE_SIZE,
+        color
+      ).setAlpha(0.3).setDepth(100);
+      highlightOverlays.push(highlight);
+    }
+  }
+}
+
+function isPiecePossessedByCurrentPlayer(piece) {
+  const possessed = possessedPieces.find(pp => pp.piece === piece);
+  return possessed && possessed.possessorPlayer === currentPlayer;
 }
 
 function getTornadoTeleportPositions() {
