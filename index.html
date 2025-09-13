@@ -101,10 +101,11 @@ const ITEM_WEIGHTS = {
   star: 2,
   tetrimino: 3,
   tornado: 2,
-  banana: 5,
-  phoenix: 2,
-  cursor: 3,
-  heart: 2
+    banana: 5,
+    phoenix: 2,
+    cursor: 3,
+    heart: 2,
+    sandglass: 300
 };
 // Timers
 let playerTimersMs = [];
@@ -249,6 +250,7 @@ function preload() {
   this.load.image('phoenix', 'phoenix-down.png');
   this.load.image('cursor', 'cursor-sims.png');
   this.load.image('heart', 'heart.png');
+  this.load.image('sandglass', 'hourglass.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -1863,6 +1865,37 @@ function tryUseItem(playerId, clickedIconSprite) {
     if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une pièce pour lui donner un cœur`);
     // Highlight de toutes les pièces (alliées et adverses)
     highlightPieces(pieces, 0xffb3ba); // rose pâle
+  }
+  if (icon.item === 'sandglass') {
+    // Utiliser la sablière du temps: réduire le temps des adversaires de 1 minute
+    if (timerEnabled && playerTimersMs.length > 0) {
+      let affectedPlayers = 0;
+      for (let i = 0; i < playerTimersMs.length; i++) {
+        if (i !== playerId) {
+          // Réduire le temps de l'adversaire de 1 minute (60000 ms)
+          playerTimersMs[i] = Math.max(0, playerTimersMs[i] - 60000);
+          affectedPlayers++;
+        }
+      }
+      if (infoText) {
+        const plural = affectedPlayers > 1 ? 's' : '';
+        infoText.setText(`Sablière du Temps ! -1 minute pour ${affectedPlayers} adversaire${plural}`);
+        setTimeout(() => {
+          if (infoText) infoText.setText("");
+        }, 3000);
+      }
+      // Consommer l'item
+      if (playerItemIcons[playerId] && playerItemIcons[playerId].length) {
+        const used = playerItemIcons[playerId].splice(idx, 1)[0];
+        if (used && used.sprite) used.sprite.destroy();
+      }
+      updatePieces();
+    } else {
+      if (infoText) infoText.setText(`Joueur ${playerId+1}: le timer n'est pas activé !`);
+      setTimeout(() => {
+        if (infoText) infoText.setText("");
+      }, 2000);
+    }
   }
 }
 
