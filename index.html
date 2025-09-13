@@ -95,6 +95,8 @@ let playerLostPieces = []; // array de { playerId, piece } pour chaque joueur
 let possessedPieces = []; // array de { piece, cursorSprite, originalPlayer, houseBounds }
 // Pièces qui ont un cœur
 let heartPieces = []; // array de { piece, heartSprite }
+// Masque de Majora : pièce forcée
+let forcedPiece = null; // { piece, playerId, maskSprite }
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -107,7 +109,8 @@ const ITEM_WEIGHTS = {
   phoenix: 2,
   cursor: 3,
   heart: 2,
-  sandglass: 3
+  sandglass: 3,
+  mask: 4
 };
 // Timers
 let playerTimersMs = [];
@@ -253,6 +256,7 @@ function preload() {
   this.load.image('cursor', 'cursor-sims.png');
   this.load.image('heart', 'heart.png');
   this.load.image('sandglass', 'hourglass.png');
+  this.load.image('mask', 'mask-majora.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -743,6 +747,12 @@ function startGame(scene) {
     if (hp.heartSprite) hp.heartSprite.destroy();
   }
   heartPieces = [];
+  
+  // reset masque de Majora
+  if (forcedPiece && forcedPiece.maskSprite) {
+    forcedPiece.maskSprite.destroy();
+  }
+  forcedPiece = null;
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -1097,6 +1107,8 @@ function updatePieces() {
   cleanupOrphanedCounters();
   // Mettre à jour les positions des cœurs
   updateHeartPositions();
+  // Mettre à jour la position du masque de Majora
+  updateMaskPosition();
   updateRulesSidebar();
 }
 
@@ -1389,8 +1401,38 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'mask') {
+      // Vérifier si une pièce adverse est cliquée
+      if (!clickedPiece || clickedPiece.player === currentPlayer) return;
+      
+      // Appliquer le masque de Majora à la pièce adverse
+      applyMaskToPiece(clickedPiece);
+      const maskInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      hideInfoMessage();
+      
+      // Consommer l'item masque
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof maskInventoryIndex === 'number') ? maskInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'mask');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
+  // Si le joueur a une pièce forcée, empêcher la sélection d'autres pièces
+  if (forcedPiece && forcedPiece.playerId === currentPlayer && forcedPiece.piece && clickedPiece && clickedPiece !== forcedPiece.piece) {
+    showInfoMessage(`Vous êtes forcé de jouer cette pièce par le Masque de Majora !`, 3000);
+    return;
+  }
+  
   // Sélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
   if (clickedPiece && clickedPiece.player === currentPlayer) {
     selectedPiece = clickedPiece;
@@ -1494,6 +1536,15 @@ function handleClick(scene, pos) {
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
         updateAdInfo();
+        
+        // Supprimer le masque de Majora si la pièce forcée a été jouée
+        if (forcedPiece && forcedPiece.piece === selectedPiece) {
+          if (forcedPiece.maskSprite) {
+            forcedPiece.maskSprite.destroy();
+          }
+          forcedPiece = null;
+        }
+        
         // fin de tour
         let oldRound = roundCounter;
         if (currentPlayer === players.length - 1) { roundCounter++; }
@@ -1518,6 +1569,15 @@ function handleClick(scene, pos) {
         // La pièce trébuche, elle est déplacée sur la case de la banane
         updatePieces();
         clearHighlights();
+        
+        // Supprimer le masque de Majora si la pièce forcée a été jouée
+        if (forcedPiece && forcedPiece.piece === selectedPiece) {
+          if (forcedPiece.maskSprite) {
+            forcedPiece.maskSprite.destroy();
+          }
+          forcedPiece = null;
+        }
+        
         selectedPiece = null;
         // Terminer le tour et passer au joueur suivant
         moveCount++;
@@ -1533,6 +1593,15 @@ function handleClick(scene, pos) {
       maybePickupItem(selectedPiece);
       updatePieces();
       clearHighlights();
+      
+      // Supprimer le masque de Majora si la pièce forcée a été jouée
+      if (forcedPiece && forcedPiece.piece === selectedPiece) {
+        if (forcedPiece.maskSprite) {
+          forcedPiece.maskSprite.destroy();
+        }
+        forcedPiece = null;
+      }
+      
       selectedPiece = null;
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
@@ -1540,7 +1609,7 @@ function handleClick(scene, pos) {
       // fin de tour
       let oldRound = roundCounter;
       if (currentPlayer === players.length - 1) { roundCounter++; }
-      currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+      currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
       // décrémenter les charges uniquement quand un round complet vient de s'achever
       if (roundCounter !== oldRound) {
         decrementLightningCharges();
@@ -1977,6 +2046,14 @@ function tryUseItem(playerId, clickedIconSprite) {
       showInfoMessage(`Joueur ${playerId+1}: le timer n'est pas activé !`, 2000);
     }
   }
+  if (icon.item === 'mask') {
+    // Activer mode masque de Majora: prochain clic sur une pièce adverse la force
+    currentItemAction = { playerId, type: 'mask', active: true, inventoryIndex: idx };
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce adverse à forcer`, 5000);
+    // Highlight des pièces adverses possibles
+    const allowed = pieces.filter(p => p.player !== playerId);
+    highlightPieces(allowed, 0xff9800); // orange
+  }
 }
 
 function getBananaPlacablePositions() {
@@ -2400,6 +2477,40 @@ function updateHeartPositions() {
   }
 }
 
+function updateMaskPosition() {
+  // Mettre à jour la position du masque de Majora
+  if (forcedPiece && forcedPiece.maskSprite && forcedPiece.piece) {
+    forcedPiece.maskSprite.x = GRID_OFFSET_X + forcedPiece.piece.x * TILE_SIZE + TILE_SIZE/2;
+    forcedPiece.maskSprite.y = GRID_OFFSET_Y + forcedPiece.piece.y * TILE_SIZE + TILE_SIZE/2 - 25;
+  }
+}
+
+function applyMaskToPiece(piece) {
+  // Nettoyer l'ancien masque s'il existe
+  if (forcedPiece && forcedPiece.maskSprite) {
+    forcedPiece.maskSprite.destroy();
+  }
+  
+  // Créer le sprite du masque
+  const scene = infoText.scene;
+  const maskSprite = scene.add.image(0, 0, 'mask');
+  maskSprite.setDisplaySize(20, 20);
+  maskSprite.setDepth(1500);
+  
+  // Positionner le masque au-dessus de la pièce
+  maskSprite.x = GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2;
+  maskSprite.y = GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2 - 25;
+  
+  // Stocker l'information du masque
+  forcedPiece = {
+    piece: piece,
+    playerId: piece.player,
+    maskSprite: maskSprite
+  };
+  
+  showInfoMessage(`Masque de Majora ! Le joueur ${piece.player + 1} devra jouer cette pièce !`, 3000);
+}
+
 function isPiecePossessedByCurrentPlayer(piece) {
   const possessed = possessedPieces.find(pp => pp.piece === piece);
   return possessed && possessed.possessorPlayer === currentPlayer;
@@ -2705,6 +2816,19 @@ function updateTurnUI() {
   
   // Vérifier si l'effet de l'étoile doit se terminer
   checkStarEffect();
+  
+  // Si le joueur actuel a une pièce forcée par le masque de Majora, la sélectionner automatiquement
+  if (forcedPiece && forcedPiece.playerId === currentPlayer && forcedPiece.piece) {
+    selectedPiece = forcedPiece.piece;
+    const reachable = getReachablePositions(selectedPiece);
+    highlightPositions(reachable);
+    showInfoMessage(`Vous êtes forcé de jouer cette pièce par le Masque de Majora !`, 5000);
+  } else {
+    // Désélectionner toute pièce si pas de contrainte
+    selectedPiece = null;
+    clearHighlights();
+  }
+  
   // Positionner l'icône de tour à côté du nom du joueur actif
   if (turnIcon && playerNameTexts[currentPlayer]) {
     const t = playerNameTexts[currentPlayer];
