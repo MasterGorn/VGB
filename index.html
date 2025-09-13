@@ -91,6 +91,8 @@ let bananas = []; // array de { x, y, sprite } pour les bananes
 let playerLostPieces = []; // array de { playerId, piece } pour chaque joueur
 // Pièces possédées par le curseur Sims
 let possessedPieces = []; // array de { piece, cursorSprite, originalPlayer, houseBounds }
+// Pièces qui ont un cœur
+let heartPieces = []; // array de { piece, heartSprite }
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -101,7 +103,8 @@ const ITEM_WEIGHTS = {
   tornado: 2,
   banana: 5,
   phoenix: 2,
-  cursor: 2
+  cursor: 2,
+  heart: 200
 };
 // Timers
 let playerTimersMs = [];
@@ -245,6 +248,7 @@ function preload() {
   this.load.image('banana', 'banana.png');
   this.load.image('phoenix', 'phoenix-down.png');
   this.load.image('cursor', 'cursor-sims.png');
+  this.load.image('heart', 'heart.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -666,6 +670,12 @@ function startGame(scene) {
     if (pp.cursorSprite) pp.cursorSprite.destroy();
   }
   possessedPieces = [];
+  
+  // reset cœurs
+  for (const hp of heartPieces) {
+    if (hp.heartSprite) hp.heartSprite.destroy();
+  }
+  heartPieces = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -1018,6 +1028,8 @@ function updatePieces() {
   
   // Nettoyer les compteurs orphelins (compteurs sans sprite associé)
   cleanupOrphanedCounters();
+  // Mettre à jour les positions des cœurs
+  updateHeartPositions();
   updateRulesSidebar();
 }
 
@@ -1278,6 +1290,30 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'heart') {
+      // Vérifier si une pièce est cliquée
+      if (!clickedPiece) return;
+      
+      // Donner un cœur à la pièce
+      giveHeartToPiece(clickedPiece);
+      const heartInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      if (infoText) infoText.setText("");
+      
+      // Consommer l'item cœur
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof heartInventoryIndex === 'number') ? heartInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'heart');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
   // Sélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
@@ -1302,12 +1338,23 @@ function handleClick(scene, pos) {
           return;
         }
         const capturedKing = target.type === 'king';
-        // Enregistrer la pièce perdue pour la queue de phoenix
-        playerLostPieces.push({ playerId: target.player, piece: { ...target } });
-        // Nettoyer l'exposant du curseur Sims si la pièce était possédée
-        cleanupCursorForPiece(target);
-        target.sprite.destroy();
-        pieces = pieces.filter(p => p !== target);
+        
+        // Vérifier si la pièce cible a un cœur
+        const hasHeart = heartPieces.some(hp => hp.piece === target);
+        if (hasHeart) {
+          // La pièce a un cœur : elle reste en place mais perd son cœur
+          removeHeartFromPiece(target);
+          if (infoText) infoText.setText(`La pièce a perdu son cœur !`);
+          // La pièce reste en place, pas de capture
+        } else {
+          // Pas de cœur : capture normale
+          // Enregistrer la pièce perdue pour la queue de phoenix
+          playerLostPieces.push({ playerId: target.player, piece: { ...target } });
+          // Nettoyer l'exposant du curseur Sims si la pièce était possédée
+          cleanupCursorForPiece(target);
+          target.sprite.destroy();
+          pieces = pieces.filter(p => p !== target);
+        }
         // Vérifier si la pièce trébuche sur une banane
         if (checkBananaTrip(selectedPiece, pos)) {
           // La pièce trébuche, elle est déplacée sur la case de la banane
@@ -1810,6 +1857,13 @@ function tryUseItem(playerId, clickedIconSprite) {
     const allowed = getPossessablePieces(playerId);
     highlightPieces(allowed, 0x81c784); // vert pâle
   }
+  if (icon.item === 'heart') {
+    // Activer mode don de cœur: prochain clic sur une pièce lui donne un cœur
+    currentItemAction = { playerId, type: 'heart', active: true, inventoryIndex: idx };
+    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une pièce pour lui donner un cœur`);
+    // Highlight de toutes les pièces (alliées et adverses)
+    highlightPieces(pieces, 0xffb3ba); // rose pâle
+  }
 }
 
 function getBananaPlacablePositions() {
@@ -2183,6 +2237,52 @@ function highlightPieces(pieces, color) {
         color
       ).setAlpha(0.3).setDepth(100);
       highlightOverlays.push(highlight);
+    }
+  }
+}
+
+function giveHeartToPiece(piece) {
+  // Vérifier si la pièce a déjà un cœur
+  if (heartPieces.some(hp => hp.piece === piece)) {
+    if (infoText) infoText.setText("Cette pièce a déjà un cœur !");
+    return;
+  }
+  
+  // Créer le sprite du cœur
+  const scene = infoText.scene;
+  const heartSprite = scene.add.image(
+    GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2 + 15,
+    GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2 - 15,
+    'heart'
+  );
+  heartSprite.setDisplaySize(16, 16);
+  heartSprite.setDepth(1500);
+  heartSprite.setVisible(true);
+  
+  // Ajouter à la liste des pièces avec cœur
+  heartPieces.push({ piece: piece, heartSprite: heartSprite });
+  
+  if (infoText) infoText.setText(`Cœur donné à la pièce !`);
+}
+
+function removeHeartFromPiece(piece) {
+  // Trouver et supprimer le cœur de la pièce
+  const heartIndex = heartPieces.findIndex(hp => hp.piece === piece);
+  if (heartIndex >= 0) {
+    const heart = heartPieces[heartIndex];
+    if (heart.heartSprite && heart.heartSprite.destroy) {
+      heart.heartSprite.destroy();
+    }
+    heartPieces.splice(heartIndex, 1);
+  }
+}
+
+function updateHeartPositions() {
+  // Mettre à jour la position des cœurs pour qu'ils suivent leurs pièces
+  for (const hp of heartPieces) {
+    if (hp.heartSprite && hp.piece) {
+      hp.heartSprite.x = GRID_OFFSET_X + hp.piece.x * TILE_SIZE + TILE_SIZE/2 + 15;
+      hp.heartSprite.y = GRID_OFFSET_Y + hp.piece.y * TILE_SIZE + TILE_SIZE/2 - 15;
     }
   }
 }
