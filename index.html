@@ -54,6 +54,8 @@ let highlightedTiles = [];
 let highlightOverlays = [];
 let turnText;
 let moveCount = 0;
+let infoBackground; // Fond blanc pour les messages d'information
+let isEndGameMessage = false; // Flag pour empêcher le masquage du message de fin
 // plus de garde: décrément à chaque fin de tour
 let adRotationIndex = 0;
 let playerNameTexts = [];
@@ -101,11 +103,11 @@ const ITEM_WEIGHTS = {
   star: 2,
   tetrimino: 3,
   tornado: 2,
-    banana: 5,
-    phoenix: 2,
-    cursor: 3,
-    heart: 2,
-    sandglass: 300
+  banana: 5,
+  phoenix: 2,
+  cursor: 3,
+  heart: 2,
+  sandglass: 3
 };
 // Timers
 let playerTimersMs = [];
@@ -258,8 +260,23 @@ function preload() {
 }
 
 function create() {
-  infoText = this.add.text(10, 10, "", { font: "16px Arial", fill: "#000" });
-  infoText.setDepth(1000);
+  // Créer le texte d'information centré avec fond blanc et coins arrondis
+  infoText = this.add.text(0, 0, "", { 
+    font: "18px Arial", 
+    fill: "#000",
+    align: "center",
+    wordWrap: { width: 400 }
+  });
+  infoText.setDepth(10000); // Z-index très élevé pour passer devant tout
+  infoText.setOrigin(0.5, 0.5);
+  infoText.x = 448; // Centre du canvas (896/2)
+  infoText.y = 300; // Position verticale centrée
+  
+  // Créer le fond blanc avec coins arrondis
+  infoBackground = this.add.rectangle(448, 300, 420, 60, 0xffffff);
+  infoBackground.setDepth(9999); // Juste en dessous du texte
+  infoBackground.setStrokeStyle(2, 0xcccccc);
+  infoBackground.setVisible(false);
   // Démarrage avec preset mémorisé ?
   const wantsPreset = localStorage.getItem('vgb_start_with_preset') === '1';
   if (wantsPreset && loadPresetAndStart(this)) {
@@ -269,9 +286,42 @@ function create() {
   setupGridSizeUI(this);
 }
 
+function showInfoMessage(message, duration = 3000) {
+  if (!infoText || !infoBackground) return;
+  
+  // Ne pas afficher de nouveaux messages si c'est un message de fin de partie permanent
+  if (isEndGameMessage && duration > 0) return;
+  
+  // Ajuster la taille du fond selon la longueur du message
+  const textWidth = Math.min(500, Math.max(200, message.length * 8));
+  const textHeight = message.includes('\n') ? 80 : 60;
+  
+  infoBackground.setSize(textWidth + 32, textHeight); // +32 pour le padding
+  infoBackground.setVisible(true);
+  
+  infoText.setText(message);
+  infoText.setVisible(true);
+  
+  // Masquer après la durée spécifiée (sauf si duration = 0 pour message permanent)
+  if (duration > 0 && !isEndGameMessage) {
+    setTimeout(() => {
+      if (infoText && !isEndGameMessage) infoText.setVisible(false);
+      if (infoBackground && !isEndGameMessage) infoBackground.setVisible(false);
+    }, duration);
+  }
+}
+
+function hideInfoMessage() {
+  // Ne pas masquer si c'est un message de fin de partie permanent
+  if (isEndGameMessage) return;
+  
+  if (infoText) infoText.setVisible(false);
+  if (infoBackground) infoBackground.setVisible(false);
+}
+
 function setupGridSizeUI(scene) {
   const last = parseInt(localStorage.getItem('vgb_grid_size') || '0', 10);
-  infoText.setText("Choisissez la taille du plateau (9x9 / 12x12 / 15x15)");
+  showInfoMessage("Choisissez la taille du plateau (9x9 / 12x12 / 15x15)", 10000);
   const options = [9,11,15];
   let x = 10;
   let y = 40;
@@ -1195,7 +1245,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       // consommer l'item portals sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (currentItemAction && typeof currentItemAction.inventoryIndex === 'number') ? currentItemAction.inventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'portals');
@@ -1216,7 +1266,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       // consommer l'item tetrimino sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (typeof tetriminoInventoryIndex === 'number') ? tetriminoInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'tetrimino');
@@ -1237,7 +1287,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       // consommer l'item tornado sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (typeof tornadoInventoryIndex === 'number') ? tornadoInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'tornado');
@@ -1258,7 +1308,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       // consommer l'item banane sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (typeof bananaInventoryIndex === 'number') ? bananaInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'banana');
@@ -1280,7 +1330,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights(); // Effacer le fond vert pâle
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       // consommer l'item curseur sélectionné
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
         const useIdx = (typeof cursorInventoryIndex === 'number') ? cursorInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'cursor');
@@ -1303,7 +1353,7 @@ function handleClick(scene, pos) {
       currentItemAction = null;
       itemUsedThisTurn = true;
       clearHighlights();
-      if (infoText) infoText.setText("");
+      hideInfoMessage();
       
       // Consommer l'item cœur
       if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
@@ -1346,7 +1396,7 @@ function handleClick(scene, pos) {
         if (hasHeart) {
           // La pièce a un cœur : elle reste en place mais perd son cœur
           removeHeartFromPiece(target);
-          if (infoText) infoText.setText(`La pièce a perdu son cœur !`);
+          showInfoMessage(`La pièce a perdu son cœur !`, 2000);
           // La pièce reste en place, pas de capture
         } else {
           // Pas de cœur : capture normale
@@ -1382,6 +1432,9 @@ function handleClick(scene, pos) {
         if (capturedKing) {
           if (!eliminationOrder.includes(target.player)) {
             eliminationOrder.push(target.player);
+            // Annoncer l'élimination du joueur
+            const eliminatedPlayer = players[target.player];
+            showInfoMessage(`⚔️ ${eliminatedPlayer.name} a été éliminé !`, 3000);
           }
           const remainingKings = pieces.filter(pp => pp.type === 'king').length;
           if (remainingKings <= 1) {
@@ -1813,7 +1866,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'tetrimino') {
     // Activer mode pose de tetrimino: prochain clic sur une case pose le mur
     currentItemAction = { playerId, type: 'tetrimino', active: true, inventoryIndex: idx };
-    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case pour placer le tetrimino`);
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case pour placer le tetrimino`, 5000);
     // Highlight des cases possibles
     const allowed = getTetriminoPlacablePositions();
     highlightPositions(allowed, 0xce93d8); // violet pâle
@@ -1821,7 +1874,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'tornado') {
     // Activer mode téléportation du roi: prochain clic sur une case vide téléporte le roi
     currentItemAction = { playerId, type: 'tornado', active: true, inventoryIndex: idx };
-    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case vide pour téléporter votre roi`);
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case vide pour téléporter votre roi`, 5000);
     // Highlight des cases possibles (cases vides sauf caisses d'objets)
     const allowed = getTornadoTeleportPositions();
     highlightPositions(allowed, 0x81c784); // vert pâle
@@ -1829,7 +1882,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'banana') {
     // Activer mode pose de banane: prochain clic sur une case vide pose la banane
     currentItemAction = { playerId, type: 'banana', active: true, inventoryIndex: idx };
-    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une case vide pour placer la banane`);
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case vide pour placer la banane`, 5000);
     // Highlight des cases possibles (cases vides)
     const allowed = getBananaPlacablePositions();
     highlightPositions(allowed, 0xffd54f); // jaune pâle
@@ -1845,16 +1898,13 @@ function tryUseItem(playerId, clickedIconSprite) {
       updatePieces();
     } else {
       // Aucune pièce à ressusciter
-      if (infoText) infoText.setText(`Joueur ${playerId+1}: aucune pièce perdue à ressusciter`);
-      setTimeout(() => {
-        if (infoText) infoText.setText("");
-      }, 2000);
+      showInfoMessage(`Joueur ${playerId+1}: aucune pièce perdue à ressusciter`, 2000);
     }
   }
   if (icon.item === 'cursor') {
     // Activer mode possession: prochain clic sur une pièce faible/moyenne adverse la possède
     currentItemAction = { playerId, type: 'cursor', active: true, inventoryIndex: idx };
-    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une pièce faible ou moyenne adverse à posséder`);
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce faible ou moyenne adverse à posséder`, 5000);
     // Highlight des pièces possibles (faibles et moyennes adverses) en vert pâle
     const allowed = getPossessablePieces(playerId);
     highlightPieces(allowed, 0x81c784); // vert pâle
@@ -1862,7 +1912,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'heart') {
     // Activer mode don de cœur: prochain clic sur une pièce lui donne un cœur
     currentItemAction = { playerId, type: 'heart', active: true, inventoryIndex: idx };
-    if (infoText) infoText.setText(`Joueur ${playerId+1}: cliquez sur une pièce pour lui donner un cœur`);
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce pour lui donner un cœur`, 5000);
     // Highlight de toutes les pièces (alliées et adverses)
     highlightPieces(pieces, 0xffb3ba); // rose pâle
   }
@@ -1877,13 +1927,8 @@ function tryUseItem(playerId, clickedIconSprite) {
           affectedPlayers++;
         }
       }
-      if (infoText) {
-        const plural = affectedPlayers > 1 ? 's' : '';
-        infoText.setText(`Sablière du Temps ! -1 minute pour ${affectedPlayers} adversaire${plural}`);
-        setTimeout(() => {
-          if (infoText) infoText.setText("");
-        }, 3000);
-      }
+      const plural = affectedPlayers > 1 ? 's' : '';
+      showInfoMessage(`Sablière du Temps ! -1 minute pour ${affectedPlayers} adversaire${plural}`, 3000);
       // Consommer l'item
       if (playerItemIcons[playerId] && playerItemIcons[playerId].length) {
         const used = playerItemIcons[playerId].splice(idx, 1)[0];
@@ -1891,10 +1936,7 @@ function tryUseItem(playerId, clickedIconSprite) {
       }
       updatePieces();
     } else {
-      if (infoText) infoText.setText(`Joueur ${playerId+1}: le timer n'est pas activé !`);
-      setTimeout(() => {
-        if (infoText) infoText.setText("");
-      }, 2000);
+      showInfoMessage(`Joueur ${playerId+1}: le timer n'est pas activé !`, 2000);
     }
   }
 }
@@ -2767,7 +2809,12 @@ function tickTimer(scene) {
     if (king) {
       king.sprite.destroy();
       pieces = pieces.filter(p => p !== king);
-      if (!eliminationOrder.includes(nowIdx)) eliminationOrder.push(nowIdx);
+      if (!eliminationOrder.includes(nowIdx)) {
+        eliminationOrder.push(nowIdx);
+        // Annoncer l'élimination par timeout
+        const eliminatedPlayer = players[nowIdx];
+        showInfoMessage(`⏰ ${eliminatedPlayer.name} a perdu par timeout !`, 3000);
+      }
     }
     // vérifier fin
     const remainingKings = pieces.filter(pp => pp.type === 'king').length;
@@ -2782,6 +2829,79 @@ function tickTimer(scene) {
       endGameWithRanking(ranking);
     }
   }
+}
+
+function endGameWithRanking(ranking) {
+  // Créer le message de fin de partie avec le classement
+  let message = "🏆 FIN DE PARTIE 🏆\n\n";
+  
+  for (let i = 0; i < ranking.length; i++) {
+    const playerId = ranking[i];
+    const player = players[playerId];
+    const position = i + 1;
+    const emoji = position === 1 ? "🥇" : position === 2 ? "🥈" : position === 3 ? "🥉" : "🏅";
+    
+    message += `${emoji} ${position}er : ${player.name}\n`;
+  }
+  
+  // Afficher le message de manière permanente avec le bouton intégré
+  showEndGameMessage(message);
+}
+
+function showEndGameMessage(message) {
+  if (!infoText || !infoBackground) return;
+  
+  // Marquer que c'est un message de fin de partie permanent
+  isEndGameMessage = true;
+  
+  const scene = infoText.scene;
+  
+  // Calculer la taille nécessaire pour le message + bouton
+  const textWidth = Math.min(500, Math.max(300, message.length * 8));
+  const textHeight = 140; // Hauteur fixe pour message + bouton plus bas
+  
+  // Ajuster la taille du fond pour inclure le bouton
+  infoBackground.setSize(textWidth + 32, textHeight); // +32 pour le padding
+  infoBackground.setVisible(true);
+  
+  // Afficher le message (PERMANENT - pas de timeout)
+  infoText.setText(message);
+  infoText.setVisible(true);
+  
+  // Créer le bouton "Nouvelle Partie" intégré dans le message
+  const buttonY = 380; // Position du bouton plus bas sous le message
+  
+  // Créer le fond du bouton
+  const buttonBackground = scene.add.rectangle(448, buttonY, 180, 40, 0x4CAF50);
+  buttonBackground.setDepth(10001);
+  buttonBackground.setStrokeStyle(2, 0x2E7D32);
+  buttonBackground.setInteractive();
+  
+  // Créer le texte du bouton
+  const button = scene.add.text(448, buttonY, "🎮 Nouvelle Partie", {
+    font: "18px Arial",
+    fill: "#ffffff"
+  });
+  button.setOrigin(0.5, 0.5);
+  button.setDepth(10002);
+  button.setInteractive();
+  
+  // Style du bouton au survol
+  buttonBackground.on('pointerover', () => {
+    buttonBackground.setFillStyle(0x45a049);
+  });
+  
+  buttonBackground.on('pointerout', () => {
+    buttonBackground.setFillStyle(0x4CAF50);
+  });
+  
+  // Action du bouton : recharger la page
+  const reloadGame = () => {
+    location.reload();
+  };
+  
+  buttonBackground.on('pointerdown', reloadGame);
+  button.on('pointerdown', reloadGame);
 }
 
 new Phaser.Game(config);
