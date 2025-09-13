@@ -319,6 +319,21 @@ function hideInfoMessage() {
   if (infoBackground) infoBackground.setVisible(false);
 }
 
+function getNextActivePlayer() {
+  // Trouver le prochain joueur non éliminé
+  let nextPlayer = (currentPlayer + 1) % players.length;
+  
+  // Continuer à chercher tant qu'on trouve un joueur éliminé
+  while (eliminationOrder.includes(nextPlayer)) {
+    nextPlayer = (nextPlayer + 1) % players.length;
+    
+    // Protection contre une boucle infinie si tous les joueurs sont éliminés
+    if (nextPlayer === currentPlayer) break;
+  }
+  
+  return nextPlayer;
+}
+
 function setupGridSizeUI(scene) {
   const last = parseInt(localStorage.getItem('vgb_grid_size') || '0', 10);
   showInfoMessage("Choisissez la taille du plateau (9x9 / 12x12 / 15x15)", 10000);
@@ -1203,6 +1218,14 @@ function placePortal(color, pos) {
 
 function handleClick(scene, pos) {
   if (!gameStarted) return;
+  
+  // Empêcher les joueurs éliminés de jouer
+  if (eliminationOrder.includes(currentPlayer)) {
+    currentPlayer = getNextActivePlayer();
+    updateTurnUI();
+    return;
+  }
+  
   const clickedPiece = getPieceAt(pos);
   // Si un item est actif (ex: bombe), gérer l'effet et retourner
   if (currentItemAction && currentItemAction.active && currentItemAction.playerId === currentPlayer) {
@@ -1416,7 +1439,7 @@ function handleClick(scene, pos) {
           // Terminer le tour et passer au joueur suivant
           moveCount++;
           if (moveCount % 5 === 0) rotateAds();
-          currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+          currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
           updateTurnUI();
           return;
         }
@@ -1432,9 +1455,24 @@ function handleClick(scene, pos) {
         if (capturedKing) {
           if (!eliminationOrder.includes(target.player)) {
             eliminationOrder.push(target.player);
+            
+            // Supprimer TOUTES les pièces du joueur éliminé
+            const eliminatedPlayerId = target.player;
+            const piecesToRemove = pieces.filter(p => p.player === eliminatedPlayerId);
+            
+            for (const piece of piecesToRemove) {
+              // Nettoyer les éléments associés avant suppression
+              cleanupCursorForPiece(piece);
+              removeHeartFromPiece(piece);
+              if (piece.sprite) piece.sprite.destroy();
+            }
+            
+            // Retirer toutes les pièces du joueur éliminé du tableau pieces
+            pieces = pieces.filter(p => p.player !== eliminatedPlayerId);
+            
             // Annoncer l'élimination du joueur
-            const eliminatedPlayer = players[target.player];
-            showInfoMessage(`⚔️ ${eliminatedPlayer.name} a été éliminé !`, 3000);
+            const eliminatedPlayer = players[eliminatedPlayerId];
+            showInfoMessage(`⚔️ ${eliminatedPlayer.name} a été éliminé ! Toutes ses pièces ont disparu.`, 3000);
           }
           const remainingKings = pieces.filter(pp => pp.type === 'king').length;
           if (remainingKings <= 1) {
@@ -1459,7 +1497,7 @@ function handleClick(scene, pos) {
         // fin de tour
         let oldRound = roundCounter;
         if (currentPlayer === players.length - 1) { roundCounter++; }
-        currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
         if (roundCounter !== oldRound) {
           decrementLightningCharges();
           // L'effet étoile est maintenant géré dans updateTurnUI()
@@ -1484,7 +1522,7 @@ function handleClick(scene, pos) {
         // Terminer le tour et passer au joueur suivant
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
-        currentPlayer = (currentPlayer+1) % players.length; // changer de joueur
+        currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
         updateTurnUI();
         return;
       }
@@ -2656,6 +2694,15 @@ function checkStarEffect() {
 
 function updateTurnUI() {
   const mid = getKingCenterIndex(GRID_SIZE);
+  
+  // Vérifier si le joueur actuel est éliminé et passer au suivant si nécessaire
+  if (eliminationOrder.includes(currentPlayer)) {
+    currentPlayer = getNextActivePlayer();
+    // Appeler récursivement pour s'assurer que le nouveau joueur n'est pas éliminé non plus
+    updateTurnUI();
+    return;
+  }
+  
   // Vérifier si l'effet de l'étoile doit se terminer
   checkStarEffect();
   // Positionner l'icône de tour à côté du nom du joueur actif
@@ -2804,17 +2851,26 @@ function tickTimer(scene) {
   if (timerTexts[nowIdx] && playerNameTexts[nowIdx]) positionTimerTextNearName(timerTexts[nowIdx], playerNameTexts[nowIdx]);
   // Défaite sur timeout
   if (playerTimersMs[nowIdx] === 0) {
-    // éliminer le roi de this player si encore présent pour provoquer la fin
-    const king = pieces.find(pp => pp.type === 'king' && pp.player === nowIdx);
-    if (king) {
-      king.sprite.destroy();
-      pieces = pieces.filter(p => p !== king);
-      if (!eliminationOrder.includes(nowIdx)) {
-        eliminationOrder.push(nowIdx);
-        // Annoncer l'élimination par timeout
-        const eliminatedPlayer = players[nowIdx];
-        showInfoMessage(`⏰ ${eliminatedPlayer.name} a perdu par timeout !`, 3000);
+    if (!eliminationOrder.includes(nowIdx)) {
+      eliminationOrder.push(nowIdx);
+      
+      // Supprimer TOUTES les pièces du joueur éliminé par timeout
+      const eliminatedPlayerId = nowIdx;
+      const piecesToRemove = pieces.filter(p => p.player === eliminatedPlayerId);
+      
+      for (const piece of piecesToRemove) {
+        // Nettoyer les éléments associés avant suppression
+        cleanupCursorForPiece(piece);
+        removeHeartFromPiece(piece);
+        if (piece.sprite) piece.sprite.destroy();
       }
+      
+      // Retirer toutes les pièces du joueur éliminé du tableau pieces
+      pieces = pieces.filter(p => p.player !== eliminatedPlayerId);
+      
+      // Annoncer l'élimination par timeout
+      const eliminatedPlayer = players[nowIdx];
+      showInfoMessage(`⏰ ${eliminatedPlayer.name} a perdu par timeout ! Toutes ses pièces ont disparu.`, 3000);
     }
     // vérifier fin
     const remainingKings = pieces.filter(pp => pp.type === 'king').length;
