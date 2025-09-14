@@ -513,7 +513,7 @@ function setupDraftUI(scene) {
   for (let i = 0; i < players.length; i++) {
     const baseLabelY = 30 + i*70;
     armyLabels[i] = scene.add.text(300, baseLabelY, `Équipe J${i+1}`, { font: "16px Arial", fill: "#000" });
-    armyPanels[i] = scene.add.rectangle(450, baseLabelY + 35, 280, 50, 0xffffff, 0).setStrokeStyle(0);
+    armyPanels[i] = scene.add.rectangle(450, baseLabelY + 35, 280, 50, 0xffffff, 0).setStrokeStyle(0, 0).setVisible(false);
     armyHints[i] = scene.add.text(300, baseLabelY + 15, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
   }
   renderArmyThumbnails(scene);
