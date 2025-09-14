@@ -9,8 +9,21 @@
   header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); overflow:visible; }
   header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:relative; height:64px; }
   nav a { color:#111; text-decoration:none; padding:6px 10px; border-radius:6px; }
-  main { max-width:1200px; margin:0 auto; padding:144px 16px 32px; }
+  main { max-width:1200px; margin:0 auto; padding:32px 16px 32px; }
   h1 { margin:0 0 16px; font:24px Arial, sans-serif; }
+  .titlePage { display:flex; align-items:center; height: 32px; font-weight:900; }
+  .titlePage:before {
+    background-color: orange;
+    border-radius: 2px;
+    content: "";
+    display: inline-block;
+    height: 32px;
+    margin-bottom: auto;
+    margin-right: 8px;
+    min-width: 4px;
+    padding-bottom: 2px;
+    width: 4px;
+  }
   .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
   .card { background:#fff; border:1px solid #e5e5e5; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
   .card h2 { margin:0 0 8px; font:18px Arial, sans-serif; }
@@ -25,12 +38,13 @@
 <div id="header-root"></div>
 
 <main>
-  <h1>Objets disponibles</h1>
+  <h1 class="titlePage">Objets disponibles</h1>
   <div class="note">
     Règles communes:
     <ul>
       <li>Chaque joueur peut conserver jusqu’à <strong>3 objets</strong> en réserve.</li>
       <li>On ne peut utiliser <strong>qu’un objet par tour</strong>.</li>
+      <li>Les objets doivent être utilisés à leur tour, avant le déplacement de pièces.</li>
       <li>Les pondérations peuvent évoluer au fil des équilibrages.</li>
     </ul>
   </div>

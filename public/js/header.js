@@ -11,7 +11,7 @@
             '<a href="credits.html" style="font:14px Arial; color:#111; text-decoration:none; padding:6px 10px; border-radius:6px;'+(active==='credits'?' background:#dde8ff;':'')+'">Crédits</a>' +
           '</nav>' +
           '<a href="index.html" aria-label="Accueil" style="position:absolute; left:50%; top:0; transform:translateX(-50%); display:inline-flex; align-items:center;">' +
-            '<img src="public/images/site/logo-video-games-battle-256.png" alt="Video Games Battle" style="height:128px; width:128px; object-fit:contain; display:block;" />' +
+            '<img src="public/images/site/logo-video-games-battle-256.png" alt="Video Games Battle" style="height:86px; width:86px; object-fit:contain; display:block;" />' +
           '</a>' +
           '<div><a href="login.html" style="font:14px Arial; color:#111; text-decoration:none; padding:6px 10px; border-radius:6px;">Se connecter</a></div>' +
         '</div>' +
