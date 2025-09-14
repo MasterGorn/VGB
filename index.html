@@ -111,7 +111,7 @@ const ITEM_WEIGHTS = {
   phoenix: 2,
   cursor: 3,
   heart: 2,
-  sandglass: 3,
+  sandglass: 3000,
   mask: 4,
   ocarina: 3
 };
@@ -2077,18 +2077,35 @@ function tryUseItem(playerId, clickedIconSprite) {
     highlightPieces(pieces, 0xffb3ba); // rose pâle
   }
   if (icon.item === 'sandglass') {
-    // Utiliser la sablière du temps: réduire le temps des adversaires de 1 minute
+    // Utiliser la sablière du temps: réduire le temps des adversaires selon la taille du plateau
     if (timerEnabled && playerTimersMs.length > 0) {
+      // Calculer le temps à soustraire selon la taille du plateau
+      let timeToSubtract;
+      let timeText;
+      if (GRID_SIZE === 9) {
+        timeToSubtract = 60000; // 1 minute
+        timeText = "1 minute";
+      } else if (GRID_SIZE === 11) {
+        timeToSubtract = 120000; // 2 minutes
+        timeText = "2 minutes";
+      } else if (GRID_SIZE === 15) {
+        timeToSubtract = 180000; // 3 minutes
+        timeText = "3 minutes";
+      } else {
+        timeToSubtract = 60000; // fallback: 1 minute
+        timeText = "1 minute";
+      }
+      
       let affectedPlayers = 0;
       for (let i = 0; i < playerTimersMs.length; i++) {
         if (i !== playerId) {
-          // Réduire le temps de l'adversaire de 1 minute (60000 ms)
-          playerTimersMs[i] = Math.max(0, playerTimersMs[i] - 60000);
+          // Réduire le temps de l'adversaire selon la taille du plateau
+          playerTimersMs[i] = Math.max(0, playerTimersMs[i] - timeToSubtract);
           affectedPlayers++;
         }
       }
       const plural = affectedPlayers > 1 ? 's' : '';
-      showInfoMessage(`Sablière du Temps ! -1 minute pour ${affectedPlayers} adversaire${plural}`, 3000);
+      showInfoMessage(`Sablière du Temps ! -${timeText} pour ${affectedPlayers} adversaire${plural}`, 3000);
       // Consommer l'item
       if (playerItemIcons[playerId] && playerItemIcons[playerId].length) {
         const used = playerItemIcons[playerId].splice(idx, 1)[0];
