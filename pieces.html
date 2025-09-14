@@ -4,134 +4,493 @@
 <meta charset="UTF-8" />
 <title>Chesstendo - Les pièces</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" href="data:," />
 <style>
   body { margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111; }
-  .container { max-width:1200px; margin:0 auto; padding:16px; }
-  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); }
-  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
-  header a { color:#111; text-decoration:none; }
-  nav a { font:14px Arial; padding:6px 10px; border-radius:6px; }
-  h1 { font-size:24px; margin:18px 0; }
-  h2 { font-size:20px; margin:22px 4px 10px; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
-  .card { border:1px solid #e5e5e5; border-radius:10px; padding:14px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-  .card h3 { margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .card img { width:96px; height:96px; object-fit:contain; image-rendering:auto; display:block; margin:8px auto; }
-  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef; color:#223; font:12px/18px Arial; }
-  .pill.tier { color:#222; }
-  .tier-king { background:#d9d9d9; }
-  .tier-low { background:#ffeb3b; }
-  .tier-mid { background:#ffb74d; }
-  .tier-high { background:#ef5350; color:#fff; }
-  .tier-unique { background:#9c27b0; color:#fff; }
+  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); overflow:visible; }
+  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:relative; height:64px; }
+  nav a { color:#111; text-decoration:none; padding:6px 10px; border-radius:6px; }
+  main { max-width:1200px; margin:0 auto; padding:144px 16px 32px; }
+  h1 { margin:0 0 16px; font:24px Arial, sans-serif; }
+  
+  /* Contrôles de tri */
+  .controls { margin-bottom:24px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .control-group { display:flex; gap:8px; align-items:center; }
+  .control-group label { font-weight:bold; }
+  select, input { padding:6px 8px; border:1px solid #ddd; border-radius:4px; font:14px Arial; }
+  
+  /* Grille des pièces */
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+  .card { background:#fff; border:1px solid #e5e5e5; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  .card h2 { margin:0 0 8px; font:18px Arial, sans-serif; display:flex; align-items:center; justify-content:space-between; }
+  .card img { width:64px; height:64px; object-fit:contain; image-rendering:auto; display:block; margin:8px auto; }
+  .card .info { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin:8px 0; }
+  .card .info div { font:12px Arial; color:#555; }
+  .card .info strong { color:#111; }
+  .moves { font:11px Arial; color:#666; margin-top:8px; }
+  .description { margin-top:8px; font:13px Arial; color:#444; line-height:1.4; }
+  
+  /* Pills pour les métadonnées */
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font:11px Arial; margin-left:6px; }
+  .pill.faction { background:#e8f4fd; color:#0066cc; }
+  .pill.universe { background:#f0f8e8; color:#006600; }
+  .pill.tier { background:#fff3cd; color:#856404; }
+  .pill.range { background:#f8d7da; color:#721c24; }
+  .pill.cost { background:#d1ecf1; color:#0c5460; }
+  
+  /* Filtres actifs */
+  .active-filters { margin-bottom:16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .filter-tag { background:#007bff; color:white; padding:4px 8px; border-radius:12px; font:12px Arial; display:flex; align-items:center; gap:4px; }
+  .filter-tag .remove { cursor:pointer; font-weight:bold; }
 </style>
 </head>
 <body>
 <div id="header-root"></div>
-<main class="container" style="padding-top:144px;">
-  <h1>Les pièces</h1>
-  <p>Liste des pièces par faction. Les coûts et paliers de puissance sont indicatifs.</p>
 
-  <h2>Nintendo</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Roi Nintendo <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
-      <img src="public/images/nintendo/characters/king.png" alt="Roi Nintendo" />
-      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
+<main>
+  <h1>Pièces disponibles</h1>
+  
+  <!-- Contrôles de tri et filtrage -->
+  <div class="controls">
+    <div class="control-group">
+      <label for="sortBy">Trier par :</label>
+      <select id="sortBy">
+        <option value="name">Nom</option>
+        <option value="cost">Coût</option>
+        <option value="tier">Force (Tier)</option>
+        <option value="range">Portée</option>
+        <option value="faction">Faction</option>
+        <option value="universe">Univers</option>
+      </select>
     </div>
-    <div class="card">
-      <h3>Mario <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 3</span></h3>
-      <img src="public/images/nintendo/characters/mario.png" alt="Mario" />
-      <div>Déplacements diagonaux courts (portée 2).</div>
+    
+    <div class="control-group">
+      <label for="sortOrder">Ordre :</label>
+      <select id="sortOrder">
+        <option value="asc">Croissant</option>
+        <option value="desc">Décroissant</option>
+      </select>
     </div>
-    <div class="card">
-      <h3>Link <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 5</span></h3>
-      <img src="public/images/nintendo/characters/link.png" alt="Link" />
-      <div>Déplacements orthogonaux (portée 3).</div>
+    
+    <div class="control-group">
+      <label for="filterFaction">Faction :</label>
+      <select id="filterFaction">
+        <option value="">Toutes</option>
+        <option value="nintendo">Nintendo</option>
+        <option value="playstation">PlayStation</option>
+        <option value="sega">SEGA</option>
+        <option value="xbox">Xbox</option>
+      </select>
     </div>
-    <div class="card">
-      <h3>Zelda <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
-      <img src="public/images/nintendo/characters/zelda.png" alt="Zelda" />
-      <div>Déplacements dans toutes les directions (portée 8).</div>
+    
+    <div class="control-group">
+      <label for="filterUniverse">Univers :</label>
+      <select id="filterUniverse">
+        <option value="">Tous</option>
+        <option value="zelda">The Legend of Zelda</option>
+        <option value="mario">Super Mario</option>
+        <option value="halo">Halo</option>
+        <option value="god-of-war">God of War</option>
+        <option value="sonic">Sonic</option>
+        <option value="yakuza">Yakuza</option>
+        <option value="shinobi">Shinobi</option>
+        <option value="uncharted">Uncharted</option>
+        <option value="astro-bot">Astro Bot</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="filterTier">Force :</label>
+      <select id="filterTier">
+        <option value="">Toutes</option>
+        <option value="1">Faible (Tier 1)</option>
+        <option value="2">Moyen (Tier 2)</option>
+        <option value="3">Fort (Tier 3)</option>
+        <option value="4">Unique (Tier 4)</option>
+      </select>
     </div>
   </div>
-
-  <h2>SEGA</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Roi SEGA <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
-      <img src="public/images/sega/characters/king.png" alt="Roi SEGA" />
-      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
-    </div>
-    <div class="card">
-      <h3>Sonic <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
-      <img src="public/images/sega/characters/sonic.png" alt="Sonic" />
-      <div>Déplacements orthogonaux (portée 3).</div>
-    </div>
-    <div class="card">
-      <h3>Ryo <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
-      <img src="public/images/sega/characters/ryo.png" alt="Ryo" />
-      <div>Déplacements diagonaux courts (portée 2).</div>
-    </div>
-    <div class="card">
-      <h3>Joe Musashi <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
-      <img src="public/images/sega/characters/joe-musashi.png" alt="Joe Musashi" />
-      <div>Déplacements dans toutes les directions (portée 8).</div>
-    </div>
-  </div>
-
-  <h2>PlayStation</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Roi PlayStation <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
-      <img src="public/images/playstation/characters/king.png" alt="Roi PlayStation" />
-      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
-    </div>
-    <div class="card">
-      <h3>Nathan Drake <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
-      <img src="public/images/playstation/characters/nathan-drake.png" alt="Nathan Drake" />
-      <div>Déplacements orthogonaux (portée 3).</div>
-    </div>
-    <div class="card">
-      <h3>Kratos <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
-      <img src="public/images/playstation/characters/kratos.png" alt="Kratos" />
-      <div>Déplacements diagonaux courts (portée 2).</div>
-    </div>
-    <div class="card">
-      <h3>Astro Bot <span class="pill tier tier-high">Fort</span> <span class="pill">Coût: 7</span></h3>
-      <img src="public/images/playstation/characters/astro-bot.png" alt="Astro Bot" />
-      <div>Déplacements dans toutes les directions (portée 8).</div>
-    </div>
-  </div>
-
-  <h2>Xbox</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Roi Xbox <span class="pill tier tier-king">Roi</span> <span class="pill">Coût: 0</span></h3>
-      <img src="public/images/xbox/characters/king.png" alt="Roi Xbox" />
-      <div>Pièce clé: dernier roi en vie gagne. Se déplace d’une case dans toutes les directions.</div>
-    </div>
-    <div class="card">
-      <h3>Masterchief <span class="pill tier tier-low">Faible</span> <span class="pill">Coût: 5</span></h3>
-      <img src="public/images/xbox/characters/masterchief.png" alt="Masterchief" />
-      <div>Déplacements orthogonaux (portée 3).</div>
-    </div>
-    <div class="card">
-      <h3>Marcus Fenix <span class="pill tier tier-mid">Moyen</span> <span class="pill">Coût: 3</span></h3>
-      <img src="public/images/xbox/characters/marcus-fenix.png" alt="Marcus Fenix" />
-      <div>Déplacements diagonaux courts (portée 2).</div>
-    </div>
-    <div class="card">
-      <h3>Joanna Dark <span class="pill tier tier-unique">Unique</span> <span class="pill">Coût: 7</span></h3>
-      <img src="public/images/xbox/characters/joanna-dark.png" alt="Joanna Dark" />
-      <div>Déplacements dans toutes les directions (portée 8).</div>
-    </div>
-  </div>
+  
+  <!-- Filtres actifs -->
+  <div class="active-filters" id="activeFilters"></div>
+  
+  <!-- Grille des pièces -->
+  <div class="grid" id="piecesGrid"></div>
 </main>
+
 <script src="public/js/header.js"></script>
-<script>VGBHeader.injectHeader('pieces');</script>
+<script>
+// Données des pièces (extrait du jeu principal)
+const piecesData = {
+  // Rois
+  'king-nintendo': {
+    name: 'Roi Nintendo',
+    faction: 'nintendo',
+    universe: 'nintendo',
+    cost: 0,
+    tier: 0,
+    range: 1,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le roi Nintendo, pièce maîtresse de votre armée. Peut se déplacer d\'une case dans toutes les directions.',
+    image: 'public/images/nintendo/characters/king.png',
+    isKing: true
+  },
+  'king-playstation': {
+    name: 'Roi PlayStation',
+    faction: 'playstation',
+    universe: 'playstation',
+    cost: 0,
+    tier: 0,
+    range: 1,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le roi PlayStation, protecteur de votre empire. Mouvements limités mais stratégiques.',
+    image: 'public/images/playstation/characters/king.png',
+    isKing: true
+  },
+  'king-sega': {
+    name: 'Roi SEGA',
+    faction: 'sega',
+    universe: 'sega',
+    cost: 0,
+    tier: 0,
+    range: 1,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le roi SEGA, symbole de l\'ère 16-bit. Une pièce essentielle à protéger.',
+    image: 'public/images/sega/characters/king.png',
+    isKing: true
+  },
+  'king-xbox': {
+    name: 'Roi Xbox',
+    faction: 'xbox',
+    universe: 'xbox',
+    cost: 0,
+    tier: 0,
+    range: 1,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le roi Xbox, gardien de votre royaume. Pièce centrale de votre stratégie.',
+    image: 'public/images/xbox/characters/king.png',
+    isKing: true
+  },
+  
+  // Nintendo
+  'link': {
+    name: 'Link',
+    faction: 'nintendo',
+    universe: 'zelda',
+    cost: 5,
+    tier: 2,
+    range: 3,
+    moves: [[1,0],[-1,0],[0,1],[0,-1]],
+    description: 'Le héros de la Triforce. Excellent pour contrôler les lignes orthogonales avec sa portée de 3 cases.',
+    image: 'public/images/nintendo/characters/link.png'
+  },
+  'mario': {
+    name: 'Mario',
+    faction: 'nintendo',
+    universe: 'mario',
+    cost: 3,
+    tier: 1,
+    range: 2,
+    moves: [[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le plombier le plus célèbre du monde. Spécialiste des attaques en diagonale.',
+    image: 'public/images/nintendo/characters/mario.png'
+  },
+  'zelda': {
+    name: 'Zelda',
+    faction: 'nintendo',
+    universe: 'zelda',
+    cost: 7,
+    tier: 3,
+    range: 8,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'La princesse de la sagesse. Pièce la plus puissante avec une portée de 8 cases dans toutes les directions.',
+    image: 'public/images/nintendo/characters/zelda.png'
+  },
+  
+  // PlayStation
+  'nathan-drake': {
+    name: 'Nathan Drake',
+    faction: 'playstation',
+    universe: 'uncharted',
+    cost: 5,
+    tier: 1,
+    range: 3,
+    moves: [[1,0],[-1,0],[0,1],[0,-1]],
+    description: 'Le chasseur de trésors. Parfait pour les attaques en ligne droite sur longue distance.',
+    image: 'public/images/playstation/characters/nathan-drake.png'
+  },
+  'kratos': {
+    name: 'Kratos',
+    faction: 'playstation',
+    universe: 'god-of-war',
+    cost: 3,
+    tier: 2,
+    range: 2,
+    moves: [[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le Dieu de la Guerre. Dévastateur en diagonale avec ses attaques puissantes.',
+    image: 'public/images/playstation/characters/kratos.png'
+  },
+  'astro-bot': {
+    name: 'Astro Bot',
+    faction: 'playstation',
+    universe: 'astro-bot',
+    cost: 7,
+    tier: 3,
+    range: 8,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le petit robot de PlayStation. Une pièce versatile avec une portée maximale.',
+    image: 'public/images/playstation/characters/astro-bot.png'
+  },
+  
+  // SEGA
+  'sonic': {
+    name: 'Sonic',
+    faction: 'sega',
+    universe: 'sonic',
+    cost: 5,
+    tier: 1,
+    range: 3,
+    moves: [[1,0],[-1,0],[0,1],[0,-1]],
+    description: 'Le hérisson bleu le plus rapide. Excellent pour les courses en ligne droite.',
+    image: 'public/images/sega/characters/sonic.png'
+  },
+  'ryo': {
+    name: 'Ryo Hazuki',
+    faction: 'sega',
+    universe: 'yakuza',
+    cost: 3,
+    tier: 2,
+    range: 2,
+    moves: [[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le jeune héros de Shenmue. Spécialiste des arts martiaux en diagonale.',
+    image: 'public/images/sega/characters/ryo.png'
+  },
+  'joe-musashi': {
+    name: 'Joe Musashi',
+    faction: 'sega',
+    universe: 'shinobi',
+    cost: 7,
+    tier: 3,
+    range: 8,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le ninja légendaire. Maître de tous les mouvements avec une portée maximale.',
+    image: 'public/images/sega/characters/joe-musashi.png'
+  },
+  
+  // Xbox
+  'masterchief': {
+    name: 'Master Chief',
+    faction: 'xbox',
+    universe: 'halo',
+    cost: 5,
+    tier: 1,
+    range: 3,
+    moves: [[1,0],[-1,0],[0,1],[0,-1]],
+    description: 'Le super-soldat de Halo. Parfait pour les attaques tactiques en ligne.',
+    image: 'public/images/xbox/characters/masterchief.png'
+  },
+  'marcus-fenix': {
+    name: 'Marcus Fenix',
+    faction: 'xbox',
+    universe: 'halo',
+    cost: 3,
+    tier: 2,
+    range: 2,
+    moves: [[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'Le soldat de Gears of War. Redoutable en diagonale avec son fusil à chaîne.',
+    image: 'public/images/xbox/characters/marcus-fenix.png'
+  },
+  'joanna-dark': {
+    name: 'Joanna Dark',
+    faction: 'xbox',
+    universe: 'halo',
+    cost: 7,
+    tier: 4,
+    range: 8,
+    moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+    description: 'L\'agent parfait de Perfect Dark. Pièce unique avec des capacités exceptionnelles.',
+    image: 'public/images/xbox/characters/joanna-dark.png'
+  }
+};
+
+// Fonction pour formater les mouvements
+function formatMoves(moves) {
+  const moveNames = {
+    '[[1,0],[-1,0],[0,1],[0,-1]]': 'Orthogonaux (4 directions)',
+    '[[1,1],[1,-1],[-1,1],[-1,-1]]': 'Diagonaux (4 directions)',
+    '[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]': 'Toutes directions (8 directions)'
+  };
+  
+  const moveStr = JSON.stringify(moves);
+  return moveNames[moveStr] || `Mouvements personnalisés (${moves.length} directions)`;
+}
+
+// Fonction pour obtenir le nom du tier
+function getTierName(tier) {
+  if (tier === 0) return 'Roi';
+  if (tier === 1) return 'Faible';
+  if (tier === 2) return 'Moyen';
+  if (tier === 3) return 'Fort';
+  if (tier === 4) return 'Unique';
+  return `Tier ${tier}`;
+}
+
+// Fonction pour créer une carte de pièce
+function createPieceCard(pieceId, pieceData) {
+  const movesText = formatMoves(pieceData.moves);
+  const tierName = getTierName(pieceData.tier);
+  
+  return `
+    <div class="card">
+      <h2>
+        ${pieceData.name}
+        <span class="pill cost">Coût: ${pieceData.cost}</span>
+      </h2>
+      <img src="${pieceData.image}" alt="${pieceData.name}" />
+      <div class="info">
+        <div><strong>Faction:</strong> <span class="pill faction">${pieceData.faction}</span></div>
+        <div><strong>Univers:</strong> <span class="pill universe">${pieceData.universe}</span></div>
+        <div><strong>Force:</strong> <span class="pill tier">${tierName}</span></div>
+        <div><strong>Portée:</strong> <span class="pill range">${pieceData.range}</span></div>
+      </div>
+      <div class="moves"><strong>Mouvements:</strong> ${movesText}</div>
+      <div class="description">${pieceData.description}</div>
+    </div>
+  `;
+}
+
+// Fonction pour afficher les pièces
+function displayPieces(pieces = piecesData) {
+  const grid = document.getElementById('piecesGrid');
+  const activeFilters = document.getElementById('activeFilters');
+  
+  // Créer les cartes
+  const cards = Object.entries(pieces).map(([id, data]) => 
+    createPieceCard(id, data)
+  ).join('');
+  
+  grid.innerHTML = cards;
+  
+  // Mettre à jour les filtres actifs
+  updateActiveFilters();
+}
+
+// Fonction pour mettre à jour les filtres actifs
+function updateActiveFilters() {
+  const activeFilters = document.getElementById('activeFilters');
+  const filters = [];
+  
+  const faction = document.getElementById('filterFaction').value;
+  const universe = document.getElementById('filterUniverse').value;
+  const tier = document.getElementById('filterTier').value;
+  
+  if (faction) filters.push({ type: 'Faction', value: faction, field: 'filterFaction' });
+  if (universe) filters.push({ type: 'Univers', value: universe, field: 'filterUniverse' });
+  if (tier) filters.push({ type: 'Force', value: getTierName(parseInt(tier)), field: 'filterTier' });
+  
+  activeFilters.innerHTML = filters.map(filter => 
+    `<span class="filter-tag">
+      ${filter.type}: ${filter.value}
+      <span class="remove" onclick="clearFilter('${filter.field}')">×</span>
+    </span>`
+  ).join('');
+}
+
+// Fonction pour effacer un filtre
+function clearFilter(field) {
+  document.getElementById(field).value = '';
+  applyFiltersAndSort();
+}
+
+// Fonction pour appliquer les filtres et le tri
+function applyFiltersAndSort() {
+  let filteredPieces = { ...piecesData };
+  
+  // Appliquer les filtres
+  const faction = document.getElementById('filterFaction').value;
+  const universe = document.getElementById('filterUniverse').value;
+  const tier = document.getElementById('filterTier').value;
+  
+  if (faction) {
+    filteredPieces = Object.fromEntries(
+      Object.entries(filteredPieces).filter(([id, data]) => data.faction === faction)
+    );
+  }
+  
+  if (universe) {
+    filteredPieces = Object.fromEntries(
+      Object.entries(filteredPieces).filter(([id, data]) => data.universe === universe)
+    );
+  }
+  
+  if (tier) {
+    filteredPieces = Object.fromEntries(
+      Object.entries(filteredPieces).filter(([id, data]) => data.tier.toString() === tier)
+    );
+  }
+  
+  // Appliquer le tri
+  const sortBy = document.getElementById('sortBy').value;
+  const sortOrder = document.getElementById('sortOrder').value;
+  
+  const sortedEntries = Object.entries(filteredPieces).sort(([idA, dataA], [idB, dataB]) => {
+    let valueA, valueB;
+    
+    switch (sortBy) {
+      case 'name':
+        valueA = dataA.name.toLowerCase();
+        valueB = dataB.name.toLowerCase();
+        break;
+      case 'cost':
+        valueA = dataA.cost;
+        valueB = dataB.cost;
+        break;
+      case 'tier':
+        valueA = dataA.tier;
+        valueB = dataB.tier;
+        break;
+      case 'range':
+        valueA = dataA.range;
+        valueB = dataB.range;
+        break;
+      case 'faction':
+        valueA = dataA.faction;
+        valueB = dataB.faction;
+        break;
+      case 'universe':
+        valueA = dataA.universe;
+        valueB = dataB.universe;
+        break;
+      default:
+        valueA = dataA.name.toLowerCase();
+        valueB = dataB.name.toLowerCase();
+    }
+    
+    if (sortOrder === 'desc') {
+      return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+    } else {
+      return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+    }
+  });
+  
+  filteredPieces = Object.fromEntries(sortedEntries);
+  displayPieces(filteredPieces);
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  // Injecter le header
+  VGBHeader.injectHeader('pieces');
+  
+  // Afficher toutes les pièces
+  displayPieces();
+  
+  // Ajouter les event listeners
+  document.getElementById('sortBy').addEventListener('change', applyFiltersAndSort);
+  document.getElementById('sortOrder').addEventListener('change', applyFiltersAndSort);
+  document.getElementById('filterFaction').addEventListener('change', applyFiltersAndSort);
+  document.getElementById('filterUniverse').addEventListener('change', applyFiltersAndSort);
+  document.getElementById('filterTier').addEventListener('change', applyFiltersAndSort);
+});
+</script>
 </body>
 </html>
-
-
