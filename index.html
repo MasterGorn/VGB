@@ -111,7 +111,7 @@ const ITEM_WEIGHTS = {
   phoenix: 2,
   cursor: 3,
   heart: 2,
-  sandglass: 3000,
+  sandglass: 3,
   mask: 4,
   ocarina: 3
 };
@@ -265,6 +265,7 @@ function preload() {
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
   this.load.audio('star', 'star.mp3');
+  this.load.audio('ocarina', 'ocarina.wav');
 }
 
 function create() {
@@ -2633,6 +2634,9 @@ function applyOcarinaToPiece(piece) {
     piece: piece,
     ocarinaSprite: ocarinaSprite
   });
+  
+  // Jouer le son de l'Ocarina
+  scene.sound.play('ocarina');
   
   showInfoMessage(`Ocarina du Temps ! Cette pièce devient un cavalier !`, 3000);
 }
