@@ -97,6 +97,8 @@ let possessedPieces = []; // array de { piece, cursorSprite, originalPlayer, hou
 let heartPieces = []; // array de { piece, heartSprite }
 // Masque de Majora : pièce forcée
 let forcedPiece = null; // { piece, playerId, maskSprite }
+// Ocarina du Temps : pièces transformées en cavaliers
+let knightPieces = []; // array de { piece, ocarinaSprite }
 // Poids d'apparition des objets de caisse
 const ITEM_WEIGHTS = {
   bobomb: 4,
@@ -110,7 +112,8 @@ const ITEM_WEIGHTS = {
   cursor: 3,
   heart: 2,
   sandglass: 3,
-  mask: 4
+  mask: 4,
+  ocarina: 3
 };
 // Timers
 let playerTimersMs = [];
@@ -257,6 +260,7 @@ function preload() {
   this.load.image('heart', 'heart.png');
   this.load.image('sandglass', 'hourglass.png');
   this.load.image('mask', 'mask-majora.png');
+  this.load.image('ocarina', 'oracina.png');
   // Sons (par item)
   this.load.setPath('public/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -336,6 +340,20 @@ function getNextActivePlayer() {
   }
   
   return nextPlayer;
+}
+
+function shouldIncrementRoundCounter() {
+  // Incrémenter le compteur de round quand on revient au premier joueur actif
+  const nextPlayer = getNextActivePlayer();
+  
+  // Trouver le premier joueur actif (non éliminé)
+  let firstActivePlayer = 0;
+  while (eliminationOrder.includes(firstActivePlayer) && firstActivePlayer < players.length) {
+    firstActivePlayer++;
+  }
+  
+  // Incrémenter si on revient au premier joueur actif ou si on "boucle" vers un joueur avec un index plus petit
+  return nextPlayer === firstActivePlayer || (nextPlayer < currentPlayer && !eliminationOrder.includes(nextPlayer));
 }
 
 function setupGridSizeUI(scene) {
@@ -753,6 +771,12 @@ function startGame(scene) {
     forcedPiece.maskSprite.destroy();
   }
   forcedPiece = null;
+  
+  // reset ocarinas (cavaliers)
+  for (const kp of knightPieces) {
+    if (kp.ocarinaSprite) kp.ocarinaSprite.destroy();
+  }
+  knightPieces = [];
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser
   if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
@@ -1109,6 +1133,8 @@ function updatePieces() {
   updateHeartPositions();
   // Mettre à jour la position du masque de Majora
   updateMaskPosition();
+  // Mettre à jour les positions des ocarinas
+  updateOcarinaPositions();
   updateRulesSidebar();
 }
 
@@ -1425,6 +1451,30 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'ocarina') {
+      // Vérifier si une pièce est cliquée
+      if (!clickedPiece) return;
+      
+      // Appliquer l'Ocarina du Temps à la pièce
+      applyOcarinaToPiece(clickedPiece);
+      const ocarinaInventoryIndex = currentItemAction.inventoryIndex;
+      currentItemAction.active = false;
+      currentItemAction = null;
+      itemUsedThisTurn = true;
+      clearHighlights();
+      hideInfoMessage();
+      
+      // Consommer l'item ocarina
+      if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+        const useIdx = (typeof ocarinaInventoryIndex === 'number') ? ocarinaInventoryIndex : playerItemIcons[currentPlayer].findIndex(e => e && e.item === 'ocarina');
+        if (useIdx >= 0) {
+          const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+          if (used && used.sprite) used.sprite.destroy();
+        }
+      }
+      updatePieces();
+      return;
+    }
   }
 
   // Si le joueur a une pièce forcée, empêcher la sélection d'autres pièces
@@ -1469,6 +1519,8 @@ function handleClick(scene, pos) {
           playerLostPieces.push({ playerId: target.player, piece: { ...target } });
           // Nettoyer l'exposant du curseur Sims si la pièce était possédée
           cleanupCursorForPiece(target);
+          // Nettoyer l'ocarina si la pièce en avait un
+          removeOcarinaFromPiece(target);
           target.sprite.destroy();
           pieces = pieces.filter(p => p !== target);
         }
@@ -1506,6 +1558,7 @@ function handleClick(scene, pos) {
               // Nettoyer les éléments associés avant suppression
               cleanupCursorForPiece(piece);
               removeHeartFromPiece(piece);
+              removeOcarinaFromPiece(piece);
               if (piece.sprite) piece.sprite.destroy();
             }
             
@@ -1547,7 +1600,7 @@ function handleClick(scene, pos) {
         
         // fin de tour
         let oldRound = roundCounter;
-        if (currentPlayer === players.length - 1) { roundCounter++; }
+        if (shouldIncrementRoundCounter()) { roundCounter++; }
         currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
         if (roundCounter !== oldRound) {
           decrementLightningCharges();
@@ -1608,7 +1661,7 @@ function handleClick(scene, pos) {
       updateAdInfo();
       // fin de tour
       let oldRound = roundCounter;
-      if (currentPlayer === players.length - 1) { roundCounter++; }
+      if (shouldIncrementRoundCounter()) { roundCounter++; }
       currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
       // décrémenter les charges uniquement quand un round complet vient de s'achever
       if (roundCounter !== oldRound) {
@@ -1914,8 +1967,8 @@ function tryUseItem(playerId, clickedIconSprite) {
     moveCount++;
     if (moveCount % 5 === 0) rotateAds();
     updateAdInfo();
-    if (currentPlayer === players.length - 1) { roundCounter++; }
-    currentPlayer = (currentPlayer+1) % players.length;
+    if (shouldIncrementRoundCounter()) { roundCounter++; }
+    currentPlayer = getNextActivePlayer();
     itemUsedThisTurn = false;
     decrementLightningCharges();
     // L'effet étoile est maintenant géré dans updateTurnUI()
@@ -1952,10 +2005,10 @@ function tryUseItem(playerId, clickedIconSprite) {
     moveCount++;
     if (moveCount % 5 === 0) rotateAds();
     updateAdInfo();
-    let oldRound = roundCounter;
-    if (currentPlayer === players.length - 1) { roundCounter++; }
-    currentPlayer = (currentPlayer+1) % players.length;
-    if (roundCounter !== oldRound) {
+        let oldRound = roundCounter;
+        if (shouldIncrementRoundCounter()) { roundCounter++; }
+        currentPlayer = getNextActivePlayer();
+        if (roundCounter !== oldRound) {
       decrementLightningCharges();
       // L'effet étoile est maintenant géré dans updateTurnUI()
     }
@@ -2053,6 +2106,13 @@ function tryUseItem(playerId, clickedIconSprite) {
     // Highlight des pièces adverses possibles
     const allowed = pieces.filter(p => p.player !== playerId);
     highlightPieces(allowed, 0xff9800); // orange
+  }
+  if (icon.item === 'ocarina') {
+    // Activer mode ocarina: prochain clic sur une pièce la transforme en cavalier
+    currentItemAction = { playerId, type: 'ocarina', active: true, inventoryIndex: idx };
+    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce à transformer en cavalier`, 5000);
+    // Highlight de toutes les pièces (alliées et adverses)
+    highlightPieces(pieces, 0x9c27b0); // violet
   }
 }
 
@@ -2467,6 +2527,18 @@ function removeHeartFromPiece(piece) {
   }
 }
 
+function removeOcarinaFromPiece(piece) {
+  // Trouver et supprimer l'ocarina de la pièce
+  const ocarinaIndex = knightPieces.findIndex(kp => kp.piece === piece);
+  if (ocarinaIndex >= 0) {
+    const knight = knightPieces[ocarinaIndex];
+    if (knight.ocarinaSprite && knight.ocarinaSprite.destroy) {
+      knight.ocarinaSprite.destroy();
+    }
+    knightPieces.splice(ocarinaIndex, 1);
+  }
+}
+
 function updateHeartPositions() {
   // Mettre à jour la position des cœurs pour qu'ils suivent leurs pièces
   for (const hp of heartPieces) {
@@ -2482,6 +2554,16 @@ function updateMaskPosition() {
   if (forcedPiece && forcedPiece.maskSprite && forcedPiece.piece) {
     forcedPiece.maskSprite.x = GRID_OFFSET_X + forcedPiece.piece.x * TILE_SIZE + TILE_SIZE/2;
     forcedPiece.maskSprite.y = GRID_OFFSET_Y + forcedPiece.piece.y * TILE_SIZE + TILE_SIZE/2 - 25;
+  }
+}
+
+function updateOcarinaPositions() {
+  // Mettre à jour les positions des ocarinas
+  for (const kp of knightPieces) {
+    if (kp.ocarinaSprite && kp.piece) {
+      kp.ocarinaSprite.x = GRID_OFFSET_X + kp.piece.x * TILE_SIZE + TILE_SIZE/2;
+      kp.ocarinaSprite.y = GRID_OFFSET_Y + kp.piece.y * TILE_SIZE + TILE_SIZE/2 - 25;
+    }
   }
 }
 
@@ -2509,6 +2591,173 @@ function applyMaskToPiece(piece) {
   };
   
   showInfoMessage(`Masque de Majora ! Le joueur ${piece.player + 1} devra jouer cette pièce !`, 3000);
+}
+
+function applyOcarinaToPiece(piece) {
+  // Vérifier si la pièce n'est pas déjà un cavalier
+  const existingKnight = knightPieces.find(kp => kp.piece === piece);
+  if (existingKnight) {
+    showInfoMessage(`Cette pièce est déjà transformée en cavalier !`, 2000);
+    return;
+  }
+  
+  // Créer le sprite de l'ocarina
+  const scene = infoText.scene;
+  const ocarinaSprite = scene.add.image(0, 0, 'ocarina');
+  ocarinaSprite.setDisplaySize(18, 18);
+  ocarinaSprite.setDepth(1500);
+  
+  // Positionner l'ocarina au-dessus de la pièce
+  ocarinaSprite.x = GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2;
+  ocarinaSprite.y = GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2 - 25;
+  
+  // Stocker l'information du cavalier
+  knightPieces.push({
+    piece: piece,
+    ocarinaSprite: ocarinaSprite
+  });
+  
+  showInfoMessage(`Ocarina du Temps ! Cette pièce devient un cavalier !`, 3000);
+}
+
+function getReachablePositions(piece) {
+  if (!piece) return [];
+  
+  // Vérifier si la pièce est transformée en cavalier par l'Ocarina
+  const isKnight = knightPieces.some(kp => kp.piece === piece);
+  
+  if (isKnight) {
+    return getKnightMoves(piece);
+  } else {
+    // Utiliser la logique de mouvement originale du jeu
+    // Pour l'instant, on retourne un mouvement simple en attendant d'identifier la vraie logique
+    return getOriginalMoves(piece);
+  }
+}
+
+function getKnightMoves(piece) {
+  const moves = [];
+  const knightOffsets = [
+    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+    [1, -2], [1, 2], [2, -1], [2, 1]
+  ];
+  
+  for (const [dx, dy] of knightOffsets) {
+    const newX = piece.x + dx;
+    const newY = piece.y + dy;
+    
+    // Vérifier que la position est dans la grille
+    if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) continue;
+    
+    // Vérifier s'il y a une pièce sur cette case
+    const targetPiece = getPieceAt({x: newX, y: newY});
+    
+    if (!targetPiece) {
+      // Case vide - mouvement valide
+      moves.push({x: newX, y: newY});
+    } else if (targetPiece.player !== piece.player) {
+      // Pièce ennemie - capture possible
+      moves.push({x: newX, y: newY});
+    }
+    // Si c'est une pièce alliée, on ne peut pas aller sur cette case
+  }
+  
+  return moves;
+}
+
+function getOriginalMoves(piece) {
+  const moves = [];
+  
+  // Obtenir les données de mouvement de la pièce
+  const pieceData = getPieceMovementData(piece);
+  if (!pieceData) {
+    // Fallback : mouvement de roi si pas de données
+    return getBasicKingMoves(piece);
+  }
+  
+  const { moves: moveDirections, range } = pieceData;
+  
+  // Appliquer chaque direction de mouvement
+  for (const [dx, dy] of moveDirections) {
+    // Parcourir dans cette direction jusqu'à la portée maximale
+    for (let distance = 1; distance <= range; distance++) {
+      const newX = piece.x + dx * distance;
+      const newY = piece.y + dy * distance;
+      
+      // Vérifier limites de grille
+      if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) break;
+      
+      const targetPiece = getPieceAt({x: newX, y: newY});
+      
+      if (!targetPiece) {
+        // Case vide - mouvement valide
+        moves.push({x: newX, y: newY});
+      } else if (targetPiece.player !== piece.player) {
+        // Pièce ennemie - capture possible puis arrêt
+        moves.push({x: newX, y: newY});
+        break;
+      } else {
+        // Pièce alliée - arrêt
+        break;
+      }
+    }
+  }
+  
+  return moves;
+}
+
+function getPieceMovementData(piece) {
+  // Obtenir la faction du joueur
+  const player = players[piece.player];
+  const faction = player ? player.faction : 'nintendo';
+  
+  if (piece.type === 'king') {
+    // Données du roi pour cette faction
+    return kings[faction];
+  } else {
+    // Données de la pièce dans le catalogue de faction
+    const catalog = factionCatalogs[faction];
+    return catalog ? catalog[piece.type] : null;
+  }
+}
+
+function getBasicKingMoves(piece) {
+  // Mouvement de base du roi en cas de fallback
+  const moves = [];
+  const directions = [
+    [-1, -1], [-1, 0], [-1, 1],
+    [0, -1],           [0, 1],
+    [1, -1],  [1, 0],  [1, 1]
+  ];
+  
+  for (const [dx, dy] of directions) {
+    const newX = piece.x + dx;
+    const newY = piece.y + dy;
+    if (isValidMove(piece, newX, newY)) {
+      moves.push({x: newX, y: newY});
+    }
+  }
+  
+  return moves;
+}
+
+function isValidMove(piece, x, y) {
+  // Vérifier que la position est dans la grille
+  if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return false;
+  
+  // Vérifier s'il y a une pièce sur cette case
+  const targetPiece = getPieceAt({x, y});
+  
+  if (!targetPiece) {
+    // Case vide - mouvement valide
+    return true;
+  } else if (targetPiece.player !== piece.player) {
+    // Pièce ennemie - capture possible
+    return true;
+  }
+  
+  // Pièce alliée - mouvement invalide
+  return false;
 }
 
 function isPiecePossessedByCurrentPlayer(piece) {
@@ -2710,6 +2959,8 @@ function detonateBombAt(pos) {
       playerLostPieces.push({ playerId: victim.player, piece: { ...victim } });
       // Nettoyer l'exposant du curseur Sims si la pièce était possédée
       cleanupCursorForPiece(victim);
+      // Nettoyer l'ocarina si la pièce en avait un
+      removeOcarinaFromPiece(victim);
       victim.sprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
       if (wasKing) {
@@ -2892,6 +3143,8 @@ function applyLightningKill() {
     playerLostPieces.push({ playerId: v.player, piece: { ...v } });
     // Nettoyer l'exposant du curseur Sims si la pièce était possédée
     cleanupCursorForPiece(v);
+    // Nettoyer l'ocarina si la pièce en avait un
+    removeOcarinaFromPiece(v);
     if (v && v.sprite) v.sprite.destroy();
     if (v.type === 'king') {
       kingDied = true;
@@ -2986,6 +3239,7 @@ function tickTimer(scene) {
         // Nettoyer les éléments associés avant suppression
         cleanupCursorForPiece(piece);
         removeHeartFromPiece(piece);
+        removeOcarinaFromPiece(piece);
         if (piece.sprite) piece.sprite.destroy();
       }
       
