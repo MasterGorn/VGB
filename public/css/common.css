@@ -416,6 +416,8 @@ body {
 }
 
 .control-group label {
+  display: inline-block;
+  min-width: max-content;
   font-weight: bold;
   color: var(--text-primary);
 }
