@@ -91,6 +91,114 @@ const piecesData = [
     image: "public/images/nintendo/characters/zelda.png",
     type: "zelda"
   },
+  {
+    name: "Bowser",
+    faction: "Nintendo",
+    universe: "Super Mario",
+    cost: 8,
+    tier: 4,
+    range: 3,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Roi des Koopas et ennemi juré de Mario. Se déplace dans toutes les directions sur 3 cases. Force brute et résistance exceptionnelles.",
+    image: "public/images/nintendo/characters/bowser.png",
+    type: "bowser"
+  },
+  {
+    name: "Ganondorf",
+    faction: "Nintendo",
+    universe: "The Legend of Zelda",
+    cost: 9,
+    tier: 4,
+    range: 4,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Roi des Gerudos et incarnation du Mal. Se déplace dans toutes les directions sur 4 cases. Pouvoirs sombres et magie noire redoutables.",
+    image: "public/images/nintendo/characters/ganondorf.png",
+    type: "ganondorf"
+  },
+  {
+    name: "Samus",
+    faction: "Nintendo",
+    universe: "Metroid",
+    cost: 6,
+    tier: 3,
+    range: 4,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Chasseuse de prime galactique. Se déplace dans toutes les directions sur 4 cases. Armure puissante et armes avancées.",
+    image: "public/images/nintendo/characters/samus.png",
+    type: "samus"
+  },
+  {
+    name: "Pit",
+    faction: "Nintendo",
+    universe: "Kid Icarus",
+    cost: 4,
+    tier: 2,
+    range: 3,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Ange gardien de Palutena. Se déplace dans toutes les directions sur 3 cases. Vol et attaques à distance avec son arc.",
+    image: "public/images/nintendo/characters/pit.png",
+    type: "pit"
+  },
+  {
+    name: "Palutena",
+    faction: "Nintendo",
+    universe: "Kid Icarus",
+    cost: 8,
+    tier: 4,
+    range: 6,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Déesse de la Lumière et protectrice d'Angel Land. Se déplace dans toutes les directions sur 6 cases. Pouvoirs divins et magie sacrée.",
+    image: "public/images/nintendo/characters/palutena.png",
+    type: "palutena"
+  },
+  {
+    name: "Sheik",
+    faction: "Nintendo",
+    universe: "The Legend of Zelda",
+    cost: 5,
+    tier: 2,
+    range: 2,
+    moves: [[1,1], [1,-1], [-1,1], [-1,-1], [2,0], [-2,0], [0,2], [0,-2]],
+    description: "Identité secrète de Zelda. Se déplace en diagonale et en L sur 2 cases. Agilité et techniques ninja redoutables.",
+    image: "public/images/nintendo/characters/sheik.png",
+    type: "sheik"
+  },
+  {
+    name: "Wario",
+    faction: "Nintendo",
+    universe: "Super Mario",
+    cost: 4,
+    tier: 2,
+    range: 2,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Cousin avare de Mario. Se déplace dans toutes les directions sur 2 cases. Force brute et résistance aux dégâts.",
+    image: "public/images/nintendo/characters/wario.png",
+    type: "wario"
+  },
+  {
+    name: "Duo Duck Hunt",
+    faction: "Nintendo",
+    universe: "Duck Hunt",
+    cost: 3,
+    tier: 1,
+    range: 5,
+    moves: [[1,0], [-1,0], [0,1], [0,-1]],
+    description: "Chasseur et son canard fidèle. Se déplace en ligne droite sur 5 cases. Attaques à distance et travail d'équipe.",
+    image: "public/images/nintendo/characters/duo-duck-hunt.png",
+    type: "duo-duck-hunt"
+  },
+  {
+    name: "Wii Fit Trainer",
+    faction: "Nintendo",
+    universe: "Wii Fit",
+    cost: 2,
+    tier: 1,
+    range: 2,
+    moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
+    description: "Instructeur de fitness Wii. Se déplace dans toutes les directions sur 2 cases. Équilibre et techniques de yoga.",
+    image: "public/images/nintendo/characters/wii-fit-trainer.png",
+    type: "wii-fit-trainer"
+  },
   
   // PlayStation
   {

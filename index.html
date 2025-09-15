@@ -351,7 +351,16 @@ const factionCatalogs = {
   nintendo: {
     link: { cost: 5, tier: 2, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // moyen
     mario: { cost: 3, tier: 1, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // faible
-    zelda: { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
+    zelda: { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 }, // fort
+    bowser: { cost: 8, tier: 4, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 }, // boss
+    ganondorf: { cost: 9, tier: 4, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 }, // boss
+    samus: { cost: 6, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 }, // fort
+    pit: { cost: 4, tier: 2, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 }, // moyen
+    palutena: { cost: 8, tier: 4, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 6 }, // boss
+    sheik: { cost: 5, tier: 2, moves: [[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]], range: 2 }, // spécial
+    wario: { cost: 4, tier: 2, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // moyen
+    'duo-duck-hunt': { cost: 3, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 5 }, // spécial
+    'wii-fit-trainer': { cost: 2, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 } // faible
   },
   xbox: {
     'masterchief': { cost: 5, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // faible
@@ -398,6 +407,15 @@ function preload() {
   this.load.image('mario', 'mario.png');
   this.load.image('link', 'link.png');
   this.load.image('zelda', 'zelda.png');
+  this.load.image('bowser', 'bowser.png');
+  this.load.image('ganondorf', 'ganondorf.png');
+  this.load.image('samus', 'samus.png');
+  this.load.image('pit', 'pit.png');
+  this.load.image('palutena', 'palutena.png');
+  this.load.image('sheik', 'sheik.png');
+  this.load.image('wario', 'wario.png');
+  this.load.image('duo-duck-hunt', 'duo-duck-hunt.png');
+  this.load.image('wii-fit-trainer', 'wii-fit-trainer.png');
   // nintendo utilise le sprite de pit (fallback)
   this.load.image('nintendo', 'pit.png');
 
@@ -721,22 +739,47 @@ function rebuildChoiceList(scene) {
     choiceThumbs = [];
   }
   currentChoicesFaction = faction;
+  
+  // Organiser les personnages en 2 colonnes
+  const catalogKeys = Object.keys(draftCatalog);
+  const itemsPerColumn = Math.ceil(catalogKeys.length / 2);
+  
   let y = 50;
-  for (let key in draftCatalog) {
+  let column = 0;
+  let itemInColumn = 0;
+  
+  for (let key of catalogKeys) {
     const displayName = getDisplayNameForKey(key);
     const texKey = hasTexture(scene, key) ? key : 'nintendo';
-    const img = scene.add.image(35, y, texKey)
+    
+    // Position X : 35 pour colonne gauche, 200 pour colonne droite
+    const x = column === 0 ? 35 : 200;
+    const textX = column === 0 ? 70 : 235;
+    
+    const img = scene.add.image(x, y, texKey)
       .setDisplaySize(52,52)
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const nameText = scene.add.text(70, y - 12, displayName, { font: "16px Arial", fill: "#000" })
+    const nameText = scene.add.text(textX, y - 12, displayName, { font: "16px Arial", fill: "#000" })
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const costText = scene.add.text(70, y + 10, `cost: ${draftCatalog[key].cost}` , { font: "12px Arial", fill: "#333" });
+    const costText = scene.add.text(textX, y + 10, `cost: ${draftCatalog[key].cost}` , { font: "12px Arial", fill: "#333" });
     choiceThumbs.push({ key, image: img, nameText, costText });
+    
+    itemInColumn++;
     y += 70;
+    
+    // Passer à la colonne de droite quand on a rempli la colonne de gauche
+    if (itemInColumn >= itemsPerColumn && column === 0) {
+      column = 1;
+      y = 50; // Reset Y pour la colonne de droite
+      itemInColumn = 0;
+    }
   }
-  choiceListBottomY = y;
+  
+  // Calculer la position Y du bas en prenant la plus grande des deux colonnes
+  choiceListBottomY = Math.max(y, 50 + itemsPerColumn * 70);
+  
   if (endDraftBtn) endDraftBtn.setY(choiceListBottomY + 10);
   if (clearAllBtn) clearAllBtn.setY(choiceListBottomY + 10);
 }
