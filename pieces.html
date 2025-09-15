@@ -90,9 +90,10 @@
   <div id="activeFilters" class="active-filters"></div>
   
   <!-- Grille des pièces -->
-  <div id="piecesGrid" class="pieces-grid"></div>
+  <div id="piecesGrid" class="pieces-grid">  </div>
 </main>
 
+<script src="public/js/header.js"></script>
 <script>
 // Données des pièces avec informations détaillées (correspondant au jeu)
 const piecesData = [
@@ -458,6 +459,7 @@ document.getElementById('tierFilter').addEventListener('change', (e) => {
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
+  VGBHeader.injectHeader('pieces');
   applyFiltersAndSort();
 });
 </script>
