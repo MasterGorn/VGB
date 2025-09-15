@@ -13,14 +13,62 @@
   gap: var(--spacing-md);
   align-items: flex-start;
   padding-top: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1280px) {
+  .game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-start;
+    padding-top: var(--spacing-xl);
+  }
+  
+  .game-root {
+    flex: 1;
+    max-width: 100%;
+  }
+  
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 280px;
+  }
+  
+  .rules-panel {
+    order: 2;
+  }
+  
+  .ads-panel {
+    order: 1;
+  }
 }
 
 .game-root {
   flex: 1;
+  max-width: 100%;
+  margin-left: 24px;
+}
+
+.game-root canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 436px;
+  margin-right: 24px;
 }
 
 .ads-panel {
-  width: 280px;
+  width: 100%;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -55,6 +103,11 @@
 
 .rules-panel {
   margin-top: var(--spacing-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-light);
 }
 
 .rules-title {
@@ -70,19 +123,72 @@
   line-height: 1.5;
 }
 
+@media (max-width: 1279px) {
+  .game-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: var(--spacing-lg);
+  }
+  
+  .game-root {
+    order: 1;
+    margin: 0 24px;
+  }
+  
+  .sidebar {
+    order: 2;
+    width: calc(100% - 48px);
+    flex-direction: column;
+    margin: 0 24px;
+  }
+  
+  .rules-panel {
+    order: 1;
+    margin-top: var(--spacing-lg);
+    margin-bottom: 0;
+  }
+  
+  .ads-panel {
+    order: 2;
+    width: 100%;
+    margin-top: var(--spacing-lg);
+  }
+}
+
 .tagline {
   text-align: center;
-  padding: var(--spacing-lg) var(--spacing-md);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin: 0;
+  padding: var(--spacing-xl) var(--spacing-md);
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
+  margin: var(--spacing-lg) 0;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-medium);
+  position: relative;
+  overflow: hidden;
+}
+
+.tagline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent-gold);
 }
 
 .tagline h1 {
   margin: 0;
-  font: 28px Arial, sans-serif;
+  font: 32px Arial, sans-serif;
   font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  text-shadow: var(--shadow-text);
+  background: var(--accent-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  z-index: 1;
 }
 </style>
 </head>
@@ -96,14 +202,17 @@
 
 <div class="game-container">
   <div id="game-root" class="game-root"></div>
-  <div id="ads-panel" class="ads-panel">
-    <div id="ads-title" class="ads-title">Publicités</div>
-    <div id="ad-slot-1" class="ad-slot">Annonce 1</div>
-    <div id="ad-slot-2" class="ad-slot">Annonce 2</div>
-    <div id="ad-info" class="ad-info">Mise à jour toutes les 5 actions</div>
+  <div class="sidebar">
     <div id="rules-panel" class="rules-panel">
       <div class="rules-title">Pièces en jeu</div>
       <div id="rules-list" class="rules-list"></div>
+    </div>
+    
+    <div id="ads-panel" class="ads-panel">
+      <div id="ads-title" class="ads-title">Publicités</div>
+      <div id="ad-slot-1" class="ad-slot">Annonce 1</div>
+      <div id="ad-slot-2" class="ad-slot">Annonce 2</div>
+      <div id="ad-info" class="ad-info">Mise à jour toutes les 5 actions</div>
     </div>
   </div>
 </div>
@@ -1598,8 +1707,8 @@ function handleClick(scene, pos) {
           cleanupCursorForPiece(target);
           // Nettoyer l'ocarina si la pièce en avait un
           removeOcarinaFromPiece(target);
-          target.sprite.destroy();
-          pieces = pieces.filter(p => p !== target);
+        target.sprite.destroy();
+        pieces = pieces.filter(p => p !== target);
         }
         // Vérifier si la pièce trébuche sur une banane
         if (checkBananaTrip(selectedPiece, pos)) {
