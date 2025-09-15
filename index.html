@@ -108,6 +108,8 @@
   </div>
 </div>
 <script src="public/js/header.js"></script>
+<script src="public/data/pieces.js"></script>
+<script src="public/data/items.js"></script>
 <script>
 VGBHeader.injectHeader('index');
 
@@ -187,21 +189,8 @@ let forcedPiece = null; // { piece, playerId, maskSprite }
 // Ocarina du Temps : pièces transformées en cavaliers
 let knightPieces = []; // array de { piece, ocarinaSprite }
 // Poids d'apparition des objets de caisse
-const ITEM_WEIGHTS = {
-  bobomb: 4,
-  portals: 4,
-  lightning: 1,
-  star: 2,
-  tetrimino: 3,
-  tornado: 2,
-  banana: 5,
-  phoenix: 2,
-  cursor: 3,
-  heart: 2,
-  sandglass: 3,
-  mask: 4,
-  ocarina: 3
-};
+// Utilisation des données des objets depuis le fichier externe
+const ITEM_WEIGHTS = getItemWeights();
 // Timers
 let playerTimersMs = [];
 let timerTexts = [];
