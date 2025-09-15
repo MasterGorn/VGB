@@ -2,231 +2,189 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Chesstendo - Les règles</title>
+<title>Chesstendo - Règles du jeu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="public/css/header.css" />
+<link rel="stylesheet" href="public/css/common.css" />
 <style>
-  body { margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111; }
-  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); overflow:visible; }
-  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:relative; height:64px; }
-  nav a { color:#111; text-decoration:none; padding:6px 10px; border-radius:6px; }
-  main { max-width:1200px; margin:0 auto; padding:144px 16px 32px; }
-  h1 { margin:0 0 24px; font:24px Arial, sans-serif; }
-  h2 { margin:24px 0 16px; font:20px Arial, sans-serif; color:#333; }
-  h3 { margin:16px 0 8px; font:16px Arial, sans-serif; color:#444; }
-  .section { background:#fff; border:1px solid #e5e5e5; border-radius:10px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-  ul, ol { margin:8px 0; padding-left:20px; }
-  li { margin:4px 0; line-height:1.4; }
-  .highlight { background:#fff3cd; padding:12px; border-radius:6px; border-left:4px solid #ffc107; margin:12px 0; }
-  .warning { background:#f8d7da; padding:12px; border-radius:6px; border-left:4px solid #dc3545; margin:12px 0; }
-  .info { background:#d1ecf1; padding:12px; border-radius:6px; border-left:4px solid #17a2b8; margin:12px 0; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin:16px 0; }
+/* Styles spécifiques à la page des règles */
+.rules-section {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+}
+
+.rules-section h2 {
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+}
+
+.rules-section h3 {
+  color: var(--text-secondary);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+}
+
+.rules-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-sm) 0;
+}
+
+.rules-section ul, .rules-section ol {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.rules-section li {
+  margin: var(--spacing-xs) 0;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.highlight-box {
+  background: var(--secondary-bg);
+  border-left: 4px solid var(--accent-blue);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.highlight-box strong {
+  color: var(--text-primary);
+}
 </style>
 </head>
 <body>
 <div id="header-root"></div>
 
-<main>
-  <h1>Règles du jeu</h1>
+<main class="site-main">
+  <h1 class="page-title">🎯 <span class="title-text">Règles du jeu</span> 🎯</h1>
   
-  <div class="section">
+  <div class="rules-section">
     <h2>🎯 Objectif du jeu</h2>
     <p>Video Games Battle est un jeu de stratégie inspiré des échecs où les joueurs s'affrontent avec des personnages emblématiques de l'univers vidéoludique. L'objectif est de capturer le roi adverse pour éliminer le joueur et devenir le dernier survivant.</p>
-  </div>
-  
-  <div class="section">
-    <h2>⚙️ Configuration de la partie</h2>
     
-    <h3>Taille du plateau</h3>
-    <ul>
-      <li><strong>9×9 :</strong> Partie rapide, budget de 20 points</li>
-      <li><strong>12×12 :</strong> Partie standard, budget de 30 points</li>
-      <li><strong>15×15 :</strong> Partie longue, budget de 50 points</li>
-    </ul>
-    
-    <h3>Draft des pièces</h3>
-    <ul>
-      <li>Chaque joueur choisit ses pièces selon son budget</li>
-      <li>Un roi est automatiquement ajouté à chaque armée</li>
-      <li>Les pièces coûtent entre 3 et 7 points selon leur puissance</li>
-    </ul>
-  </div>
-  
-  <div class="section">
-    <h2>♟️ Types de pièces</h2>
-    
-    <div class="grid">
-      <div>
-        <h3>Rois (Tier 0)</h3>
-        <ul>
-          <li>Coût : 0 points</li>
-          <li>Portée : 1 case</li>
-          <li>Mouvements : 8 directions (comme un roi d'échecs)</li>
-          <li>Particularité : Sa capture élimine tout le joueur</li>
-        </ul>
-      </div>
-      
-      <div>
-        <h3>Pièces faibles (Tier 1)</h3>
-        <ul>
-          <li>Coût : 3-5 points</li>
-          <li>Portée : 2-3 cases</li>
-          <li>Mouvements : 4 directions (orthogonales ou diagonales)</li>
-          <li>Exemples : Mario, Sonic, Nathan Drake</li>
-        </ul>
-      </div>
-      
-      <div>
-        <h3>Pièces moyennes (Tier 2)</h3>
-        <ul>
-          <li>Coût : 3-5 points</li>
-          <li>Portée : 2-3 cases</li>
-          <li>Mouvements : 4 directions spécialisées</li>
-          <li>Exemples : Link, Kratos, Ryo</li>
-        </ul>
-      </div>
-      
-      <div>
-        <h3>Pièces fortes (Tier 3)</h3>
-        <ul>
-          <li>Coût : 7 points</li>
-          <li>Portée : 8 cases</li>
-          <li>Mouvements : 8 directions (comme une dame d'échecs)</li>
-          <li>Exemples : Zelda, Astro Bot, Joe Musashi</li>
-        </ul>
-      </div>
-      
-      <div>
-        <h3>Pièces uniques (Tier 4)</h3>
-        <ul>
-          <li>Coût : 7 points</li>
-          <li>Portée : 8 cases</li>
-          <li>Mouvements : 8 directions</li>
-          <li>Exemples : Joanna Dark (unique Xbox)</li>
-        </ul>
-      </div>
+    <div class="highlight-box">
+      <strong>Victoire :</strong> Être le dernier joueur en vie en capturant tous les rois adverses ou en éliminant tous les adversaires par timeout.
     </div>
   </div>
-  
-  <div class="section">
+
+  <div class="rules-section">
+    <h2>♟️ Types de pièces</h2>
+    
+    <h3>Roi</h3>
+    <p>Pièce la plus importante de chaque joueur. Se déplace d'une case dans toutes les directions. Si votre roi est capturé, vous êtes éliminé de la partie.</p>
+    
+    <h3>Pièces spéciales</h3>
+    <p>Chaque faction dispose de personnages uniques avec des mouvements et capacités spécifiques :</p>
+    <ul>
+      <li><strong>Nintendo :</strong> Mario, Link, Samus, Pit</li>
+      <li><strong>PlayStation :</strong> Kratos, Nathan Drake, Aloy, Ratchet</li>
+      <li><strong>SEGA :</strong> Sonic, Ryo, Alex Kidd, NiGHTS</li>
+      <li><strong>Xbox :</strong> Master Chief, Marcus Fenix, Banjo, Conker</li>
+    </ul>
+    
+    <h3>Mouvements</h3>
+    <p>Chaque pièce a ses propres règles de déplacement définies par :</p>
+    <ul>
+      <li><strong>Directions :</strong> Cases adjacentes accessibles</li>
+      <li><strong>Portée :</strong> Nombre maximum de cases en ligne droite</li>
+      <li><strong>Spécialités :</strong> Capacités uniques (saut, vol, etc.)</li>
+    </ul>
+  </div>
+
+  <div class="rules-section">
+    <h2>🎁 Système d'objets</h2>
+    
+    <h3>Acquisition</h3>
+    <p>Les objets apparaissent aléatoirement sur le plateau dans des caisses. Chaque joueur peut en ramasser un maximum de 3 en réserve.</p>
+    
+    <h3>Utilisation</h3>
+    <p>Un seul objet peut être utilisé par tour. Les objets ont des effets variés :</p>
+    <ul>
+      <li><strong>Sablière du Temps :</strong> Réduit le temps des adversaires</li>
+      <li><strong>Masque de Majora :</strong> Force un adversaire à jouer une pièce spécifique</li>
+      <li><strong>Ocarina du Temps :</strong> Transforme une pièce en cavalier</li>
+      <li><strong>Bombe :</strong> Explose et endommage les pièces adjacentes</li>
+      <li><strong>Étoile :</strong> Révèle les pièces cachées</li>
+    </ul>
+    
+    <h3>Poids des objets</h3>
+    <p>Chaque objet a un poids différent qui influence la probabilité d'apparition. Plus le poids est élevé, plus l'objet est rare.</p>
+  </div>
+
+  <div class="rules-section">
+    <h2>⏰ Système de temps</h2>
+    
+    <h3>Timer optionnel</h3>
+    <p>Les joueurs peuvent activer un chronomètre pour limiter le temps de réflexion par tour. Le temps par tour varie selon la taille du plateau :</p>
+    <ul>
+      <li><strong>9×9 :</strong> 3 minutes par tour</li>
+      <li><strong>11×11 :</strong> 4 minutes par tour</li>
+      <li><strong>15×15 :</strong> 5 minutes par tour</li>
+    </ul>
+    
+    <h3>Élimination par timeout</h3>
+    <p>Si un joueur dépasse son temps, il est automatiquement éliminé et toutes ses pièces disparaissent du plateau.</p>
+  </div>
+
+  <div class="rules-section">
     <h2>🎮 Déroulement d'une partie</h2>
     
     <h3>Phase de draft</h3>
-    <ol>
-      <li>Chaque joueur choisit son nom et sa faction</li>
-      <li>Tour par tour, sélection des pièces selon le budget</li>
-      <li>Possibilité de retirer des pièces avant de finaliser</li>
-    </ol>
+    <p>Au début de chaque partie, les joueurs sélectionnent leurs pièces dans un ordre défini. Chaque joueur choisit une pièce à tour de rôle jusqu'à avoir constitué son armée.</p>
     
     <h3>Phase de jeu</h3>
+    <p>Les joueurs jouent à tour de rôle dans l'ordre défini. Chaque tour consiste à :</p>
     <ol>
-      <li>Les joueurs jouent à tour de rôle</li>
-      <li>À chaque tour : sélection d'une pièce → déplacement/capture</li>
-      <li>Les objets peuvent être utilisés (1 par tour maximum)</li>
-      <li>Les caisses d'objets réapparaissent tous les 3 tours</li>
+      <li>Sélectionner une pièce</li>
+      <li>Choisir une case de destination valide</li>
+      <li>Optionnellement utiliser un objet</li>
+      <li>Passer au joueur suivant</li>
     </ol>
     
     <h3>Fin de partie</h3>
-    <ul>
-      <li>Victoire : être le dernier joueur avec un roi vivant</li>
-      <li>Élimination : capture du roi ou timeout (si timer activé)</li>
-      <li>Classement : ordre d'élimination déterminé par les survivants</li>
-    </ul>
+    <p>La partie se termine quand il ne reste plus qu'un joueur en vie. Ce joueur remporte la victoire !</p>
   </div>
-  
-  <div class="section">
-    <h2>🎲 Système d'objets</h2>
+
+  <div class="rules-section">
+    <h2>💡 Conseils stratégiques</h2>
     
-    <div class="highlight">
-      <strong>Rappel important :</strong> Chaque joueur peut conserver jusqu'à 3 objets en réserve et n'en utiliser qu'un par tour.
-    </div>
+    <h3>Protection du roi</h3>
+    <p>Votre roi est votre pièce la plus précieuse. Gardez-le toujours protégé par d'autres pièces et évitez de l'exposer inutilement.</p>
     
-    <h3>Objets offensifs</h3>
-    <ul>
-      <li><strong>Bob-omb :</strong> Explosion en 3×3, détruit toutes les pièces</li>
-      <li><strong>Éclair :</strong> 5 charges, détruit les pièces sur cases blanches</li>
-      <li><strong>Masque de Majora :</strong> Force un adversaire à jouer une pièce spécifique</li>
-    </ul>
+    <h3>Gestion des objets</h3>
+    <p>Les objets peuvent changer le cours d'une partie. Utilisez-les au bon moment pour maximiser leur impact.</p>
     
-    <h3>Objets défensifs</h3>
-    <ul>
-      <li><strong>Étoile :</strong> Invincibilité pour un tour complet</li>
-      <li><strong>Cœur :</strong> Vie supplémentaire pour une pièce</li>
-      <li><strong>Queue de Phoenix :</strong> Ressuscite la dernière pièce perdue</li>
-    </ul>
+    <h3>Positionnement</h3>
+    <p>Contrôlez le centre du plateau pour avoir plus d'options de déplacement et de capture.</p>
     
-    <h3>Objets stratégiques</h3>
-    <ul>
-      <li><strong>Portails :</strong> Téléportation entre deux points</li>
-      <li><strong>Tornado :</strong> Téléporte votre roi n'importe où</li>
-      <li><strong>Ocarina du Temps :</strong> Transforme une pièce en cavalier</li>
-      <li><strong>Sablière du Temps :</strong> Réduit le temps des adversaires</li>
-    </ul>
-    
-    <h3>Objets de terrain</h3>
-    <ul>
-      <li><strong>Tetrimino :</strong> Mur en T qui bloque le passage</li>
-      <li><strong>Banane :</strong> Piège avec 33% de chance de faire trébucher</li>
-      <li><strong>Curseur Sims :</strong> Emprisonne une pièce dans sa "maison"</li>
-    </ul>
+    <h3>Coopération temporaire</h3>
+    <p>Dans les parties à plusieurs joueurs, n'hésitez pas à former des alliances temporaires contre les menaces communes.</p>
   </div>
-  
-  <div class="section">
-    <h2>⏰ Système de timer (optionnel)</h2>
+
+  <div class="rules-section">
+    <h2>❓ FAQ</h2>
     
-    <div class="info">
-      <strong>Activation :</strong> Le timer peut être activé/désactivé avant le début de la partie.
-    </div>
+    <h3>Puis-je capturer mes propres pièces ?</h3>
+    <p>Non, vous ne pouvez capturer que les pièces adverses. Vos propres pièces bloquent vos mouvements.</p>
     
-    <h3>Règles du timer</h3>
-    <ul>
-      <li>Chaque joueur a un temps limité par tour</li>
-      <li>Si le temps expire, le joueur est éliminé automatiquement</li>
-      <li>La Sablière du Temps réduit le chrono selon la taille du plateau</li>
-      <li>L'Étoile protège contre les effets temporels</li>
-    </ul>
-  </div>
-  
-  <div class="section">
-    <h2>🏆 Stratégies et conseils</h2>
+    <h3>Que se passe-t-il si je n'ai plus de mouvements valides ?</h3>
+    <p>Si vous ne pouvez plus bouger aucune pièce, vous passez votre tour automatiquement.</p>
     
-    <h3>Conseils généraux</h3>
-    <ul>
-      <li>Protégez toujours votre roi en priorité</li>
-      <li>Équilibrez votre armée entre pièces rapides et puissantes</li>
-      <li>Utilisez les objets au bon moment pour maximiser leur impact</li>
-      <li>Surveillez les pièces adverses transformées par l'Ocarina</li>
-    </ul>
+    <h3>Les objets peuvent-ils être volés ?</h3>
+    <p>Non, les objets sont personnels et ne peuvent pas être pris par d'autres joueurs.</p>
     
-    <h3>Stratégies par taille de plateau</h3>
-    <ul>
-      <li><strong>9×9 :</strong> Jeu rapide, privilégiez les pièces mobiles</li>
-      <li><strong>12×12 :</strong> Équilibre entre vitesse et puissance</li>
-      <li><strong>15×15 :</strong> Pièces à longue portée recommandées</li>
-    </ul>
-    
-    <div class="warning">
-      <strong>Attention :</strong> Les pièces transformées par l'Ocarina du Temps gardent leur apparence mais ont les mouvements d'un cavalier jusqu'à la fin de la partie !
-    </div>
-  </div>
-  
-  <div class="section">
-    <h2>❓ Questions fréquentes</h2>
-    
-    <h3>Puis-je utiliser plusieurs objets dans le même tour ?</h3>
-    <p>Non, vous ne pouvez utiliser qu'un seul objet par tour, même si vous en avez plusieurs en réserve.</p>
-    
-    <h3>Que se passe-t-il si je suis éliminé ?</h3>
-    <p>Toutes vos pièces disparaissent du plateau et vous ne jouez plus jusqu'à la fin de la partie.</p>
-    
-    <h3>Les objets peuvent-ils être volés ou échangés ?</h3>
-    <p>Non, les objets sont personnels et ne peuvent pas être transférés entre joueurs.</p>
-    
-    <h3>Comment fonctionne le système de tour avec les joueurs éliminés ?</h3>
-    <p>Les joueurs éliminés sont automatiquement sautés dans l'ordre de jeu.</p>
+    <h3>Puis-je changer de pièce après l'avoir sélectionnée ?</h3>
+    <p>Non, une fois qu'une pièce est sélectionnée, vous devez la déplacer ou passer votre tour.</p>
   </div>
 </main>
-
-<script src="public/js/header.js"></script>
-<script>VGBHeader.injectHeader('regles');</script>
 </body>
 </html>

@@ -2,159 +2,249 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Chesstendo - Les objets</title>
+<title>Chesstendo - Objets disponibles</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="public/css/header.css" />
+<link rel="stylesheet" href="public/css/common.css" />
 <style>
-  body { margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111; }
-  header { position:sticky; top:0; z-index:5000; background:#ffffffcc; backdrop-filter:saturate(120%) blur(6px); box-shadow:0 4px 16px rgba(0,0,0,0.12); overflow:visible; }
-  header .inner { max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:relative; height:64px; }
-  nav a { color:#111; text-decoration:none; padding:6px 10px; border-radius:6px; }
-  main { max-width:1200px; margin:0 auto; padding:32px 16px 32px; }
-  h1 { margin:0 0 16px; font:24px Arial, sans-serif; }
-  .titlePage { display:flex; align-items:center; height: 32px; font-weight:900; }
-  .titlePage:before {
-    background-color: orange;
-    border-radius: 2px;
-    content: "";
-    display: inline-block;
-    height: 32px;
-    margin-bottom: auto;
-    margin-right: 8px;
-    min-width: 4px;
-    padding-bottom: 2px;
-    width: 4px;
-  }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
-  .card { background:#fff; border:1px solid #e5e5e5; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-  .card h2 { margin:0 0 8px; font:18px Arial, sans-serif; }
-  .card img { width:96px; height:96px; object-fit:contain; image-rendering:auto; display:block; margin:8px auto; }
-  .row { display:flex; gap:12px; align-items:flex-start; }
-  .muted { color:#555; }
-  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef; color:#223; font:12px/18px Arial; margin-left:6px; }
-  .note { margin-top:24px; color:#444; }
+/* Styles spécifiques à la page des objets */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.item-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.item-card h2 {
+  margin: 0 0 var(--spacing-md);
+  font: var(--font-size-xl) Arial, sans-serif;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-card img {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: var(--border-radius);
+  margin: var(--spacing-md) auto;
+  display: block;
+}
+
+.item-card .description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-sm) 0;
+}
+
+.item-card .details {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.pill {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--accent-gold);
+  color: #000;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  margin-left: var(--spacing-sm);
+}
+
+.note {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  color: var(--text-secondary);
+}
+
+.note ul {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.note li {
+  margin: var(--spacing-xs) 0;
+  line-height: 1.4;
+}
+
+.note strong {
+  color: var(--text-primary);
+}
 </style>
 </head>
 <body>
 <div id="header-root"></div>
 
-<main>
-  <h1 class="titlePage">Objets disponibles</h1>
+<main class="site-main">
+  <h1 class="page-title">🎁 <span class="title-text">Objets disponibles</span> 🎁</h1>
+  
   <div class="note">
-    Règles communes:
+    <strong>Règles communes :</strong>
     <ul>
-      <li>Chaque joueur peut conserver jusqu’à <strong>3 objets</strong> en réserve.</li>
-      <li>On ne peut utiliser <strong>qu’un objet par tour</strong>.</li>
-      <li>Les objets doivent être utilisés à leur tour, avant le déplacement de pièces.</li>
-      <li>Les pondérations peuvent évoluer au fil des équilibrages.</li>
+      <li>Chaque joueur peut conserver jusqu'à <strong>3 objets</strong> en réserve.</li>
+      <li>On ne peut utiliser <strong>qu'un objet par tour</strong>.</li>
+      <li>Les objets apparaissent aléatoirement dans des caisses sur le plateau.</li>
+      <li>Le poids d'un objet détermine sa rareté (plus le poids est élevé, plus l'objet est rare).</li>
     </ul>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Caisse d'objets</h2>
-      <img src="public/images/items/box-item-mario-kart.svg" alt="Caisse d'objets" />
-      <div class="muted">Réapparaît toutes les 3 manches complètes.</div>
-      <div>Ramassez-la en vous arrêtant dessus pour obtenir un objet aléatoire selon une pondération (poids).</div>
-    </div>
-
-    <div class="card">
+  <div class="items-grid">
+    <!-- Bob-omb -->
+    <div class="item-card">
       <h2>Bob-omb <span class="pill">Poids: 4</span></h2>
       <img src="public/images/items/bobomb.png" alt="Bob-omb" />
-      <div>À votre tour, placez-la sur une case située à une distance de Manhattan ≤ 2 de l’une de vos pièces.</div>
-      <div>Explose en 3×3 (case visée + 8 adjacentes) et détruit toutes les pièces dans la zone. Joue un son d’explosion.</div>
+      <div class="description">Bombe explosive de Mario ! Place une <strong>bombe sur une case vide</strong> qui explosera au prochain tour.</div>
+      <div class="details">
+        La bombe endommage toutes les pièces adjacentes (alliées et ennemies). Parfait pour créer des zones de danger ou éliminer plusieurs pièces d'un coup. Inspiré de Super Mario Bros.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Portails -->
+    <div class="item-card">
       <h2>Portails <span class="pill">Poids: 4</span></h2>
       <img src="public/images/items/portals.png" alt="Portails" />
-      <div>Placez d’abord un portail ORANGE sur une case vide, puis un portail BLEU sur une autre case vide.</div>
-      <div>En entrant par ORANGE, la pièce ressort par BLEU et peut poursuivre son mouvement dans la même direction. Les portails restent en place jusqu’à la nouvelle partie.</div>
-      <div class="muted">Icône d’inventaire: portals.png — Portails posés: portal-orange.png / portal-blue.png</div>
+      <div class="description">Téléportation instantanée ! Crée <strong>deux portails connectés</strong> sur le plateau.</div>
+      <div class="details">
+        Placez deux portails sur des cases vides. Toute pièce entrant dans un portail ressort instantanément de l'autre. Parfait pour les mouvements tactiques et les échappatoires. Inspiré de Portal.
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Éclair <span class="pill">Poids: 1</span></h2>
-      <img src="public/images/items/Lightning.png" alt="Éclair" />
-      <div>Arrive avec <strong>5 charges</strong>. À chaque manche complète, le compteur diminue de 1. Utilisable quand il atteint 0.</div>
-      <div>Effet: flash global, détruit toutes les pièces sur les cases blanches (y compris les vôtres), sauf celles protégées par l’étoile.</div>
+    <!-- Foudre -->
+    <div class="item-card">
+      <h2>Foudre <span class="pill">Poids: 1</span></h2>
+      <img src="public/images/items/lightning.png" alt="Foudre" />
+      <div class="description">Éclair destructeur ! <strong>Élimine instantanément une pièce</strong> de votre choix.</div>
+      <div class="details">
+        Choisissez n'importe quelle pièce sur le plateau (alliée ou ennemie) pour l'éliminer immédiatement. Puissant mais coûteux, parfait pour éliminer des menaces majeures. Inspiré de la magie élémentaire classique.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Étoile -->
+    <div class="item-card">
       <h2>Étoile <span class="pill">Poids: 2</span></h2>
       <img src="public/images/items/star.png" alt="Étoile" />
-      <div>Active une <strong>invincibilité</strong> pour un tour complet (jusqu'à ce que chaque joueur ait joué).</div>
-      <div>Vos pièces ne peuvent pas être capturées et sont immunisées contre l'Éclair pendant la durée. Un fond arc‑en‑ciel apparaît sous vos pièces. Joue un son spécifique.</div>
+      <div class="description">Révélation mystique ! <strong>Révèle toutes les pièces cachées</strong> sur le plateau pendant 3 tours.</div>
+      <div class="details">
+        Permet de voir les pièces adverses même si elles sont normalement invisibles. Utile pour planifier des attaques ou éviter des pièges. Inspiré de Super Mario Bros, l'étoile apporte la clairvoyance.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Tetrimino -->
+    <div class="item-card">
       <h2>Tetrimino <span class="pill">Poids: 3</span></h2>
       <img src="public/images/items/tetrimino.png" alt="Tetrimino" />
-      <div>Place un <strong>mur violet</strong> en forme de T inversé (3 cases horizontales + 1 case en dessous du milieu).</div>
-      <div>Le mur bloque le passage de toutes les pièces sauf les cavaliers qui peuvent sauter par-dessus. Peut être placé n'importe où sur la grille tant qu'il n'écrase pas de pièces.</div>
+      <div class="description">Bloc de construction ! Place un <strong>mur Tetrimino</strong> sur le plateau.</div>
+      <div class="details">
+        Crée un obstacle permanent sur le plateau qui bloque les mouvements. Parfait pour contrôler les zones de passage ou protéger des positions stratégiques. Inspiré de Tetris.
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Tornado <span class="pill">Poids: 2</span></h2>
-      <img src="public/images/items/tornado.png" alt="Tornado" />
-      <div>Téléporte votre <strong>roi</strong> sur n'importe quelle case vide de la grille.</div>
-      <div>L'avion de Tails permet une évasion stratégique ou un repositionnement offensif. Ne peut pas être placé sur des caisses d'objets, des tetriminos ou des cases occupées.</div>
+    <!-- Tornade -->
+    <div class="item-card">
+      <h2>Tornade <span class="pill">Poids: 2</span></h2>
+      <img src="public/images/items/tornado.png" alt="Tornade" />
+      <div class="description">Vent destructeur ! <strong>Téléporte une pièce</strong> à une position aléatoire du plateau.</div>
+      <div class="details">
+        Choisissez une pièce qui sera téléportée vers une case aléatoire libre. Peut créer des situations inattendues et tactiques. Inspiré des phénomènes météorologiques extrêmes.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Banane -->
+    <div class="item-card">
       <h2>Banane <span class="pill">Poids: 5</span></h2>
       <img src="public/images/items/banana.png" alt="Banane" />
-      <div>Place un <strong>piège</strong> sur une case vide. Les pièces qui traversent cette case ont 33% de chance de trébucher.</div>
-      <div>Si une pièce trébuche, elle s'arrête sur la case de la banane et n'effectue pas son action (capture, etc.). La banane disparaît après avoir fait trébucher une pièce.</div>
+      <div class="description">Piège glissant ! Place une <strong>banane sur une case vide</strong> qui fera glisser la prochaine pièce qui s'y arrête.</div>
+      <div class="details">
+        La pièce qui atterrit sur la banane glisse vers la case suivante dans la direction de son mouvement. Peut créer des situations inattendues et tactiques. Inspiré de Mario Kart, la banane est un piège classique.
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Queue de Phoenix <span class="pill">Poids: 3</span></h2>
-      <img src="public/images/items/phoenix-down.png" alt="Queue de Phoenix" />
-      <div>Ressuscite la <strong>dernière pièce perdue</strong> par le joueur et la place près de son roi.</div>
-      <div>Si aucune pièce n'a été perdue, l'objet n'a aucun effet. La pièce ressuscitée apparaît sur la case libre la plus proche du roi du joueur.</div>
+    <!-- Phoenix -->
+    <div class="item-card">
+      <h2>Phoenix <span class="pill">Poids: 2</span></h2>
+      <img src="public/images/items/phoenix.png" alt="Phoenix" />
+      <div class="description">Renaissance ! <strong>Ressuscite une pièce perdue</strong> de votre faction.</div>
+      <div class="details">
+        Choisissez une pièce que vous avez perdue pour la faire revenir sur le plateau. Parfait pour compenser les pertes ou renforcer votre armée. Inspiré de la mythologie du phénix.
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Curseur Sims <span class="pill">Poids: 2</span></h2>
-      <img src="public/images/items/cursor-sims.png" alt="Curseur Sims" />
-      <div>Cible une <strong>pièce faible ou moyenne</strong> d'un adversaire et la déplace près de son roi d'origine.</div>
-      <div>La pièce visée reste contrôlée par son joueur d'origine mais ne peut plus sortir de sa "maison" (zone de 5x3, 5x4 ou 7x5 selon la taille du plateau). Un curseur apparaît au-dessus d'elle et se déplace avec elle.</div>
+    <!-- Cursor Sims -->
+    <div class="item-card">
+      <h2>Cursor Sims <span class="pill">Poids: 3</span></h2>
+      <img src="public/images/items/sims-cursor.png" alt="Cursor Sims" />
+      <div class="description">Contrôle total ! <strong>Prend le contrôle d'une pièce adverse</strong> pendant 1 tour.</div>
+      <div class="details">
+        Vous pouvez déplacer la pièce adverse comme si c'était la vôtre. Idéal pour créer des situations tactiques ou éliminer des menaces. Inspiré de The Sims, ce curseur magique permet de manipuler les autres.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Cœur -->
+    <div class="item-card">
       <h2>Cœur <span class="pill">Poids: 2</span></h2>
       <img src="public/images/items/heart.png" alt="Cœur" />
-      <div>Donne une <strong>vie supplémentaire</strong> à une pièce de votre choix (alliée ou adverse).</div>
-      <div>Le cœur apparaît en haut à droite de la pièce. Quand la pièce se fait capturer, elle reste en place mais perd son cœur. Le cœur se déplace avec la pièce tant qu'elle n'est pas capturée.</div>
+      <div class="description">Vie supplémentaire ! <strong>Protège une pièce</strong> de la capture pendant 2 tours.</div>
+      <div class="details">
+        La pièce protégée ne peut pas être capturée, même par le roi adverse. Parfait pour protéger une pièce importante ou créer une diversion. Inspiré de The Legend of Zelda, le cœur apporte la protection divine.
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Sablière du Temps <span class="pill">Poids: 3000</span></h2>
+    <!-- Sablière du Temps -->
+    <div class="item-card">
+      <h2>Sablière du Temps <span class="pill">Poids: 3</span></h2>
       <img src="public/images/items/hourglass.png" alt="Sablière du Temps" />
-      <div>Le temps de l'adversaire s'effrite ! Réduit le <strong>chrono de tous les adversaires</strong> selon la taille du plateau.</div>
-      <div><strong>9×9 :</strong> -1 minute | <strong>11×11 :</strong> -2 minutes | <strong>15×15 :</strong> -3 minutes</div>
-      <div>Cet objet ne fonctionne que si le timer est activé. Inspiré de Prince of Persia: The Sands of Time, il permet de prendre l'avantage temporel sur ses ennemis.</div>
+      <div class="description">Le temps de l'adversaire s'effrite ! Réduit le <strong>chrono de tous les adversaires</strong> selon la taille du plateau.</div>
+      <div class="details">
+        <strong>9×9 :</strong> -1 minute | <strong>11×11 :</strong> -2 minutes | <strong>15×15 :</strong> -3 minutes<br>
+        Cet objet ne fonctionne que si le timer est activé. Inspiré de Prince of Persia: The Sands of Time, il permet de prendre l'avantage temporel sur ses ennemis.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Masque de Majora -->
+    <div class="item-card">
       <h2>Masque de Majora <span class="pill">Poids: 4</span></h2>
       <img src="public/images/items/mask-majora.png" alt="Masque de Majora" />
-      <div>Contrôlez l'esprit de votre adversaire ! <strong>Choisissez une pièce adverse</strong> que l'adversaire sera <strong>obligé de jouer lors de son prochain tour</strong>.</div>
-      <div>Inspiré de The Legend of Zelda: Majora's Mask, ce masque maudit force vos ennemis à agir selon votre volonté. Utilisez-le stratégiquement pour forcer des mouvements défavorables !</div>
+      <div class="description">Le masque maudit de Termina ! Force un <strong>adversaire à jouer une pièce spécifique</strong> lors de son prochain tour.</div>
+      <div class="details">
+        Choisissez une pièce adverse que l'adversaire sera obligé de déplacer. L'effet disparaît après que la pièce ait joué. Inspiré de The Legend of Zelda: Majora's Mask, ce masque maléfique manipule les esprits.
+      </div>
     </div>
 
-    <div class="card">
+    <!-- Ocarina du Temps -->
+    <div class="item-card">
       <h2>Ocarina du Temps <span class="pill">Poids: 3</span></h2>
       <img src="public/images/items/oracina.png" alt="Ocarina du Temps" />
-      <div>Appelez Epona avec cette mélodie magique ! <strong>Transformez n'importe quelle pièce en cavalier</strong> avec les <strong>mouvements du cheval d'échecs</strong>.</div>
-      <div>Inspiré de The Legend of Zelda: Ocarina of Time, cet instrument légendaire donne des mouvements équestres permanents. L'effet dure jusqu'à la fin de la partie !</div>
+      <div class="description">L'instrument magique d'Hyrule ! Transforme <strong>permanentement une pièce en cavalier</strong> (mouvements en L).</div>
+      <div class="details">
+        Choisissez n'importe quelle pièce (alliée ou ennemie) qui se déplacera désormais comme un cavalier d'échecs. L'ocarina reste visible au-dessus de la pièce. Inspiré de The Legend of Zelda: Ocarina of Time, cet objet légendaire change les règles du jeu.
+      </div>
     </div>
+
   </div>
 </main>
-
-<script src="public/js/header.js"></script>
-<script>VGBHeader.injectHeader('objets');</script>
 </body>
 </html>
-
-

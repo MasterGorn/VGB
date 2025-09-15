@@ -4,27 +4,106 @@
 <meta charset="UTF-8" />
 <title>Chesstendo - Draft + Plateau</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+<link rel="stylesheet" href="public/css/header.css" />
+<link rel="stylesheet" href="public/css/common.css" />
+<style>
+/* Styles spécifiques à la page d'accueil */
+.game-container {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  padding-top: var(--spacing-xl);
+}
+
+.game-root {
+  flex: 1;
+}
+
+.ads-panel {
+  width: 280px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-light);
+}
+
+.ads-title {
+  font: var(--font-size-lg) Arial, sans-serif;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.ad-slot {
+  height: 130px;
+  background: var(--secondary-bg);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.ad-info {
+  font: var(--font-size-sm) Arial, sans-serif;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-md);
+}
+
+.rules-panel {
+  margin-top: var(--spacing-md);
+}
+
+.rules-title {
+  font: var(--font-size-lg) Arial, sans-serif;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.rules-list {
+  font: var(--font-size-sm) Arial, sans-serif;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.tagline {
+  text-align: center;
+  padding: var(--spacing-lg) var(--spacing-md);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: 0;
+}
+
+.tagline h1 {
+  margin: 0;
+  font: 28px Arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+</style>
 </head>
-<body style="margin:0; background:#f7f7f7; font:14px Arial, sans-serif; color:#111;">
+<body>
 <div id="header-root"></div>
 
 <!-- Accroche principale -->
-<div style="text-align:center; padding:20px 16px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; margin:0;">
-  <h1 style="margin:0; font:28px Arial, sans-serif; font-weight:bold; text-shadow:0 2px 4px rgba(0,0,0,0.3);">
-    Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !
-  </h1>
+<div class="tagline">
+  <h1>Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !</h1>
 </div>
 
-<div id="app" style="display:flex; gap:16px; align-items:flex-start; padding-top:32px;">
-  <div id="game-root"></div>
-  <div id="ads-panel" style="width:280px;">
-    <div id="ads-title" style="font:16px Arial; margin-bottom:8px;">Publicités</div>
-    <div id="ad-slot-1" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 1</div>
-    <div id="ad-slot-2" style="height:130px; background:#f0f0f0; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">Annonce 2</div>
-    <div id="ad-info" style="font:12px Arial; color:#555;">Mise à jour toutes les 5 actions</div>
-    <div id="rules-panel" style="margin-top:14px;">
-      <div style="font:16px Arial; margin-bottom:6px;">Pièces en jeu</div>
-      <div id="rules-list" style="font:12px Arial; color:#222; line-height:1.5;"></div>
+<div class="game-container">
+  <div id="game-root" class="game-root"></div>
+  <div id="ads-panel" class="ads-panel">
+    <div id="ads-title" class="ads-title">Publicités</div>
+    <div id="ad-slot-1" class="ad-slot">Annonce 1</div>
+    <div id="ad-slot-2" class="ad-slot">Annonce 2</div>
+    <div id="ad-info" class="ad-info">Mise à jour toutes les 5 actions</div>
+    <div id="rules-panel" class="rules-panel">
+      <div class="rules-title">Pièces en jeu</div>
+      <div id="rules-list" class="rules-list"></div>
     </div>
   </div>
 </div>

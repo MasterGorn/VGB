@@ -4,100 +4,12 @@
 <meta charset="UTF-8" />
 <title>Chesstendo - Crédits</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  body { 
-    margin:0; 
-    background:linear-gradient(180deg, #000428 0%, #004e92 100%); 
-    font:14px Arial, sans-serif; 
-    color:#fff; 
-    min-height:100vh;
-    overflow-x:hidden;
-  }
+  <link rel="stylesheet" href="public/css/header.css" />
+  <link rel="stylesheet" href="public/css/common.css" />
+  <style>
+  /* Styles spécifiques à la page crédits */
   
-  header { 
-    position:sticky; 
-    top:0; 
-    z-index:5000; 
-    background:rgba(0,4,40,0.9); 
-    backdrop-filter:saturate(120%) blur(6px); 
-    box-shadow:0 4px 16px rgba(0,0,0,0.3); 
-    overflow:visible; 
-  }
-  
-  header .inner { 
-    max-width:1200px; 
-    margin:0 auto; 
-    padding:10px 16px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:space-between; 
-    position:relative; 
-    height:64px; 
-  }
-  
-  nav a { 
-    color:#fff; 
-    text-decoration:none; 
-    padding:6px 10px; 
-    border-radius:6px; 
-    transition:background 0.3s ease;
-  }
-  
-  nav a:hover { 
-    background:rgba(255,255,255,0.1); 
-  }
-  
-  main { 
-    max-width:1200px; 
-    margin:0 auto; 
-    padding:64px 16px 32px; 
-  }
-  
-  h1 { 
-    margin:0 0 40px; 
-    font:36px Arial, sans-serif; 
-    text-align:center; 
-    text-shadow:0 4px 8px rgba(0,0,0,0.5);
-    background:linear-gradient(45deg, #ffd700, #ffed4e);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-  
-  .credits-container {
-    background:rgba(255,255,255,0.05);
-    border-radius:20px;
-    padding:40px;
-    margin:20px 0;
-    backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,0.1);
-    box-shadow:0 8px 32px rgba(0,0,0,0.3);
-  }
-  
-  .company-section {
-    margin:40px 0;
-    padding:30px;
-    background:rgba(255,255,255,0.03);
-    border-radius:15px;
-    border-left:5px solid;
-    position:relative;
-    overflow:hidden;
-  }
-  
-  .company-section::before {
-    content:'';
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    height:2px;
-    background:linear-gradient(90deg, transparent, currentColor, transparent);
-  }
-  
-  .nintendo { border-left-color:#e60012; color:#e60012; }
-  .playstation { border-left-color:#003087; color:#003087; }
-  .sega { border-left-color:#0089cf; color:#0089cf; }
-  .xbox { border-left-color:#107c10; color:#107c10; }
+  /* Styles spécifiques aux crédits */
   .indie { border-left-color:#ff6b6b; color:#ff6b6b; }
   
   .company-header {
@@ -273,10 +185,10 @@
 <!-- Effet d'étoiles en arrière-plan -->
 <div class="stars" id="stars"></div>
 
-<main>
-  <h1>⭐ CRÉDITS ⭐</h1>
+<main class="site-main">
+  <h1 class="page-title">⭐ <span class="title-text">CRÉDITS</span> ⭐</h1>
   
-  <div class="credits-container">
+  <div class="card-container">
     <div class="disclaimer">
       <h3>⚠️ AVERTISSEMENT LÉGAL ⚠️</h3>
       <p><strong>Ce jeu est un projet FAN non lucratif</strong></p>
@@ -286,7 +198,7 @@
     </div>
     
     <!-- Nintendo -->
-    <div class="company-section nintendo">
+    <div class="card-section nintendo">
       <div class="company-header">
         <div class="company-logo">N</div>
         <h2 class="company-name">Nintendo Co., Ltd.</h2>
@@ -318,7 +230,7 @@
     </div>
     
     <!-- PlayStation -->
-    <div class="company-section playstation">
+    <div class="card-section playstation">
       <div class="company-header">
         <div class="company-logo">PS</div>
         <h2 class="company-name">Sony Interactive Entertainment</h2>
@@ -350,7 +262,7 @@
     </div>
     
     <!-- SEGA -->
-    <div class="company-section sega">
+    <div class="card-section sega">
       <div class="company-header">
         <div class="company-logo">S</div>
         <h2 class="company-name">SEGA Corporation</h2>
@@ -382,7 +294,7 @@
     </div>
     
     <!-- Xbox -->
-    <div class="company-section xbox">
+    <div class="card-section xbox">
       <div class="company-header">
         <div class="company-logo">X</div>
         <h2 class="company-name">Microsoft Corporation</h2>
@@ -414,7 +326,7 @@
     </div>
     
     <!-- Autres propriétés -->
-    <div class="company-section indie">
+    <div class="card-section indie">
       <div class="company-header">
         <div class="company-logo">🎮</div>
         <h2 class="company-name">Autres Propriétés</h2>
@@ -467,9 +379,9 @@
     <!-- Crédits techniques -->
     <div class="footer-credits">
       <h2>🛠️ CRÉDITS TECHNIQUES</h2>
-      <p><strong>Développement :</strong> Pierre Gorn Brunet - https://github.com/mastergorn - jeu développé en Javascript avec l'IDE Cursor</p>
-      <p><strong>Moteur de jeu :</strong> Phaser 3 (Open Source) - https://phaser.io/</p>
-      <p><strong>Inspiration :</strong> Super Smash Bros. Ultimate, Mario Kart,Chess.com, et la communauté gaming</p>
+      <p><strong>Développement :</strong> Pierre Gorn Brunet - <a href="https://github.com/mastergorn">https://github.com/mastergorn</a> - jeu développé en Javascript avec l'IDE Cursor</p>
+      <p><strong>Moteur de jeu :</strong> Phaser 3 (Open Source) - <a href="https://phaser.io/">https://phaser.io/</a></p>
+      <p><strong>Inspiration :</strong> Super Smash Bros. Ultimate, Mario Kart, Chess.com, et la communauté gaming</p>
       <p><strong>Remerciements :</strong> À tous les fans qui nous soutiennent et à la communauté des jeux de stratégie</p>
       <p style="margin-top:30px; font:14px Arial; color:#888;">
         <em>Ce projet respecte les droits d'auteur et les marques déposées. Tous les personnages et franchises appartiennent à leurs propriétaires légitimes.</em>
