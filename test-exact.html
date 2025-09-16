@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Exact Movement Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="public/data/pieces.js"></script>
+    <script src="public/js/movement-demo.js"></script>
+</head>
+<body>
+    <h1>Test Exact Movement Demo</h1>
+    <button id="testBtn">Tester Exactement comme le code principal</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            try {
+                console.log('🧪 Test exact du code principal...');
+                
+                // Créer une instance de MovementDemo exactement comme dans le code principal
+                const movementDemo = new MovementDemo();
+                
+                // Appeler exportAllImages exactement comme dans le code principal
+                await movementDemo.exportAllImages();
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Test exact réussi !</h2>
+                    <p>Le code principal fonctionne correctement.</p>
+                `;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('result').innerHTML = `<h2>❌ Erreur: ${error.message}</h2>`;
+            }
+        });
+    </script>
+</body>
+</html>

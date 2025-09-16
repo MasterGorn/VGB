@@ -123,9 +123,30 @@ class MovementDemo {
   exportDemoImage(piece) {
     this.createPieceDemo(piece);
     
+    // Générer le nom de fichier basé sur l'image du personnage
+    let fileName = piece.name;
+    if (piece.image) {
+      // Extraire le nom de fichier de l'image (sans le chemin et l'extension)
+      const imagePath = piece.image;
+      const imageName = imagePath.split('/').pop().split('.')[0];
+      fileName = imageName;
+    }
+    
+    // Convertir en minuscules et remplacer les espaces par des tirets
+    fileName = fileName.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    
+    // Ajouter le suffixe
+    const finalFileName = `${fileName}-movement-demo.png`;
+    
+    // Créer le chemin avec le dossier de l'éditeur
+    const editorFolder = piece.faction ? piece.faction.toLowerCase() : 'unknown';
+    const filePath = `${editorFolder}/${finalFileName}`;
+    
     // Créer un lien de téléchargement
     const link = document.createElement('a');
-    link.download = `${piece.name}_movement_demo.png`;
+    link.download = finalFileName; // Garder juste le nom du fichier pour le téléchargement individuel
     link.href = this.canvas.toDataURL('image/png');
     link.click();
   }
@@ -162,15 +183,22 @@ class MovementDemo {
 
   // Exporter toutes les images dans une archive ZIP
   async exportAllImages() {
+    console.log('🚀 Début de exportAllImages()');
+    console.log('piecesData disponible:', typeof piecesData !== 'undefined');
+    console.log('this.pieces.length:', this.pieces ? this.pieces.length : 'undefined');
+    
     // S'assurer qu'on a toutes les pièces
     if (typeof piecesData !== 'undefined') {
       this.pieces = piecesData;
+      console.log('✅ piecesData chargé, this.pieces.length:', this.pieces.length);
     } else if (this.pieces.length === 0) {
+      console.log('⚠️ piecesData non disponible, utilisation de generateAllDemos()');
       this.generateAllDemos();
     }
     
     console.log(`Génération de ${this.pieces.length} images...`);
     console.log('Pièces à traiter:', this.pieces.map(p => p.name));
+    console.log('Factions des pièces:', [...new Set(this.pieces.map(p => p.faction))]);
     
     // Vérifier que JSZip est disponible
     if (typeof JSZip === 'undefined') {
@@ -185,12 +213,37 @@ class MovementDemo {
     const progressText = document.getElementById('progressText');
     
     try {
+      // Afficher les factions détectées
+      const factions = [...new Set(this.pieces.map(p => p.faction))];
+      console.log('🎮 Factions détectées:', factions);
+      
+      // Créer tous les dossiers d'abord avec un fichier README
+      const uniqueFolders = [...new Set(this.pieces.map(p => 
+        p.faction ? p.faction.toLowerCase() : 'unknown'
+      ))];
+      
+      console.log('📁 Création des dossiers:', uniqueFolders);
+      uniqueFolders.forEach(folder => {
+        // Créer le dossier
+        zip.folder(folder);
+        // Ajouter un fichier README pour forcer la création du dossier
+        zip.file(`${folder}/README.txt`, `Démonstrations de mouvement - ${folder.toUpperCase()}\n\nCe dossier contient les images de démonstration des mouvements des personnages de ${folder.toUpperCase()}.`);
+        console.log(`  ✓ Dossier créé: ${folder}/`);
+        
+        // Vérifier que le dossier a été créé
+        if (zip.files[`${folder}/README.txt`]) {
+          console.log(`  ✅ Vérification: ${folder}/README.txt existe`);
+        } else {
+          console.log(`  ❌ Erreur: ${folder}/README.txt n'existe pas`);
+        }
+      });
+      
       // Traiter toutes les pièces de manière séquentielle pour éviter les conflits de canvas
       for (let i = 0; i < this.pieces.length; i++) {
         const piece = this.pieces[i];
         const progress = ((i + 1) / this.pieces.length) * 100;
         
-        console.log(`Génération de l'image pour ${piece.name}... (${i + 1}/${this.pieces.length})`);
+        console.log(`Génération de l'image pour ${piece.name} (${piece.faction})... (${i + 1}/${this.pieces.length})`);
         
         // Mettre à jour la progression
         if (progressBar) {
@@ -225,9 +278,37 @@ class MovementDemo {
           bytes[j] = binaryString.charCodeAt(j);
         }
         
-        // Ajouter l'image à l'archive
-        zip.file(`${piece.name}_movement_demo.png`, bytes);
-        console.log(`Image ${piece.name} ajoutée à l'archive (${bytes.length} bytes)`);
+        // Générer le nom de fichier basé sur l'image du personnage
+        let fileName = piece.name;
+        if (piece.image) {
+          // Extraire le nom de fichier de l'image (sans le chemin et l'extension)
+          const imagePath = piece.image;
+          const imageName = imagePath.split('/').pop().split('.')[0];
+          fileName = imageName;
+        }
+        
+        // Convertir en minuscules et remplacer les espaces par des tirets
+        fileName = fileName.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+        
+        // Ajouter le suffixe
+        const finalFileName = `${fileName}-movement-demo.png`;
+        
+        // Créer le chemin avec le dossier de l'éditeur
+        const editorFolder = piece.faction ? piece.faction.toLowerCase() : 'unknown';
+        const filePath = `${editorFolder}/${finalFileName}`;
+        
+        // Ajouter l'image à l'archive dans le dossier de l'éditeur
+        zip.file(filePath, bytes);
+        console.log(`Image ${piece.name} ajoutée à l'archive comme ${filePath} (${bytes.length} bytes)`);
+        
+        // Vérifier que le fichier a été ajouté
+        if (zip.files[filePath]) {
+          console.log(`  ✅ Vérification: ${filePath} existe dans l'archive`);
+        } else {
+          console.log(`  ❌ Erreur: ${filePath} n'existe pas dans l'archive`);
+        }
       }
       
       // Mettre à jour la progression pour la génération de l'archive
@@ -237,6 +318,33 @@ class MovementDemo {
       
       console.log('Génération de l\'archive ZIP...');
       console.log('Nombre de fichiers dans l\'archive:', Object.keys(zip.files).length);
+      
+      // Debug: Afficher tous les fichiers dans l'archive
+      console.log('📋 Fichiers dans l\'archive:');
+      Object.keys(zip.files).forEach(filePath => {
+        console.log(`  - ${filePath}`);
+      });
+      
+      // Afficher un résumé des dossiers créés
+      const folders = {};
+      Object.keys(zip.files).forEach(filePath => {
+        // Ignorer les dossiers vides (qui se terminent par /)
+        if (filePath.endsWith('/')) return;
+        
+        const folder = filePath.split('/')[0];
+        if (!folders[folder]) {
+          folders[folder] = 0;
+        }
+        folders[folder]++;
+      });
+      
+      console.log('📁 Structure de l\'archive ZIP:');
+      Object.entries(folders).forEach(([folder, count]) => {
+        console.log(`  📂 ${folder}/`);
+        console.log(`     └── ${count} fichier(s)`);
+      });
+      
+      console.log(`\n📊 Total: ${Object.values(folders).reduce((a, b) => a + b, 0)} fichiers dans ${Object.keys(folders).length} dossiers`);
       
       // Générer l'archive
       const content = await zip.generateAsync({
@@ -256,7 +364,7 @@ class MovementDemo {
       // Créer le lien de téléchargement
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
-      link.download = 'movement_demos_all_pieces.zip';
+      link.download = 'movement_demos_by_editor.zip';
       link.style.display = 'none';
       
       // Ajouter au DOM et cliquer

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Movement Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="public/data/pieces.js"></script>
+    <script src="public/js/movement-demo.js"></script>
+</head>
+<body>
+    <h1>Test Movement Demo avec Dossiers</h1>
+    <button id="testBtn">Tester Movement Demo</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            try {
+                console.log('🧪 Test Movement Demo...');
+                
+                // Vérifier que piecesData est chargé
+                if (typeof piecesData === 'undefined') {
+                    throw new Error('piecesData non disponible');
+                }
+                
+                console.log('Pièces disponibles:', piecesData.length);
+                console.log('Factions:', [...new Set(piecesData.map(p => p.faction))]);
+                
+                // Créer une instance de MovementDemo
+                const demo = new MovementDemo();
+                demo.pieces = piecesData.slice(0, 3); // Prendre seulement 3 pièces pour le test
+                
+                console.log('Pièces pour le test:', demo.pieces.map(p => p.name));
+                
+                // Tester la création de l'archive
+                const zip = new JSZip();
+                
+                // Créer les dossiers
+                const factions = [...new Set(demo.pieces.map(p => p.faction))];
+                console.log('Factions à créer:', factions);
+                
+                factions.forEach(faction => {
+                    const folder = faction.toLowerCase();
+                    zip.folder(folder);
+                    zip.file(`${folder}/README.txt`, `Test - ${faction}`);
+                    console.log(`✓ Dossier créé: ${folder}/`);
+                });
+                
+                // Ajouter quelques fichiers de test
+                demo.pieces.forEach(piece => {
+                    const folder = piece.faction.toLowerCase();
+                    const fileName = piece.name.toLowerCase().replace(/\s+/g, '-');
+                    zip.file(`${folder}/${fileName}-test.png`, 'fake-image-data');
+                    console.log(`✓ Fichier ajouté: ${folder}/${fileName}-test.png`);
+                });
+                
+                console.log('📁 Fichiers dans l\'archive de test:');
+                Object.keys(zip.files).forEach(filePath => {
+                    console.log(`  - ${filePath}`);
+                });
+                
+                // Générer et télécharger
+                const content = await zip.generateAsync({type: "blob"});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'test-movement-demo.zip';
+                link.click();
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Test Movement Demo réussi !</h2>
+                    <p>Archive créée avec ${Object.keys(zip.files).length} fichiers</p>
+                    <p>Vérifiez l'archive pour voir les dossiers par faction.</p>
+                `;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('result').innerHTML = `<h2>❌ Erreur: ${error.message}</h2>`;
+            }
+        });
+    </script>
+</body>
+</html>

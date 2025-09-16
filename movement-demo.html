@@ -164,22 +164,6 @@
                     this.textContent = '⏳ Génération en cours...';
                     
                     try {
-                        // Test simple de JSZip
-                        console.log('Test de JSZip...');
-                        const testZip = new JSZip();
-                        testZip.file("test.txt", "Hello World");
-                        const testBlob = await testZip.generateAsync({type: "blob"});
-                        console.log('Test JSZip réussi, taille:', testBlob.size);
-                        
-                        // Test de téléchargement simple
-                        console.log('Test de téléchargement...');
-                        const testLink = document.createElement('a');
-                        testLink.href = URL.createObjectURL(testBlob);
-                        testLink.download = 'test.zip';
-                        testLink.click();
-                        URL.revokeObjectURL(testLink.href);
-                        console.log('Test de téléchargement effectué');
-                        
                         await movementDemo.exportAllImages();
                         this.textContent = '✅ Archive Téléchargée';
                         progressText.textContent = 'Archive téléchargée avec succès !';

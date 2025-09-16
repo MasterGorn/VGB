@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Simple ZIP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <h1>Test Simple de ZIP avec Dossiers</h1>
+    <button id="testBtn">Tester ZIP</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            try {
+                console.log('🧪 Test simple de ZIP...');
+                
+                const zip = new JSZip();
+                
+                // Méthode 1: Créer des dossiers
+                zip.folder('nintendo');
+                zip.folder('playstation');
+                
+                // Méthode 2: Ajouter des fichiers avec chemins
+                zip.file('nintendo/mario.png', 'fake-mario-data');
+                zip.file('nintendo/link.png', 'fake-link-data');
+                zip.file('playstation/kratos.png', 'fake-kratos-data');
+                
+                // Méthode 3: Ajouter des fichiers README
+                zip.file('nintendo/README.txt', 'Dossier Nintendo');
+                zip.file('playstation/README.txt', 'Dossier PlayStation');
+                
+                console.log('📁 Fichiers dans l\'archive:');
+                Object.keys(zip.files).forEach(filePath => {
+                    console.log(`  - ${filePath}`);
+                });
+                
+                // Générer et télécharger
+                const content = await zip.generateAsync({type: "blob"});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'test-simple.zip';
+                link.click();
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Test réussi !</h2>
+                    <p>Archive créée avec ${Object.keys(zip.files).length} fichiers</p>
+                    <p>Vérifiez l'archive téléchargée pour voir les dossiers.</p>
+                `;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('result').innerHTML = `<h2>❌ Erreur: ${error.message}</h2>`;
+            }
+        });
+    </script>
+</body>
+</html>
