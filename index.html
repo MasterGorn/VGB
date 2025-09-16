@@ -3566,6 +3566,12 @@ function tickTimer(scene) {
       // Annoncer l'élimination par timeout
       const eliminatedPlayer = players[nowIdx];
       showInfoMessage(`⏰ ${eliminatedPlayer.name} a perdu par timeout ! Toutes ses pièces ont disparu.`, 3000);
+      
+      // Passer au joueur suivant si le joueur éliminé était le joueur actuel
+      if (nowIdx === currentPlayer) {
+        currentPlayer = getNextActivePlayer();
+        updateTurnUI();
+      }
     }
     // vérifier fin
     const remainingKings = pieces.filter(pp => pp.type === 'king').length;
