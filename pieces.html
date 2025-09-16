@@ -43,16 +43,16 @@
       <select id="sortBy" class="form-control">
         <option value="name">Nom</option>
         <option value="cost">Coût</option>
-        <option value="tier">Tier</option>
-        <option value="faction">Faction</option>
+        <option value="tier">Force</option>
+        <option value="faction">Éditeur</option>
         <option value="universe">Univers</option>
       </select>
     </div>
     
     <div class="control-group">
-      <label for="factionFilter">Faction :</label>
+      <label for="factionFilter">Éditeur :</label>
       <select id="factionFilter" class="form-control">
-        <option value="">Toutes</option>
+        <option value="">Tous</option>
         <option value="Nintendo">Nintendo</option>
         <option value="PlayStation">PlayStation</option>
         <option value="SEGA">SEGA</option>
@@ -76,12 +76,13 @@
     </div>
     
     <div class="control-group">
-      <label for="tierFilter">Tier :</label>
+      <label for="tierFilter">Force :</label>
       <select id="tierFilter" class="form-control">
-        <option value="">Tous</option>
-        <option value="1">Tier 1</option>
-        <option value="2">Tier 2</option>
-        <option value="3">Tier 3</option>
+        <option value="">Toutes</option>
+        <option value="1">Faible</option>
+        <option value="2">Moyen</option>
+        <option value="3">Fort</option>
+        <option value="4">Unique</option>
       </select>
     </div>
   </div>
@@ -122,7 +123,7 @@ function displayPieces(pieces) {
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}">${piece.faction}</span>
         <span class="badge">${piece.universe}</span>
-        <span class="badge tier">Tier ${piece.tier}</span>
+        <span class="badge tier">${getTierLabel(piece.tier)}</span>
         <span class="badge cost">${piece.cost} pts</span>
         <span class="badge range">Range ${piece.range}</span>
       </div>
@@ -143,14 +144,26 @@ function getMovesDescription(moves) {
   return `${moves.length} directions possibles`;
 }
 
+// Fonction pour obtenir le libellé du tier
+function getTierLabel(tier) {
+  const labels = {
+    1: "Faible",
+    2: "Moyen", 
+    3: "Fort",
+    4: "Unique"
+  };
+  return labels[tier] || "Inconnu";
+}
+
 // Fonction pour obtenir la description du tier
 function getTierDescription(tier) {
   const descriptions = {
-    1: "Débutant - Facile à utiliser",
-    2: "Intermédiaire - Équilibré", 
-    3: "Expert - Puissant mais coûteux"
+    1: "Faible - Facile à utiliser",
+    2: "Moyen - Équilibré", 
+    3: "Fort - Puissant mais coûteux",
+    4: "Unique - Légendaire"
   };
-  return descriptions[tier] || "Tier inconnu";
+  return descriptions[tier] || "Force inconnue";
 }
 
 // Fonction pour obtenir la couleur de faction
@@ -225,8 +238,20 @@ function updateActiveFilters() {
     if (value) {
       const tag = document.createElement('div');
       tag.className = 'filter-tag';
+      
+      // Afficher les bons libellés
+      let displayKey = key;
+      let displayValue = value;
+      
+      if (key === 'faction') {
+        displayKey = 'Éditeur';
+      } else if (key === 'tier') {
+        displayKey = 'Force';
+        displayValue = getTierLabel(parseInt(value));
+      }
+      
       tag.innerHTML = `
-        ${key}: ${value} 
+        ${displayKey}: ${displayValue} 
         <span class="remove" onclick="removeFilter('${key}')">×</span>
       `;
       container.appendChild(tag);
