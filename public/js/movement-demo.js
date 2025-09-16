@@ -132,36 +132,191 @@ class MovementDemo {
 
   // Générer toutes les démonstrations
   generateAllDemos() {
-    const pieces = [
-      { name: 'Mario', moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-      { name: 'Link', moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
-      { name: 'Zelda', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 },
-      { name: 'Bowser', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 },
-      { name: 'Ganondorf', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 },
-      { name: 'Samus', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 },
-      { name: 'Pit', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 },
-      { name: 'Palutena', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 6 },
-      { name: 'Sheik', moves: [[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]], range: 2 },
-      { name: 'Wario', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
-      { name: 'Duck Hunt', moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 5 },
-      { name: 'Wii Fit Trainer', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }
-    ];
-    
-    this.pieces = pieces;
-    return pieces;
+    // Utiliser la liste complète des pièces depuis pieces.js
+    if (typeof piecesData !== 'undefined') {
+      this.pieces = piecesData;
+      console.log(`Chargement de ${piecesData.length} pièces depuis piecesData`);
+      console.log('Factions disponibles:', [...new Set(piecesData.map(p => p.faction))]);
+      return piecesData;
+    } else {
+      // Fallback si piecesData n'est pas disponible
+      console.warn('piecesData non disponible, utilisation de la liste de fallback');
+      const pieces = [
+        { name: 'Mario', moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+        { name: 'Link', moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 },
+        { name: 'Zelda', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 },
+        { name: 'Bowser', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 },
+        { name: 'Ganondorf', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 },
+        { name: 'Samus', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 4 },
+        { name: 'Pit', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 },
+        { name: 'Palutena', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 6 },
+        { name: 'Sheik', moves: [[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]], range: 2 },
+        { name: 'Wario', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 },
+        { name: 'Duck Hunt', moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 5 },
+        { name: 'Wii Fit Trainer', moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }
+      ];
+      this.pieces = pieces;
+      return pieces;
+    }
   }
 
-  // Exporter toutes les images
-  exportAllImages() {
-    if (this.pieces.length === 0) {
+  // Exporter toutes les images dans une archive ZIP
+  async exportAllImages() {
+    // S'assurer qu'on a toutes les pièces
+    if (typeof piecesData !== 'undefined') {
+      this.pieces = piecesData;
+    } else if (this.pieces.length === 0) {
       this.generateAllDemos();
     }
     
-    this.pieces.forEach((piece, index) => {
+    console.log(`Génération de ${this.pieces.length} images...`);
+    console.log('Pièces à traiter:', this.pieces.map(p => p.name));
+    
+    // Vérifier que JSZip est disponible
+    if (typeof JSZip === 'undefined') {
+      throw new Error('JSZip n\'est pas disponible');
+    }
+    
+    // Créer une archive ZIP
+    const zip = new JSZip();
+    
+    // Éléments de progression
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    try {
+      // Traiter toutes les pièces de manière séquentielle pour éviter les conflits de canvas
+      for (let i = 0; i < this.pieces.length; i++) {
+        const piece = this.pieces[i];
+        const progress = ((i + 1) / this.pieces.length) * 100;
+        
+        console.log(`Génération de l'image pour ${piece.name}... (${i + 1}/${this.pieces.length})`);
+        
+        // Mettre à jour la progression
+        if (progressBar) {
+          progressBar.style.width = `${progress}%`;
+        }
+        if (progressText) {
+          progressText.textContent = `Génération de ${piece.name}... (${i + 1}/${this.pieces.length})`;
+        }
+        
+        // Créer l'image pour cette pièce
+        this.createPieceDemo(piece);
+        
+        // Attendre que le canvas soit prêt
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Convertir le canvas en blob de manière synchrone
+        const canvas = this.canvas;
+        if (!canvas) {
+          throw new Error('Canvas non disponible');
+        }
+        
+        const dataURL = canvas.toDataURL('image/png');
+        if (!dataURL || dataURL === 'data:,') {
+          throw new Error(`Erreur lors de la génération de l'image pour ${piece.name}`);
+        }
+        
+        const base64 = dataURL.split(',')[1];
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        
+        for (let j = 0; j < binaryString.length; j++) {
+          bytes[j] = binaryString.charCodeAt(j);
+        }
+        
+        // Ajouter l'image à l'archive
+        zip.file(`${piece.name}_movement_demo.png`, bytes);
+        console.log(`Image ${piece.name} ajoutée à l'archive (${bytes.length} bytes)`);
+      }
+      
+      // Mettre à jour la progression pour la génération de l'archive
+      if (progressText) {
+        progressText.textContent = 'Génération de l\'archive ZIP...';
+      }
+      
+      console.log('Génération de l\'archive ZIP...');
+      console.log('Nombre de fichiers dans l\'archive:', Object.keys(zip.files).length);
+      
+      // Générer l'archive
+      const content = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: {
+          level: 6
+        }
+      });
+      
+      console.log('Archive générée, taille:', content.size, 'bytes');
+      
+      if (content.size === 0) {
+        throw new Error('L\'archive générée est vide');
+      }
+      
+      // Créer le lien de téléchargement
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = 'movement_demos_all_pieces.zip';
+      link.style.display = 'none';
+      
+      // Ajouter au DOM et cliquer
+      document.body.appendChild(link);
+      
+      // Méthode 1: Clic simple
+      try {
+        link.click();
+        console.log('Téléchargement par clic simple');
+      } catch (e) {
+        console.log('Clic simple échoué, tentative avec MouseEvent');
+        
+        // Méthode 2: MouseEvent
+        try {
+          const event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          });
+          link.dispatchEvent(event);
+          console.log('Téléchargement par MouseEvent');
+        } catch (e2) {
+          console.log('MouseEvent échoué, tentative avec window.open');
+          
+          // Méthode 3: window.open
+          try {
+            const newWindow = window.open(link.href, '_blank');
+            if (newWindow) {
+              newWindow.close();
+              console.log('Téléchargement par window.open');
+            } else {
+              throw new Error('window.open bloqué');
+            }
+          } catch (e3) {
+            console.error('Toutes les méthodes de téléchargement ont échoué');
+            throw new Error('Impossible de télécharger le fichier. Vérifiez les paramètres de votre navigateur.');
+          }
+        }
+      }
+      
+      console.log('Lien de téléchargement créé et cliqué');
+      
+      // Nettoyer après un délai
       setTimeout(() => {
-        this.exportDemoImage(piece);
-      }, index * 500); // Délai entre chaque export
-    });
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(link.href);
+        console.log('Nettoyage effectué');
+      }, 2000);
+      
+      console.log('Archive ZIP téléchargée avec succès !');
+      
+    } catch (error) {
+      console.error('Erreur lors de la génération de l\'archive:', error);
+      if (progressText) {
+        progressText.textContent = 'Erreur lors de la génération: ' + error.message;
+      }
+      throw error; // Re-throw pour que le gestionnaire d'erreur du bouton puisse le capturer
+    }
   }
 }
 

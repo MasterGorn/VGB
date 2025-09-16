@@ -18,7 +18,14 @@
             
             <div class="demo-controls">
                 <button id="generateAll" class="btn btn-primary">🎯 Générer Toutes les Démonstrations</button>
-                <button id="exportAll" class="btn btn-secondary">📁 Exporter Toutes les Images</button>
+                <button id="exportAll" class="btn btn-secondary">📦 Télécharger Archive ZIP</button>
+            </div>
+            
+            <div id="progressContainer" style="display: none; margin-top: 20px;">
+                <div class="progress-bar">
+                    <div id="progressBar" class="progress-fill"></div>
+                </div>
+                <p id="progressText">Génération en cours...</p>
             </div>
         </div>
 
@@ -26,8 +33,9 @@
             <h2>Instructions</h2>
             <ol>
                 <li><strong>Cliquez sur "Générer Toutes les Démonstrations"</strong> pour créer les visualisations</li>
-                <li><strong>Cliquez sur "Exporter Toutes les Images"</strong> pour télécharger les images PNG</li>
-                <li><strong>Les images seront sauvegardées</strong> automatiquement dans votre dossier de téléchargements</li>
+                <li><strong>Cliquez sur "Exporter Toutes les Images"</strong> pour télécharger l'archive ZIP</li>
+                <li><strong>L'archive contient toutes les images PNG</strong> des démonstrations de mouvement</li>
+                <li><strong>Extrayez l'archive</strong> pour accéder aux images individuelles</li>
             </ol>
         </div>
 
@@ -55,55 +63,8 @@
 
         <div class="card">
             <h2>Pièces Disponibles</h2>
-            <div class="pieces-grid">
-                <div class="piece-card">
-                    <h3>Mario</h3>
-                    <p>Mouvement diagonal sur 2 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Link</h3>
-                    <p>Mouvement en ligne sur 3 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Zelda</h3>
-                    <p>Mouvement complet sur 8 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Bowser</h3>
-                    <p>Mouvement complet sur 3 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Ganondorf</h3>
-                    <p>Mouvement complet sur 4 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Samus</h3>
-                    <p>Mouvement complet sur 4 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Pit</h3>
-                    <p>Mouvement complet sur 3 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Palutena</h3>
-                    <p>Mouvement complet sur 6 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Sheik</h3>
-                    <p>Mouvement spécial en L sur 2 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Wario</h3>
-                    <p>Mouvement complet sur 2 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Duck Hunt</h3>
-                    <p>Mouvement en ligne sur 5 cases</p>
-                </div>
-                <div class="piece-card">
-                    <h3>Wii Fit Trainer</h3>
-                    <p>Mouvement complet sur 2 cases</p>
-                </div>
+            <div id="piecesList" class="pieces-grid">
+                <p>Chargement des pièces...</p>
             </div>
         </div>
     </main>
@@ -111,16 +72,72 @@
     <!-- Zone de démonstration -->
     <div id="demo-container" style="display: none; text-align: center; margin: 20px 0;">
         <h3>Aperçu de la démonstration :</h3>
-        <p>La première démonstration s'affiche ci-dessous. Cliquez sur "Exporter Toutes les Images" pour télécharger tous les PNG.</p>
+        <p>La première démonstration s'affiche ci-dessous. Cliquez sur "Télécharger Archive ZIP" pour obtenir toutes les images.</p>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="public/js/header.js"></script>
+    <script src="public/data/pieces.js"></script>
     <script src="public/js/movement-demo.js"></script>
     
     <script>
+        // Fonction pour générer la liste des pièces disponibles
+        function generatePiecesList() {
+            const container = document.getElementById('piecesList');
+            if (typeof piecesData === 'undefined') {
+                container.innerHTML = '<p>Erreur: Données des pièces non disponibles</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            piecesData.forEach(piece => {
+                const card = document.createElement('div');
+                card.className = 'piece-card';
+                card.innerHTML = `
+                    <h3>${piece.name}</h3>
+                    <p><strong>Force:</strong> ${getTierLabel(piece.tier)}</p>
+                    <p><strong>Range:</strong> ${piece.range} cases</p>
+                    <p><strong>Mouvements:</strong> ${piece.moves.length} directions</p>
+                    <p><strong>Éditeur:</strong> ${piece.faction}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Fonction pour obtenir le libellé du tier
+        function getTierLabel(tier) {
+            const labels = {
+                1: "Faible",
+                2: "Moyen", 
+                3: "Fort",
+                4: "Unique"
+            };
+            return labels[tier] || "Inconnu";
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Injecter le header
             VGBHeader.injectHeader('movement-demo');
+            
+            // Vérifier que JSZip est chargé
+            if (typeof JSZip === 'undefined') {
+                console.error('JSZip n\'est pas chargé !');
+                alert('Erreur: JSZip n\'est pas chargé. Vérifiez votre connexion internet.');
+                return;
+            }
+            
+            // Vérifier que piecesData est chargé
+            if (typeof piecesData === 'undefined') {
+                console.error('piecesData n\'est pas chargé !');
+                alert('Erreur: Données des pièces non disponibles.');
+                return;
+            }
+            
+            console.log('JSZip chargé:', typeof JSZip);
+            console.log('piecesData chargé:', typeof piecesData, piecesData ? piecesData.length : 'undefined');
+            
+            // Générer la liste des pièces
+            generatePiecesList();
             
             let movementDemo = null;
             
@@ -135,11 +152,44 @@
             });
             
             // Bouton pour exporter toutes les images
-            document.getElementById('exportAll').addEventListener('click', function() {
+            document.getElementById('exportAll').addEventListener('click', async function() {
                 if (movementDemo) {
-                    exportAllMovementDemos();
-                    this.textContent = '📁 Images Exportées';
+                    // Afficher la barre de progression
+                    const progressContainer = document.getElementById('progressContainer');
+                    const progressBar = document.getElementById('progressBar');
+                    const progressText = document.getElementById('progressText');
+                    
+                    progressContainer.style.display = 'block';
                     this.disabled = true;
+                    this.textContent = '⏳ Génération en cours...';
+                    
+                    try {
+                        // Test simple de JSZip
+                        console.log('Test de JSZip...');
+                        const testZip = new JSZip();
+                        testZip.file("test.txt", "Hello World");
+                        const testBlob = await testZip.generateAsync({type: "blob"});
+                        console.log('Test JSZip réussi, taille:', testBlob.size);
+                        
+                        // Test de téléchargement simple
+                        console.log('Test de téléchargement...');
+                        const testLink = document.createElement('a');
+                        testLink.href = URL.createObjectURL(testBlob);
+                        testLink.download = 'test.zip';
+                        testLink.click();
+                        URL.revokeObjectURL(testLink.href);
+                        console.log('Test de téléchargement effectué');
+                        
+                        await movementDemo.exportAllImages();
+                        this.textContent = '✅ Archive Téléchargée';
+                        progressText.textContent = 'Archive téléchargée avec succès !';
+                        progressBar.style.width = '100%';
+                    } catch (error) {
+                        console.error('Erreur:', error);
+                        this.textContent = '❌ Erreur';
+                        progressText.textContent = 'Erreur lors de la génération: ' + error.message;
+                        this.disabled = false;
+                    }
                 } else {
                     alert('Veuillez d\'abord générer les démonstrations !');
                 }
@@ -234,6 +284,29 @@
             margin: 0;
             font-size: 14px;
             color: var(--text-secondary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-gold));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        #progressText {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--text-primary);
         }
     </style>
 </body>
