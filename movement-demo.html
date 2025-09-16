@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstrations de Mouvements - VGB</title>
+    <link rel="stylesheet" href="public/css/common.css">
+</head>
+<body>
+    <div id="header-root"></div>
+
+    <main class="site-main">
+        <h1 class="page-title">♟️ <span class="title-text">Démonstrations de Mouvements</span> ♟️</h1>
+        
+        <div class="card">
+            <h2>Générateur de Démonstrations de Mouvements</h2>
+            <p>Cette page vous permet de générer des images illustrant les capacités de mouvement de chaque pièce sur un damier.</p>
+            
+            <div class="demo-controls">
+                <button id="generateAll" class="btn btn-primary">🎯 Générer Toutes les Démonstrations</button>
+                <button id="exportAll" class="btn btn-secondary">📁 Exporter Toutes les Images</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Instructions</h2>
+            <ol>
+                <li><strong>Cliquez sur "Générer Toutes les Démonstrations"</strong> pour créer les visualisations</li>
+                <li><strong>Cliquez sur "Exporter Toutes les Images"</strong> pour télécharger les images PNG</li>
+                <li><strong>Les images seront sauvegardées</strong> automatiquement dans votre dossier de téléchargements</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>Légende</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f0d9b5;"></div>
+                    <span>Cases claires du damier</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #b58863;"></div>
+                    <span>Cases sombres du damier</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(0, 255, 0, 0.6);"></div>
+                    <span>Mouvements possibles</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff0000;"></div>
+                    <span>Position de la pièce</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Pièces Disponibles</h2>
+            <div class="pieces-grid">
+                <div class="piece-card">
+                    <h3>Mario</h3>
+                    <p>Mouvement diagonal sur 2 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Link</h3>
+                    <p>Mouvement en ligne sur 3 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Zelda</h3>
+                    <p>Mouvement complet sur 8 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Bowser</h3>
+                    <p>Mouvement complet sur 3 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Ganondorf</h3>
+                    <p>Mouvement complet sur 4 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Samus</h3>
+                    <p>Mouvement complet sur 4 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Pit</h3>
+                    <p>Mouvement complet sur 3 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Palutena</h3>
+                    <p>Mouvement complet sur 6 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Sheik</h3>
+                    <p>Mouvement spécial en L sur 2 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Wario</h3>
+                    <p>Mouvement complet sur 2 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Duck Hunt</h3>
+                    <p>Mouvement en ligne sur 5 cases</p>
+                </div>
+                <div class="piece-card">
+                    <h3>Wii Fit Trainer</h3>
+                    <p>Mouvement complet sur 2 cases</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Zone de démonstration -->
+    <div id="demo-container" style="display: none; text-align: center; margin: 20px 0;">
+        <h3>Aperçu de la démonstration :</h3>
+        <p>La première démonstration s'affiche ci-dessous. Cliquez sur "Exporter Toutes les Images" pour télécharger tous les PNG.</p>
+    </div>
+
+    <script src="public/js/header.js"></script>
+    <script src="public/js/movement-demo.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Injecter le header
+            VGBHeader.injectHeader('movement-demo');
+            
+            let movementDemo = null;
+            
+            // Bouton pour générer toutes les démonstrations
+            document.getElementById('generateAll').addEventListener('click', function() {
+                if (!movementDemo) {
+                    movementDemo = generateMovementDemos();
+                    window.movementDemo = movementDemo;
+                    this.textContent = '✅ Démonstrations Générées';
+                    this.disabled = true;
+                }
+            });
+            
+            // Bouton pour exporter toutes les images
+            document.getElementById('exportAll').addEventListener('click', function() {
+                if (movementDemo) {
+                    exportAllMovementDemos();
+                    this.textContent = '📁 Images Exportées';
+                    this.disabled = true;
+                } else {
+                    alert('Veuillez d\'abord générer les démonstrations !');
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .demo-controls {
+            display: flex;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--accent-gold);
+            color: var(--primary-bg);
+        }
+        
+        .btn-primary:hover {
+            background: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4a90e2;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+        
+        .pieces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .piece-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .piece-card h3 {
+            margin: 0 0 8px 0;
+            color: var(--accent-gold);
+        }
+        
+        .piece-card p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+    </style>
+</body>
+</html>

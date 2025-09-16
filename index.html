@@ -696,17 +696,35 @@ function showPlayerSetupForm(scene) {
 function setupDraftUI(scene) {
   rebuildChoiceList(scene);
 
-  // bouton "Terminer"
+  // bouton "Terminer" avec design du site
   endDraftBtn = scene.add.text(10, choiceListBottomY+10, "✅ Terminer draft", 
-    { font: "16px Arial", fill: "#000", backgroundColor: "#afa" })
+    { 
+      font: "16px Arial", 
+      fill: "#ffffff", 
+      backgroundColor: "#4CAF50",
+      padding: { x: 12, y: 8 },
+      stroke: "#2E7D32",
+      strokeThickness: 2
+    })
     .setInteractive()
-    .on("pointerdown", () => endDraft(scene));
+    .on("pointerdown", () => endDraft(scene))
+    .on("pointerover", () => endDraftBtn.setStyle({ backgroundColor: "#45a049" }))
+    .on("pointerout", () => endDraftBtn.setStyle({ backgroundColor: "#4CAF50" }));
 
-  // bouton "Tout supprimer"
+  // bouton "Tout supprimer" avec design du site
   clearAllBtn = scene.add.text(180, choiceListBottomY+10, "🗑️ Tout supprimer", 
-    { font: "16px Arial", fill: "#000", backgroundColor: "#faa" })
+    { 
+      font: "16px Arial", 
+      fill: "#ffffff", 
+      backgroundColor: "#f44336",
+      padding: { x: 12, y: 8 },
+      stroke: "#c62828",
+      strokeThickness: 2
+    })
     .setInteractive()
-    .on("pointerdown", () => clearCurrentBasket(scene));
+    .on("pointerdown", () => clearCurrentBasket(scene))
+    .on("pointerover", () => clearAllBtn.setStyle({ backgroundColor: "#d32f2f" }))
+    .on("pointerout", () => clearAllBtn.setStyle({ backgroundColor: "#f44336" }));
 
   // labels/panneaux/hints dynamiques selon nombre de joueurs
   armyLabels = [];
@@ -714,10 +732,10 @@ function setupDraftUI(scene) {
   armyHints = [];
   armyThumbs = Array.from({ length: players.length }, () => []);
   for (let i = 0; i < players.length; i++) {
-    const baseLabelY = 30 + i*70;
-    armyLabels[i] = scene.add.text(300, baseLabelY, `Équipe J${i+1}`, { font: "16px Arial", fill: "#000" });
-    armyPanels[i] = scene.add.rectangle(450, baseLabelY + 35, 280, 50, 0xffffff, 0).setStrokeStyle(0, 0).setVisible(false);
-    armyHints[i] = scene.add.text(300, baseLabelY + 15, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
+    const baseLabelY = 50 + i*280; // Espacement pour 5 lignes de personnages par équipe
+    armyLabels[i] = scene.add.text(450, baseLabelY, `Équipe J${i+1}`, { font: "16px Arial", fill: "#000" });
+    armyPanels[i] = scene.add.rectangle(450, baseLabelY + 120, 320, 200, 0xffffff, 0).setStrokeStyle(0, 0).setVisible(false); // Panneau pour 5 lignes
+    armyHints[i] = scene.add.text(450, baseLabelY + 20, "Cliquez pour retirer", { font: "12px Arial", fill: "#555" });
   }
   renderArmyThumbnails(scene);
 }
@@ -740,9 +758,9 @@ function rebuildChoiceList(scene) {
   }
   currentChoicesFaction = faction;
   
-  // Organiser les personnages en 2 colonnes
+  // Organiser les personnages en 4 colonnes
   const catalogKeys = Object.keys(draftCatalog);
-  const itemsPerColumn = Math.ceil(catalogKeys.length / 2);
+  const itemsPerColumn = Math.ceil(catalogKeys.length / 4);
   
   let y = 50;
   let column = 0;
@@ -752,33 +770,33 @@ function rebuildChoiceList(scene) {
     const displayName = getDisplayNameForKey(key);
     const texKey = hasTexture(scene, key) ? key : 'nintendo';
     
-    // Position X : 35 pour colonne gauche, 200 pour colonne droite
-    const x = column === 0 ? 35 : 200;
-    const textX = column === 0 ? 70 : 235;
+    // Position X : 35, 130, 225, 320 pour les 4 colonnes
+    const x = column === 0 ? 35 : (column === 1 ? 130 : (column === 2 ? 225 : 320));
+    const textX = column === 0 ? 70 : (column === 1 ? 165 : (column === 2 ? 260 : 355));
     
     const img = scene.add.image(x, y, texKey)
-      .setDisplaySize(52,52)
+      .setDisplaySize(40,40)
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const nameText = scene.add.text(textX, y - 12, displayName, { font: "16px Arial", fill: "#000" })
+    const nameText = scene.add.text(textX, y - 8, displayName, { font: "12px Arial", fill: "#000" })
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const costText = scene.add.text(textX, y + 10, `cost: ${draftCatalog[key].cost}` , { font: "12px Arial", fill: "#333" });
+    const costText = scene.add.text(textX, y + 6, `cost: ${draftCatalog[key].cost}` , { font: "10px Arial", fill: "#333" });
     choiceThumbs.push({ key, image: img, nameText, costText });
     
     itemInColumn++;
-    y += 70;
+    y += 55;
     
-    // Passer à la colonne de droite quand on a rempli la colonne de gauche
-    if (itemInColumn >= itemsPerColumn && column === 0) {
-      column = 1;
-      y = 50; // Reset Y pour la colonne de droite
+    // Passer à la colonne suivante quand on a rempli la colonne actuelle
+    if (itemInColumn >= itemsPerColumn && column < 3) {
+      column++;
+      y = 50; // Reset Y pour la nouvelle colonne
       itemInColumn = 0;
     }
   }
   
-  // Calculer la position Y du bas en prenant la plus grande des deux colonnes
-  choiceListBottomY = Math.max(y, 50 + itemsPerColumn * 70);
+  // Calculer la position Y du bas en prenant la plus grande des quatre colonnes
+  choiceListBottomY = Math.max(y, 50 + itemsPerColumn * 55);
   
   if (endDraftBtn) endDraftBtn.setY(choiceListBottomY + 10);
   if (clearAllBtn) clearAllBtn.setY(choiceListBottomY + 10);
@@ -832,9 +850,23 @@ function renderArmyThumbnails(scene) {
   }
   // re-créer
   players.forEach((pl,i) => {
-    const baseY = 60 + i*70;
+    const baseY = 80 + i*280; // Position sous le titre de l'équipe
+    const maxItemsPerRow = 8; // Nombre maximum d'items par ligne
+    const maxRows = 5; // Maximum 5 lignes par équipe
+    const itemSpacing = 35; // Espacement entre les items
+    const rowSpacing = 35; // Espacement entre les lignes
+    
     pl.army.forEach((charKey, idx) => {
-      const img = scene.add.image(300 + idx*45, baseY, charKey).setDisplaySize(32,32);
+      const row = Math.floor(idx / maxItemsPerRow);
+      const col = idx % maxItemsPerRow;
+      
+      // Limiter à 5 lignes maximum
+      if (row >= maxRows) return;
+      
+      const x = 450 + col * itemSpacing;
+      const y = baseY + row * rowSpacing;
+      
+      const img = scene.add.image(x, y, charKey).setDisplaySize(30,30);
       if (i === currentPlayer && !gameStarted) {
         img.setInteractive().on("pointerdown", () => removeArmyItem(scene, i, idx));
       } else {
