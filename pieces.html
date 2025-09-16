@@ -116,6 +116,9 @@ function displayPieces(pieces) {
     const card = document.createElement('div');
     card.className = 'piece-card';
     
+    // Obtenir le chemin de l'image de démonstration
+    const demoImagePath = getMovementDemoImage(piece);
+    
     card.innerHTML = `
       <img src="${piece.image}" alt="${piece.name}" class="piece-image" onerror="this.style.display='none'">
       <div class="piece-name">${piece.name}</div>
@@ -129,6 +132,10 @@ function displayPieces(pieces) {
       </div>
       <div class="moves" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
         <strong>Mouvements :</strong> ${getMovesDescription(piece.moves)}
+      </div>
+      <div class="movement-demo" style="margin-top: 8px; text-align: center;">
+        <img src="${demoImagePath}" alt="Démonstration de mouvement" style="width: 120px; height: 120px; border: 1px solid var(--border-color); border-radius: 4px;" onerror="this.style.display='none'">
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Démonstration de mouvement</div>
       </div>
     `;
     
@@ -153,6 +160,26 @@ function getTierLabel(tier) {
     4: "Unique"
   };
   return labels[tier] || "Inconnu";
+}
+
+// Fonction pour obtenir le chemin de l'image de démonstration
+function getMovementDemoImage(piece) {
+  // Extraire le nom de fichier de l'image du personnage
+  let fileName = piece.name;
+  if (piece.image) {
+    const imagePath = piece.image;
+    const imageName = imagePath.split('/').pop().split('.')[0];
+    fileName = imageName;
+  }
+  
+  // Convertir en minuscules et remplacer les espaces par des tirets
+  fileName = fileName.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  
+  // Construire le chemin vers l'image de démonstration
+  const faction = piece.faction.toLowerCase();
+  return `public/images/${faction}/demo/${fileName}-movement-demo.png`;
 }
 
 // Fonction pour obtenir la description du tier

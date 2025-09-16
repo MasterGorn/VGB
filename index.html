@@ -118,6 +118,9 @@
 }
 
 .rules-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 16px;
   font: var(--font-size-sm) Arial, sans-serif;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -952,6 +955,26 @@ function buildRulesCatalog() {
   return map;
 }
 
+// Fonction pour obtenir le chemin de l'image de démonstration
+function getMovementDemoImage(piece) {
+  // Extraire le nom de fichier de l'image du personnage
+  let fileName = piece.name;
+  if (piece.image) {
+    const imagePath = piece.image;
+    const imageName = imagePath.split('/').pop().split('.')[0];
+    fileName = imageName;
+  }
+  
+  // Convertir en minuscules et remplacer les espaces par des tirets
+  fileName = fileName.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  
+  // Construire le chemin vers l'image de démonstration
+  const faction = piece.faction.toLowerCase();
+  return `public/images/${faction}/demo/${fileName}-movement-demo.png`;
+}
+
 function updateRulesSidebar() {
   const el = document.getElementById('rules-list');
   if (!el) return;
@@ -973,7 +996,16 @@ function updateRulesSidebar() {
       if (entry) {
         const text = rulesTextForEntry(entry);
         const img = getImgSrc(faction, isKing ? 'king' : p.type, isKing);
-        presentByKey.set(uniq, { img, text });
+        const name = getDisplayNameForKey(entry.key || entry.type || '');
+        // Créer un objet pièce pour la démonstration
+        const pieceData = {
+          name: name,
+          moves: entry.moves || [],
+          range: entry.range || 0,
+          faction: faction,
+          image: img
+        };
+        presentByKey.set(uniq, { img, text, name, pieceData });
       }
     }
   }
@@ -983,9 +1015,13 @@ function updateRulesSidebar() {
   }
   const rows = [];
   presentByKey.forEach((v) => {
-    rows.push(`<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-      <img src="${v.img}" alt="" style="width:24px; height:24px; object-fit:contain; display:block;" />
-      <div>${v.text}</div>
+    // Obtenir le chemin de l'image de démonstration
+    const demoImagePath = getMovementDemoImage(v.pieceData);
+    
+    rows.push(`<div style="display:flex; align-items:center; flex-direction: column; gap:8px; padding:8px; background:var(--secondary-bg); border-radius:6px;">
+      <img src="${v.img}" alt="" style="width:48px; height:48px; object-fit:contain; display:block;" />
+      <div style="font-weight:bold; margin-bottom:4px;">${v.name}</div>
+      <img src="${demoImagePath}" alt="Démonstration de mouvement" style="width:80px; height:80px; border:1px solid var(--border-color); border-radius:4px;" onerror="this.style.display='none'" />
     </div>`);
   });
   el.innerHTML = rows.join('');
@@ -1844,8 +1880,8 @@ function handleClick(scene, pos) {
               if (winnerId === null || pid !== winnerId) ranking.push(pid);
             }
             endGameWithRanking(ranking);
-          return;
-        }
+            return;
+          }
         }
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
