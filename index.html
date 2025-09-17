@@ -465,7 +465,38 @@ let forcedPiece = null; // { piece, playerId, maskSprite }
 let knightPieces = []; // array de { piece, ocarinaSprite }
 // Poids d'apparition des objets de caisse
 // Utilisation des données des objets depuis le fichier externe
-const ITEM_WEIGHTS = getItemWeights();
+let ITEM_WEIGHTS = {};
+
+// Initialiser les poids des objets après le chargement
+function initItemWeights() {
+  if (typeof getItemWeights === 'function') {
+    ITEM_WEIGHTS = getItemWeights();
+    console.log('ITEM_WEIGHTS initialisés:', ITEM_WEIGHTS);
+  } else {
+    console.error('getItemWeights non disponible');
+    // Fallback avec des poids par défaut
+    ITEM_WEIGHTS = {
+      'bobomb': 4,
+      'portals': 4,
+      'lightning': 1,
+      'star': 2,
+      'tetrimino': 3,
+      'tornado': 2,
+      'banana': 5,
+      'phoenix': 2,
+      'cursor': 3,
+      'heart': 2,
+      'sandglass': 3,
+      'mask': 4,
+      'ocarina': 3
+    };
+  }
+}
+
+// Initialiser immédiatement au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+  initItemWeights();
+});
 // Timers
 let playerTimersMs = [];
 let timerTexts = [];
@@ -616,7 +647,7 @@ function preload() {
   this.load.image('tornado', 'tornado.png');
   this.load.image('banana', 'banana.png');
   this.load.image('phoenix', 'phoenix-down.png');
-  this.load.image('cursor', 'cursor-sims.png');
+  this.load.image('cursor', 'sims-cursor.png');
   this.load.image('heart', 'heart.png');
   this.load.image('sandglass', 'hourglass.png');
   this.load.image('mask', 'mask-majora.png');
@@ -1179,111 +1210,92 @@ function updateRulesSidebar() {
   el.innerHTML = rows.join('');
 }
 
-// Fonction pour générer les positions en spirale autour du roi
+// Fonction pour générer les positions en cercle autour du roi (plus fortes au centre)
 function generateSpiralPositions(kingX, kingY, playerCount, playerIndex) {
   const positions = [];
   
-  // Définir les directions de spirale selon la position du joueur
-  let directions;
+  // Générer les positions en cercles concentriques autour du roi
+  // Cercle 1 (distance 1) - pour les pièces tier 3 (plus fortes)
+  const circle1 = [
+    {x: -1, y: -1}, {x: 0, y: -1}, {x: 1, y: -1},
+    {x: -1, y: 0},                  {x: 1, y: 0},
+    {x: -1, y: 1},  {x: 0, y: 1},  {x: 1, y: 1}
+  ];
+  
+  // Cercle 2 (distance 2) - pour les pièces tier 2 (moyennes)
+  const circle2 = [
+    {x: -2, y: -2}, {x: -1, y: -2}, {x: 0, y: -2}, {x: 1, y: -2}, {x: 2, y: -2},
+    {x: -2, y: -1},                                 {x: 2, y: -1},
+    {x: -2, y: 0},                                  {x: 2, y: 0},
+    {x: -2, y: 1},                                  {x: 2, y: 1},
+    {x: -2, y: 2},  {x: -1, y: 2},  {x: 0, y: 2},  {x: 1, y: 2},  {x: 2, y: 2}
+  ];
+  
+  // Cercle 3 (distance 3) - pour les pièces tier 1 (faibles)
+  const circle3 = [
+    {x: -3, y: -3}, {x: -2, y: -3}, {x: -1, y: -3}, {x: 0, y: -3}, {x: 1, y: -3}, {x: 2, y: -3}, {x: 3, y: -3},
+    {x: -3, y: -2},                                 {x: 3, y: -2},
+    {x: -3, y: -1},                                 {x: 3, y: -1},
+    {x: -3, y: 0},                                  {x: 3, y: 0},
+    {x: -3, y: 1},                                  {x: 3, y: 1},
+    {x: -3, y: 2},                                  {x: 3, y: 2},
+    {x: -3, y: 3},  {x: -2, y: 3},  {x: -1, y: 3},  {x: 0, y: 3},  {x: 1, y: 3},  {x: 2, y: 3},  {x: 3, y: 3}
+  ];
+  
+  // Filtrer les positions selon la position du joueur pour éviter les conflits
+  let filteredCircle1 = circle1;
+  let filteredCircle2 = circle2;
+  let filteredCircle3 = circle3;
+  
   if (playerCount === 2) {
-    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
-      directions = [
-        {x: 0, y: 1},   // En dessous du roi (touche le bord)
-        {x: -1, y: 1},  // Diagonale bas-gauche
-        {x: 1, y: 1},   // Diagonale bas-droite
-        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
-        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
-        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
-        {x: -2, y: 1},  // Plus à gauche
-        {x: 2, y: 1},   // Plus à droite
-        {x: -2, y: 2},  // Diagonale bas-gauche éloignée
-        {x: 2, y: 2},   // Diagonale bas-droite éloignée
-      ];
-    } else { // Joueur 2 (bas) - vers le haut
-      directions = [
-        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
-        {x: -1, y: -1}, // Diagonale haut-gauche
-        {x: 1, y: -1},  // Diagonale haut-droite
-        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
-        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
-        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
-        {x: -2, y: -1}, // Plus à gauche
-        {x: 2, y: -1},  // Plus à droite
-        {x: -2, y: -2}, // Diagonale haut-gauche éloignée
-        {x: 2, y: -2},  // Diagonale haut-droite éloignée
-      ];
+    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
+      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
+    } else { // Joueur 2 (bas) - garder les positions du haut
+      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
     }
   } else if (playerCount === 3) {
-    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
-      directions = [
-        {x: 0, y: 1},   // En dessous du roi (touche le bord)
-        {x: -1, y: 1},  // Diagonale bas-gauche
-        {x: 1, y: 1},   // Diagonale bas-droite
-        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
-        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
-        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
-      ];
-    } else if (playerIndex === 1) { // Joueur 2 (bas) - vers le haut
-      directions = [
-        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
-        {x: -1, y: -1}, // Diagonale haut-gauche
-        {x: 1, y: -1},  // Diagonale haut-droite
-        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
-        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
-        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
-      ];
-    } else { // Joueur 3 (gauche) - vers la droite
-      directions = [
-        {x: 1, y: 0},   // À droite du roi (touche le bord)
-        {x: 1, y: -1},  // Diagonale haut-droite
-        {x: 1, y: 1},   // Diagonale bas-droite
-        {x: 2, y: -1},  // Plus à droite en haut (touche le bord)
-        {x: 2, y: 0},   // Plus à droite au centre (touche le bord)
-        {x: 2, y: 1},   // Plus à droite en bas (touche le bord)
-      ];
+    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
+      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
+    } else if (playerIndex === 1) { // Joueur 2 (bas) - garder les positions du haut
+      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
+    } else { // Joueur 3 (gauche) - garder les positions de droite
+      filteredCircle1 = circle1.filter(pos => pos.x >= 0);
+      filteredCircle2 = circle2.filter(pos => pos.x >= 0);
+      filteredCircle3 = circle3.filter(pos => pos.x >= 0);
     }
   } else { // 4 joueurs
-    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
-      directions = [
-        {x: 0, y: 1},   // En dessous du roi (touche le bord)
-        {x: -1, y: 1},  // Diagonale bas-gauche
-        {x: 1, y: 1},   // Diagonale bas-droite
-        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
-        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
-        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
-      ];
-    } else if (playerIndex === 1) { // Joueur 2 (bas) - vers le haut
-      directions = [
-        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
-        {x: -1, y: -1}, // Diagonale haut-gauche
-        {x: 1, y: -1},  // Diagonale haut-droite
-        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
-        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
-        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
-      ];
-    } else if (playerIndex === 2) { // Joueur 3 (gauche) - vers la droite
-      directions = [
-        {x: 1, y: 0},   // À droite du roi (touche le bord)
-        {x: 1, y: -1},  // Diagonale haut-droite
-        {x: 1, y: 1},   // Diagonale bas-droite
-        {x: 2, y: -1},  // Plus à droite en haut (touche le bord)
-        {x: 2, y: 0},   // Plus à droite au centre (touche le bord)
-        {x: 2, y: 1},   // Plus à droite en bas (touche le bord)
-      ];
-    } else { // Joueur 4 (droite) - vers la gauche
-      directions = [
-        {x: -1, y: 0},  // À gauche du roi (touche le bord)
-        {x: -1, y: -1}, // Diagonale haut-gauche
-        {x: -1, y: 1},  // Diagonale bas-gauche
-        {x: -2, y: -1}, // Plus à gauche en haut (touche le bord)
-        {x: -2, y: 0},  // Plus à gauche au centre (touche le bord)
-        {x: -2, y: 1},  // Plus à gauche en bas (touche le bord)
-      ];
+    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
+      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
+    } else if (playerIndex === 1) { // Joueur 2 (bas) - garder les positions du haut
+      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
+      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
+      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
+    } else if (playerIndex === 2) { // Joueur 3 (gauche) - garder les positions de droite
+      filteredCircle1 = circle1.filter(pos => pos.x >= 0);
+      filteredCircle2 = circle2.filter(pos => pos.x >= 0);
+      filteredCircle3 = circle3.filter(pos => pos.x >= 0);
+    } else { // Joueur 4 (droite) - garder les positions de gauche
+      filteredCircle1 = circle1.filter(pos => pos.x <= 0);
+      filteredCircle2 = circle2.filter(pos => pos.x <= 0);
+      filteredCircle3 = circle3.filter(pos => pos.x <= 0);
     }
   }
   
-  // Générer les positions en spirale
-  for (const dir of directions) {
+  // Combiner les cercles dans l'ordre (plus proches en premier)
+  const allDirections = [...filteredCircle1, ...filteredCircle2, ...filteredCircle3];
+  
+  // Générer les positions en cercle
+  for (const dir of allDirections) {
     const x = kingX + dir.x;
     const y = kingY + dir.y;
     
@@ -1297,6 +1309,9 @@ function generateSpiralPositions(kingX, kingY, playerCount, playerIndex) {
 }
 
 function startGame(scene) {
+  // Initialiser les poids des objets
+  initItemWeights();
+  
   gameStarted = true;
   currentPlayer = 0;
   // reset portails
@@ -1629,7 +1644,7 @@ function startGame(scene) {
     acc[p.player] = (acc[p.player] || 0) + 1;
     return acc;
   }, {}));
-  
+
   updatePieces();
   
   console.log('Nombre total de pièces créées:', pieces.length);

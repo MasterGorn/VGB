@@ -43,7 +43,7 @@ const itemsData = [
   {
     name: "Tetrimino",
     key: "tetrimino",
-    weight: 3000,
+    weight: 3,
     description: "Bloc de construction ! Place un <strong>mur Tetrimino</strong> sur le plateau.",
     details: "Crée un obstacle permanent sur le plateau qui bloque les mouvements. Parfait pour contrôler les zones de passage ou protéger des positions stratégiques. Inspiré de Tetris.",
     image: "public/images/items/tetrimino.png",
@@ -82,7 +82,7 @@ const itemsData = [
     weight: 3,
     description: "Contrôle total ! <strong>Prend le contrôle d'une pièce adverse</strong> pendant 1 tour.",
     details: "Vous pouvez déplacer la pièce adverse comme si c'était la vôtre. Idéal pour créer des situations tactiques ou éliminer des menaces. Inspiré de The Sims, ce curseur magique permet de manipuler les autres.",
-    image: "public/images/items/cursor-sims.png",
+    image: "public/images/items/sims-cursor.png",
     category: "contrôle"
   },
   {
@@ -156,4 +156,11 @@ if (typeof module !== 'undefined' && module.exports) {
     getAllCategories,
     getItemWeights
   };
+} else {
+  // Export global pour le navigateur
+  window.itemsData = itemsData;
+  window.getItemsByCategory = getItemsByCategory;
+  window.getItemByKey = getItemByKey;
+  window.getAllCategories = getAllCategories;
+  window.getItemWeights = getItemWeights;
 }
