@@ -339,7 +339,7 @@
           <label for="grid-size-select">Taille du plateau :</label>
           <select id="grid-size-select" class="setup-select">
             <option value="9">9x9 (Petit)</option>
-            <option value="12">12x12 (Moyen)</option>
+            <option value="11">11x11 (Moyen)</option>
             <option value="15" selected>15x15 (Grand)</option>
           </select>
         </div>
@@ -1179,6 +1179,123 @@ function updateRulesSidebar() {
   el.innerHTML = rows.join('');
 }
 
+// Fonction pour générer les positions en spirale autour du roi
+function generateSpiralPositions(kingX, kingY, playerCount, playerIndex) {
+  const positions = [];
+  
+  // Définir les directions de spirale selon la position du joueur
+  let directions;
+  if (playerCount === 2) {
+    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
+      directions = [
+        {x: 0, y: 1},   // En dessous du roi (touche le bord)
+        {x: -1, y: 1},  // Diagonale bas-gauche
+        {x: 1, y: 1},   // Diagonale bas-droite
+        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
+        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
+        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
+        {x: -2, y: 1},  // Plus à gauche
+        {x: 2, y: 1},   // Plus à droite
+        {x: -2, y: 2},  // Diagonale bas-gauche éloignée
+        {x: 2, y: 2},   // Diagonale bas-droite éloignée
+      ];
+    } else { // Joueur 2 (bas) - vers le haut
+      directions = [
+        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
+        {x: -1, y: -1}, // Diagonale haut-gauche
+        {x: 1, y: -1},  // Diagonale haut-droite
+        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
+        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
+        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
+        {x: -2, y: -1}, // Plus à gauche
+        {x: 2, y: -1},  // Plus à droite
+        {x: -2, y: -2}, // Diagonale haut-gauche éloignée
+        {x: 2, y: -2},  // Diagonale haut-droite éloignée
+      ];
+    }
+  } else if (playerCount === 3) {
+    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
+      directions = [
+        {x: 0, y: 1},   // En dessous du roi (touche le bord)
+        {x: -1, y: 1},  // Diagonale bas-gauche
+        {x: 1, y: 1},   // Diagonale bas-droite
+        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
+        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
+        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
+      ];
+    } else if (playerIndex === 1) { // Joueur 2 (bas) - vers le haut
+      directions = [
+        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
+        {x: -1, y: -1}, // Diagonale haut-gauche
+        {x: 1, y: -1},  // Diagonale haut-droite
+        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
+        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
+        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
+      ];
+    } else { // Joueur 3 (gauche) - vers la droite
+      directions = [
+        {x: 1, y: 0},   // À droite du roi (touche le bord)
+        {x: 1, y: -1},  // Diagonale haut-droite
+        {x: 1, y: 1},   // Diagonale bas-droite
+        {x: 2, y: -1},  // Plus à droite en haut (touche le bord)
+        {x: 2, y: 0},   // Plus à droite au centre (touche le bord)
+        {x: 2, y: 1},   // Plus à droite en bas (touche le bord)
+      ];
+    }
+  } else { // 4 joueurs
+    if (playerIndex === 0) { // Joueur 1 (haut) - vers le bas
+      directions = [
+        {x: 0, y: 1},   // En dessous du roi (touche le bord)
+        {x: -1, y: 1},  // Diagonale bas-gauche
+        {x: 1, y: 1},   // Diagonale bas-droite
+        {x: -1, y: 2},  // Plus bas à gauche (touche le bord)
+        {x: 0, y: 2},   // Plus bas au centre (touche le bord)
+        {x: 1, y: 2},   // Plus bas à droite (touche le bord)
+      ];
+    } else if (playerIndex === 1) { // Joueur 2 (bas) - vers le haut
+      directions = [
+        {x: 0, y: -1},  // Au-dessus du roi (touche le bord)
+        {x: -1, y: -1}, // Diagonale haut-gauche
+        {x: 1, y: -1},  // Diagonale haut-droite
+        {x: -1, y: -2}, // Plus haut à gauche (touche le bord)
+        {x: 0, y: -2},  // Plus haut au centre (touche le bord)
+        {x: 1, y: -2},  // Plus haut à droite (touche le bord)
+      ];
+    } else if (playerIndex === 2) { // Joueur 3 (gauche) - vers la droite
+      directions = [
+        {x: 1, y: 0},   // À droite du roi (touche le bord)
+        {x: 1, y: -1},  // Diagonale haut-droite
+        {x: 1, y: 1},   // Diagonale bas-droite
+        {x: 2, y: -1},  // Plus à droite en haut (touche le bord)
+        {x: 2, y: 0},   // Plus à droite au centre (touche le bord)
+        {x: 2, y: 1},   // Plus à droite en bas (touche le bord)
+      ];
+    } else { // Joueur 4 (droite) - vers la gauche
+      directions = [
+        {x: -1, y: 0},  // À gauche du roi (touche le bord)
+        {x: -1, y: -1}, // Diagonale haut-gauche
+        {x: -1, y: 1},  // Diagonale bas-gauche
+        {x: -2, y: -1}, // Plus à gauche en haut (touche le bord)
+        {x: -2, y: 0},  // Plus à gauche au centre (touche le bord)
+        {x: -2, y: 1},  // Plus à gauche en bas (touche le bord)
+      ];
+    }
+  }
+  
+  // Générer les positions en spirale
+  for (const dir of directions) {
+    const x = kingX + dir.x;
+    const y = kingY + dir.y;
+    
+    // Vérifier que la position est dans les limites et n'est pas sur le roi
+    if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && !(x === kingX && y === kingY)) {
+      positions.push({x, y});
+    }
+  }
+  
+  return positions;
+}
+
 function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
@@ -1231,7 +1348,21 @@ function startGame(scene) {
   // cacher l'UI de draft (supprimé - obsolète)
   // cacher l'aperçu des équipes pendant la partie (supprimé - obsolète)
 
-  // créer la grille
+  // Détruire l'ancienne grille si elle existe
+  if (grid && grid.length > 0) {
+    for (let y = 0; y < grid.length; y++) {
+      if (grid[y]) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x] && grid[y][x].destroy) {
+            grid[y][x].destroy();
+          }
+        }
+      }
+    }
+  }
+  
+  // Créer la nouvelle grille avec la taille correcte
+  grid = [];
   for (let y=0; y<GRID_SIZE; y++) {
     grid[y] = [];
     for (let x=0; x<GRID_SIZE; x++) {
@@ -1350,7 +1481,14 @@ function startGame(scene) {
     if (playerCount === 2) {
       kingY = i === 0 ? 0 : GRID_SIZE - 1;
     } else if (playerCount === 3) {
-      kingY = i === 0 ? 0 : (i === 1 ? GRID_SIZE - 1 : 0);
+      if (i === 0) {
+        kingY = 0; // Joueur 1 en haut
+      } else if (i === 1) {
+        kingY = GRID_SIZE - 1; // Joueur 2 en bas
+      } else if (i === 2) {
+        kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
+        kingX = 0;
+      }
     } else { // 4 joueurs
       if (i === 0) {
         kingY = 0; // Joueur 1 en haut
@@ -1380,7 +1518,12 @@ function startGame(scene) {
       range: 1
     };
     
+    // Rendre le roi interactive
+    kingSprite.setInteractive();
+    kingSprite.on('pointerdown', () => handleClick(scene, { x: kingPiece.x, y: kingPiece.y }));
+    
     pieces.push(kingPiece);
+    console.log(`✓ Roi créé pour Joueur ${i + 1}:`, kingPiece.name, `à (${kingX}, ${kingY})`);
   }
 
   // 2) Placer les pièces sélectionnées pour chaque joueur
@@ -1390,7 +1533,10 @@ function startGame(scene) {
     
     console.log(`Joueur ${i + 1} - Armée:`, army);
     
-    army.forEach(piece => {
+    // Trier les pièces par tier (du plus fort au plus faible) pour le placement en spirale
+    const sortedArmy = [...army].sort((a, b) => (b.tier || 1) - (a.tier || 1));
+    
+    sortedArmy.forEach(piece => {
       // Positionner les pièces autour du roi
       let kingX = Math.floor(GRID_SIZE / 2);
       let kingY;
@@ -1398,7 +1544,14 @@ function startGame(scene) {
       if (playerCount === 2) {
         kingY = i === 0 ? 0 : GRID_SIZE - 1;
       } else if (playerCount === 3) {
-        kingY = i === 0 ? 0 : (i === 1 ? GRID_SIZE - 1 : 0);
+        if (i === 0) {
+          kingY = 0; // Joueur 1 en haut
+        } else if (i === 1) {
+          kingY = GRID_SIZE - 1; // Joueur 2 en bas
+        } else if (i === 2) {
+          kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
+          kingX = 0;
+        }
       } else { // 4 joueurs
         if (i === 0) {
           kingY = 0; // Joueur 1 en haut
@@ -1413,36 +1566,20 @@ function startGame(scene) {
         }
       }
       
-      // Calculer la position de la pièce
+      // Calculer la position de la pièce en spirale
       let pieceX, pieceY;
       
-      if (playerCount === 2) {
-        const offsetX = (pieceCount % 3) - 1;
-        const offsetY = Math.floor(pieceCount / 3);
-        pieceX = kingX + offsetX;
-        pieceY = kingY + (i === 0 ? offsetY + 1 : -(offsetY + 1));
-      } else if (playerCount === 3) {
-        const offsetX = (pieceCount % 3) - 1;
-        const offsetY = Math.floor(pieceCount / 3);
-        pieceX = kingX + offsetX;
-        pieceY = kingY + (i < 2 ? offsetY + 1 : -(offsetY + 1));
-      } else { // 4 joueurs
-        if (i < 2) { // Joueurs 1 et 2 (haut et bas)
-          const offsetX = (pieceCount % 3) - 1;
-          const offsetY = Math.floor(pieceCount / 3);
-          pieceX = kingX + offsetX;
-          pieceY = kingY + (i === 0 ? offsetY + 1 : -(offsetY + 1));
-        } else { // Joueurs 3 et 4 (gauche et droite)
-          const offsetX = (pieceCount % 3) - 1; // -1, 0, 1
-          const offsetY = Math.floor(pieceCount / 3);
-          if (i === 2) { // Joueur 3 (gauche)
-            pieceX = kingX + (offsetY + 1); // À droite du roi (pour éviter les limites)
-            pieceY = kingY + offsetX;
-          } else { // Joueur 4 (droite)
-            pieceX = kingX - (offsetY + 1); // À gauche du roi
-            pieceY = kingY + offsetX;
-          }
-        }
+      // Générer les positions en spirale autour du roi
+      const spiralPositions = generateSpiralPositions(kingX, kingY, playerCount, i);
+      
+      if (pieceCount < spiralPositions.length) {
+        const pos = spiralPositions[pieceCount];
+        pieceX = pos.x;
+        pieceY = pos.y;
+      } else {
+        // Fallback si on dépasse les positions de spirale
+        pieceX = kingX + (pieceCount % 3) - 1;
+        pieceY = kingY + Math.floor(pieceCount / 3) + 1;
       }
       
       console.log(`Joueur ${i + 1} - Pièce ${pieceCount + 1}:`, {
@@ -1452,7 +1589,10 @@ function startGame(scene) {
         inBounds: pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE
       });
       
-      if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE) {
+      // Vérifier que la pièce n'est pas sur la case du roi
+      const isOnKing = (pieceX === kingX && pieceY === kingY);
+      
+      if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE && !isOnKing) {
         // Utiliser la clé d'image de la pièce
         const imageKey = piece.image.split('/').pop().split('.')[0];
         const sprite = scene.add.image(0, 0, imageKey);
@@ -1471,6 +1611,10 @@ function startGame(scene) {
           tier: piece.tier
         };
         
+        // Rendre la pièce interactive
+        sprite.setInteractive();
+        sprite.on('pointerdown', () => handleClick(scene, { x: gamePiece.x, y: gamePiece.y }));
+        
         pieces.push(gamePiece);
         pieceCount++;
         console.log(`✓ Pièce créée pour Joueur ${i + 1}:`, gamePiece.name, `à (${pieceX}, ${pieceY})`);
@@ -1487,6 +1631,8 @@ function startGame(scene) {
   }, {}));
   
   updatePieces();
+  
+  console.log('Nombre total de pièces créées:', pieces.length);
   
   // Mettre à jour la sidebar après la création de toutes les pièces
   setTimeout(() => {
@@ -1597,6 +1743,7 @@ function updatePieces() {
       if (c.sprite) {
         c.sprite.x = GRID_OFFSET_X + c.x*TILE_SIZE + TILE_SIZE/2;
         c.sprite.y = GRID_OFFSET_Y + c.y*TILE_SIZE + TILE_SIZE/2;
+        c.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
       }
     }
   }
@@ -1806,7 +1953,11 @@ function placePortal(color, pos) {
 }
 
 function handleClick(scene, pos) {
-  if (!gameStarted) return;
+  console.log('handleClick appelé:', { pos, gameStarted, currentPlayer });
+  if (!gameStarted) {
+    console.log('Jeu pas encore démarré');
+    return;
+  }
   
   // Empêcher les joueurs éliminés de jouer
   if (eliminationOrder.includes(currentPlayer)) {
@@ -2392,7 +2543,13 @@ function getReachablePositions(piece) {
 }
 
 function getRuleForPiece(piece) {
-  // Retourne l'objet { moves, range } pour la pièce, selon faction/type
+  // Retourne l'objet { moves, range } pour la pièce
+  // Utiliser directement les mouvements de la pièce si disponibles
+  if (piece.moves && piece.range !== undefined) {
+    return { moves: piece.moves, range: piece.range };
+  }
+  
+  // Fallback pour les anciennes pièces
   const owner = players[piece.player];
   if (!owner) return { moves: [], range: 0 };
   if (piece.type === 'king') {
@@ -3191,7 +3348,7 @@ function applyOcarinaToPiece(piece) {
   showInfoMessage(`Ocarina du Temps ! Cette pièce devient un cavalier !`, 3000);
 }
 
-function getReachablePositions(piece) {
+function getSimpleReachablePositions(piece) {
   if (!piece) return [];
   
   // Vérifier si la pièce est transformée en cavalier par l'Ocarina
@@ -3213,12 +3370,21 @@ function getKnightMoves(piece) {
     [1, -2], [1, 2], [2, -1], [2, 1]
   ];
   
+  // Fonction pour vérifier si une position contient un tetrimino
+  const isTetriminoPos = (x, y) => {
+    return tetriminos.some(t => t.x === x && t.y === y);
+  };
+  
   for (const [dx, dy] of knightOffsets) {
     const newX = piece.x + dx;
     const newY = piece.y + dy;
     
     // Vérifier que la position est dans la grille
     if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) continue;
+    
+    // Vérifier si la case de destination contient un tetrimino
+    // Les cavaliers peuvent sauter par-dessus les tetriminos mais ne peuvent pas atterrir dessus
+    if (isTetriminoPos(newX, newY)) continue;
     
     // Vérifier s'il y a une pièce sur cette case
     const targetPiece = getPieceAt({x: newX, y: newY});
@@ -3248,6 +3414,11 @@ function getOriginalMoves(piece) {
   
   const { moves: moveDirections, range } = pieceData;
   
+  // Fonction pour vérifier si une position contient un tetrimino
+  const isTetriminoPos = (x, y) => {
+    return tetriminos.some(t => t.x === x && t.y === y);
+  };
+  
   // Appliquer chaque direction de mouvement
   for (const [dx, dy] of moveDirections) {
     // Parcourir dans cette direction jusqu'à la portée maximale
@@ -3257,6 +3428,20 @@ function getOriginalMoves(piece) {
       
       // Vérifier limites de grille
       if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) break;
+      
+      // Vérifier si la case contient un tetrimino (mur)
+      if (isTetriminoPos(newX, newY)) {
+        // Les cavaliers peuvent sauter par-dessus les tetriminos
+        const isKnightMove = (range === 1 && distance === 1 && 
+          (Math.abs(dx) === 2 && Math.abs(dy) === 1) || 
+          (Math.abs(dx) === 1 && Math.abs(dy) === 2));
+        
+        if (isKnightMove) {
+          continue; // continuer le mouvement (sauter par-dessus)
+        } else {
+          break; // s'arrêter pour les autres pièces
+        }
+      }
       
       const targetPiece = getPieceAt({x: newX, y: newY});
       
@@ -3331,6 +3516,10 @@ function getBasicKingMoves(piece) {
 function isValidMove(piece, x, y) {
   // Vérifier que la position est dans la grille
   if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return false;
+  
+  // Vérifier si la case contient un tetrimino (mur)
+  const isTetriminoPos = tetriminos.some(t => t.x === x && t.y === y);
+  if (isTetriminoPos) return false; // Aucune pièce ne peut atterrir sur un tetrimino
   
   // Vérifier s'il y a une pièce sur cette case
   const targetPiece = getPieceAt({x, y});
@@ -3980,10 +4169,11 @@ function startCharacterSelection() {
   playerNames = [];
   playerFactions = [];
   
-  // Initialiser les joueurs
+  // Initialiser les joueurs avec les points selon la taille du plateau
+  const budget = (GRID_SIZE === 9) ? 30 : (GRID_SIZE === 11) ? 60 : 100;
   for (let i = 0; i < playerCount; i++) {
     playerArmies.push([]);
-    playerMoney.push(100);
+    playerMoney.push(budget);
     playerNames.push(`Joueur ${i + 1}`);
     playerFactions.push('Nintendo');
   }
@@ -4124,7 +4314,7 @@ function createCharacterSelectionUI() {
   factions.forEach(faction => {
     const option = document.createElement('option');
     option.value = faction;
-    option.textContent = faction;
+    option.textContent = faction.charAt(0).toUpperCase() + faction.slice(1);
     if (faction === playerFactions[currentPlayerIndex]) option.selected = true;
     factionSelect.appendChild(option);
   });
@@ -4324,7 +4514,26 @@ function createCharacterSelectionUI() {
     updateTeamsDisplay();
   });
   factionSelect.addEventListener('change', (e) => {
-    playerFactions[currentPlayerIndex] = e.target.value;
+    const newFaction = e.target.value;
+    const oldFaction = playerFactions[currentPlayerIndex];
+    
+    // Si l'éditeur change, supprimer tous les personnages déjà sélectionnés
+    if (newFaction !== oldFaction) {
+      // Rembourser les points des personnages sélectionnés
+      const totalRefund = playerArmies[currentPlayerIndex].reduce((sum, piece) => sum + piece.cost, 0);
+      playerMoney[currentPlayerIndex] += totalRefund;
+      
+      // Vider l'armée du joueur
+      playerArmies[currentPlayerIndex] = [];
+      
+      // Mettre à jour l'affichage
+      updateTeamsDisplay();
+      updatePlayerInfo();
+      
+      showInfoMessage(`Éditeur changé ! ${totalRefund} points remboursés.`, 3000);
+    }
+    
+    playerFactions[currentPlayerIndex] = newFaction;
     generateCharacterCards();
   });
 }
@@ -4470,6 +4679,13 @@ function removeCharacter(piece) {
 function nextPlayer() {
   if (currentPlayerIndex < playerCount - 1) {
     currentPlayerIndex++;
+    
+    // Changer automatiquement l'éditeur au suivant (rotation Nintendo -> SEGA -> PlayStation -> Xbox)
+    const defaultFactions = ['Nintendo', 'SEGA', 'PlayStation', 'Xbox'];
+    if (currentPlayerIndex < defaultFactions.length) {
+      playerFactions[currentPlayerIndex] = defaultFactions[currentPlayerIndex];
+    }
+    
     updatePlayerInfo();
     updateTeamsDisplay();
     generateCharacterCards();
@@ -4645,6 +4861,14 @@ function updateTeamsDisplay() {
 }
 
 function startGameFromSelection() {
+  // Récupérer et mettre à jour la taille du plateau sélectionnée
+  const gridSizeSelect = document.getElementById('grid-size-select');
+  if (gridSizeSelect) {
+    GRID_SIZE = parseInt(gridSizeSelect.value);
+    TILE_SIZE = Math.floor(780 / GRID_SIZE);
+    console.log(`Taille du plateau mise à jour: ${GRID_SIZE}x${GRID_SIZE}, TILE_SIZE: ${TILE_SIZE}`);
+  }
+  
   // Cacher l'interface de sélection
   const selectionContainer = document.getElementById('character-selection-container');
   if (selectionContainer) {
