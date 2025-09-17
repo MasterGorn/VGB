@@ -57,6 +57,11 @@
 .game-root canvas {
   max-width: 100%;
   height: auto;
+  display: none; /* Caché par défaut */
+}
+
+.game-root canvas.game-started {
+  display: block; /* Affiché quand la partie commence */
 }
 
 .sidebar {
@@ -99,6 +104,126 @@
   font: var(--font-size-sm) Arial, sans-serif;
   color: var(--text-muted);
   margin-bottom: var(--spacing-md);
+}
+
+/* Contrôles de sélection des personnages */
+.draft-controls {
+  margin-top: var(--spacing-md);
+  text-align: center;
+}
+
+.draft-btn {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-medium);
+}
+
+.draft-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-large);
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-color));
+}
+
+/* Configuration de la partie */
+.game-setup {
+  background: var(--primary-bg);
+  padding: 40px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  box-shadow: var(--shadow-light);
+  margin: 20px;
+}
+
+.setup-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 40px;
+  box-shadow: var(--shadow-medium);
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.setup-title {
+  color: var(--accent-gold);
+  margin: 0 0 30px 0;
+  font-size: 32px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.setup-options {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  min-width: 150px;
+}
+
+.option-group label {
+  color: var(--text-primary);
+  font-weight: bold;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setup-select {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  min-width: 150px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.setup-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.setup-btn {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+  color: white;
+  border: none;
+  padding: 15px 35px;
+  border-radius: var(--border-radius);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-large);
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-color));
 }
 
 .rules-panel {
@@ -204,6 +329,35 @@
 </div>
 
 <div class="game-container">
+  <!-- Configuration de la partie -->
+  <div id="game-setup" class="game-setup">
+    <div class="setup-card">
+      <h2 class="setup-title">Configuration de la partie</h2>
+      
+      <div class="setup-options">
+        <div class="option-group">
+          <label for="grid-size-select">Taille du plateau :</label>
+          <select id="grid-size-select" class="setup-select">
+            <option value="9">9x9 (Petit)</option>
+            <option value="12">12x12 (Moyen)</option>
+            <option value="15" selected>15x15 (Grand)</option>
+          </select>
+        </div>
+        
+        <div class="option-group">
+          <label for="player-count-select">Nombre de joueurs :</label>
+          <select id="player-count-select" class="setup-select">
+            <option value="2">2 joueurs</option>
+            <option value="3">3 joueurs</option>
+            <option value="4" selected>4 joueurs</option>
+          </select>
+        </div>
+      </div>
+      
+      <button id="start-character-selection" class="setup-btn">🎮 Sélection des personnages</button>
+    </div>
+  </div>
+  
   <div id="game-root" class="game-root"></div>
   <div class="sidebar">
     <div id="rules-panel" class="rules-panel">
@@ -282,6 +436,15 @@ let itemUsedThisTurn = false;
 // Portails
 let portalOrange = null; // { x, y, sprite }
 let portalBlue = null;   // { x, y, sprite }
+// Variables pour la sélection des personnages
+let characterSelectionMode = false;
+let currentPlayerIndex = 0;
+let playerCount = 4;
+let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4'];
+let playerFactions = ['Nintendo', 'Nintendo', 'Nintendo', 'Nintendo'];
+let playerArmies = [[], [], [], []]; // Armées des joueurs
+let playerMoney = [100, 100, 100, 100]; // Argent de chaque joueur
+let availablePieces = [];
 // Étoile d'invincibilité
 let starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
 let starPhase = 0; // pour l'effet arc-en-ciel
@@ -386,17 +549,8 @@ function getCatalogForFaction(faction) {
   return factionCatalogs[faction] || factionCatalogs.nintendo;
 }
 
-// Draft UI
+// Game UI
 let infoText;
-let choiceButtons = [];
-let choiceThumbs = [];
-let armyThumbs = [];
-let armyLabels = [];
-let endDraftBtn;
-let armyPanels = [];
-let armyHints = [];
-let clearAllBtn;
-let playerCountBtns = [];
 
 function preload() {
   // Activer un filtrage linéaire pour toutes les textures pour un rendu lisse
@@ -498,7 +652,15 @@ function create() {
     localStorage.removeItem('vgb_start_with_preset');
     return;
   }
-  setupGridSizeUI(this);
+  // setupGridSizeUI(this); // Supprimé - remplacé par l'interface de configuration
+  
+  // Événement pour le bouton de sélection des personnages
+  const startCharacterSelectionBtn = document.getElementById('start-character-selection');
+  if (startCharacterSelectionBtn) {
+    startCharacterSelectionBtn.addEventListener('click', () => {
+      startCharacterSelection();
+    });
+  }
 }
 
 function showInfoMessage(message, duration = 3000) {
@@ -563,41 +725,9 @@ function shouldIncrementRoundCounter() {
   return nextPlayer === firstActivePlayer || (nextPlayer < currentPlayer && !eliminationOrder.includes(nextPlayer));
 }
 
-function setupGridSizeUI(scene) {
-  const last = parseInt(localStorage.getItem('vgb_grid_size') || '0', 10);
-  showInfoMessage("Choisissez la taille du plateau (9x9 / 12x12 / 15x15)", 10000);
-  const options = [9,11,15];
-  let x = 10;
-  let y = 40;
-  options.forEach(size => {
-    const isDefault = (last === size);
-    const label = isDefault ? `${size} x ${size} (défaut)` : `${size} x ${size}`;
-    const btn = scene.add.text(x, y, label, { font: "16px Arial", fill: "#000", backgroundColor: isDefault ? "#bdf" : "#ddd" })
-      .setInteractive()
-      .on("pointerdown", () => selectGridSize(scene, size));
-    gridSizeUIElems.push(btn);
-    y += 30;
-  });
-  // Bouton pour utiliser directement la taille par défaut mémorisée
-  if (options.includes(last)) {
-    const defBtn = scene.add.text(x, y + 10, `➡️ Utiliser la taille par défaut (${last}x${last})`, { font: "16px Arial", fill: "#000", backgroundColor: "#cfc" })
-      .setInteractive()
-      .on("pointerdown", () => selectGridSize(scene, last));
-    gridSizeUIElems.push(defBtn);
-  }
-}
+// Fonction supprimée - remplacée par l'interface de configuration
 
-function selectGridSize(scene, size) {
-  GRID_SIZE = size;
-  // ajuster automatiquement la taille de tuile pour tenir dans 900x900 avec les offsets
-  const available = 900 - 2*GRID_OFFSET_Y; // carré
-  TILE_SIZE = Math.floor(available / GRID_SIZE);
-  // mémoriser le choix
-  try { localStorage.setItem('vgb_grid_size', String(size)); } catch(e) {}
-  // passer au choix du nombre de joueurs
-  gridSizeUIElems.forEach(e => e && e.setVisible(false));
-  setupPlayerCountUI(scene);
-}
+// Fonction supprimée - remplacée par l'interface de configuration
 
 function getKingCenterIndex(gridSize) {
   // 15x15 -> 8e case (index 7), 11x11 -> 6e (index 5), 9x9 -> 5e (index 4)
@@ -689,7 +819,7 @@ function showPlayerSetupForm(scene) {
       playerSetupDiv = null;
       infoText.setText("");
       setupDraftUI(scene);
-      updateDraftUI();
+  updateDraftUI();
     } else {
       showPlayerSetupForm(scene);
     }
@@ -978,6 +1108,10 @@ function getMovementDemoImage(piece) {
 function updateRulesSidebar() {
   const el = document.getElementById('rules-list');
   if (!el) return;
+  
+  console.log('updateRulesSidebar - pieces:', pieces);
+  console.log('updateRulesSidebar - players:', players);
+  
   const rulesMap = buildRulesCatalog();
   // Helper pour trouver la source d'image selon faction et type
   const getImgSrc = (faction, type, isKing) => {
@@ -987,26 +1121,44 @@ function updateRulesSidebar() {
   // Dédupliquer par (faction::keyAfficher)
   const presentByKey = new Map();
   for (const p of pieces) {
-    const faction = players[p.player] && players[p.player].faction ? players[p.player].faction : 'nintendo';
+    const faction = players[p.player] && players[p.player].faction ? players[p.player].faction.toLowerCase() : 'nintendo';
     const isKing = p.type === 'king';
-    const ruleKey = isKing ? (kings[faction].key) : p.type;
+    
+    let ruleKey, img, name, pieceData;
+    
+    if (isKing) {
+      ruleKey = kings[faction] && kings[faction].key;
+      img = getImgSrc(faction, 'king', true);
+      name = `Roi ${p.name}`;
+      pieceData = {
+        name: name,
+        moves: p.moves || [],
+        range: p.range || 0,
+        faction: faction,
+        image: img
+      };
+    } else {
+      // Pour les pièces normales, utiliser les données stockées dans la pièce
+      ruleKey = p.name || 'piece';
+      img = p.image || getImgSrc(faction, 'piece', false);
+      name = p.name || 'Pièce';
+      pieceData = {
+        name: name,
+        moves: p.moves || [],
+        range: p.range || 0,
+        faction: faction,
+        image: img
+      };
+    }
+    
     const uniq = `${faction}::${ruleKey}`;
     if (!presentByKey.has(uniq)) {
-      const entry = rulesMap.get(ruleKey);
-      if (entry) {
-        const text = rulesTextForEntry(entry);
-        const img = getImgSrc(faction, isKing ? 'king' : p.type, isKing);
-        const name = getDisplayNameForKey(entry.key || entry.type || '');
-        // Créer un objet pièce pour la démonstration
-        const pieceData = {
-          name: name,
-          moves: entry.moves || [],
-          range: entry.range || 0,
-          faction: faction,
-          image: img
-        };
-        presentByKey.set(uniq, { img, text, name, pieceData });
-      }
+      const text = isKing ? 
+        `Roi: Peut se déplacer dans toutes les directions (8 cases adjacentes)` :
+        `${name}: ${p.moves ? p.moves.length : 0} directions de mouvement, portée ${p.range || 0}`;
+      
+      console.log('Ajout à la sidebar:', { uniq, name, text, pieceData });
+      presentByKey.set(uniq, { img, text, name, pieceData });
     }
   }
   if (presentByKey.size === 0) {
@@ -1075,32 +1227,9 @@ function startGame(scene) {
   }
   knightPieces = [];
   infoText.setText("");
-  // cacher widget d'option timer s'il existe côté Phaser
-  if (playerCountBtns && playerCountBtns.length) { playerCountBtns.forEach(b => b && b.setVisible(false)); }
-  // cacher l'UI de draft
-  choiceButtons.forEach(btn => btn.setVisible(false));
-  if (endDraftBtn) endDraftBtn.setVisible(false);
-  if (choiceThumbs && choiceThumbs.length) {
-    choiceThumbs.forEach(entry => {
-      entry.image.setVisible(false);
-      entry.nameText.setVisible(false);
-      entry.costText.setVisible(false);
-    });
-  }
-  if (clearAllBtn) clearAllBtn.setVisible(false);
-  // cacher l'aperçu des équipes pendant la partie
-  if (armyLabels && armyLabels.length) {
-    armyLabels.forEach(lbl => lbl && lbl.setVisible(false));
-  }
-  if (armyThumbs && armyThumbs.length) {
-    armyThumbs.forEach(list => list.forEach(img => img && img.setVisible(false)));
-  }
-  if (armyPanels && armyPanels.length) {
-    armyPanels.forEach(r => r && r.setVisible(false));
-  }
-  if (armyHints && armyHints.length) {
-    armyHints.forEach(t => t && t.setVisible(false));
-  }
+  // cacher widget d'option timer s'il existe côté Phaser (supprimé - obsolète)
+  // cacher l'UI de draft (supprimé - obsolète)
+  // cacher l'aperçu des équipes pendant la partie (supprimé - obsolète)
 
   // créer la grille
   for (let y=0; y<GRID_SIZE; y++) {
@@ -1198,59 +1327,184 @@ function startGame(scene) {
     return slots;
   };
 
-  // 1) Placer les rois par faction au centre exact du bord
-  players.forEach((p,i) => {
-    const side = getPlayerSide(i);
-    let pos = { x: mid, y: 0 };
-    if (side === 'top') pos = { x: mid, y: 0 };
-    if (side === 'bottom') pos = { x: mid, y: GRID_SIZE - 1 };
-    if (side === 'left') pos = { x: 0, y: mid };
-    if (side === 'right') pos = { x: GRID_SIZE - 1, y: mid };
-    const kingKey = (kings[p.faction] && kings[p.faction].key) ? kings[p.faction].key : 'nintendo';
-    const spr = scene.add.image(0,0,kingKey);
-    pieces.push({ sprite: spr, type: 'king', x: pos.x, y: pos.y, player: p.id });
-  });
-
-  // 2) Placer les autres pièces en partant du bord propre à chaque joueur
-  // Trier par force: faible < moyen < fort < unique
-  const getPieceTier = (charKey, faction) => {
-    const catalog = getCatalogForFaction(faction);
-    const entry = catalog[charKey];
-    if (!entry) return 1; // par défaut faible
-    
-    // Utiliser la propriété tier définie dans le catalogue
-    return entry.tier || 1; // 1=faible, 2=moyen, 3=fort, 4=unique
-  };
+  // Initialiser les joueurs
+  players = [];
+  for (let i = 0; i < playerCount; i++) {
+    players.push({
+      name: playerNames[i],
+      faction: playerFactions[i]
+    });
+  }
   
-  players.forEach((p,i) => {
-    const side = getPlayerSide(i);
-    const slots = getBlockSlotsForSide(side);
-    
-    // Trier l'armée par force (plus fort = plus proche du roi)
-    const sortedArmy = [...p.army].sort((a, b) => {
-      const tierA = getPieceTier(a, p.faction);
-      const tierB = getPieceTier(b, p.faction);
-      return tierB - tierA; // décroissant: fort vers faible
-    });
-    
-    let si = 0;
-    sortedArmy.forEach((charKey) => {
-      // avancer jusqu'à trouver un slot libre
-      while (si < slots.length && getPieceAt(slots[si])) si++;
-      if (si >= slots.length) return; // plus de place dans le bloc
-      const pos = slots[si];
-      const spr = scene.add.image(0,0,charKey);
-      pieces.push({ sprite: spr, type: charKey, x: pos.x, y: pos.y, player: p.id });
-      si++;
-    });
-  });
+  // Initialiser les timers
+  playerTimersMs = [];
+  for (let i = 0; i < playerCount; i++) {
+    playerTimersMs.push(300000); // 5 minutes par joueur
+  }
 
+  // 1) Placer les rois par faction au centre exact du bord
+  for (let i = 0; i < playerCount; i++) {
+    let kingX = Math.floor(GRID_SIZE / 2);
+    let kingY;
+    
+    if (playerCount === 2) {
+      kingY = i === 0 ? 0 : GRID_SIZE - 1;
+    } else if (playerCount === 3) {
+      kingY = i === 0 ? 0 : (i === 1 ? GRID_SIZE - 1 : 0);
+    } else { // 4 joueurs
+      if (i === 0) {
+        kingY = 0; // Joueur 1 en haut
+      } else if (i === 1) {
+        kingY = GRID_SIZE - 1; // Joueur 2 en bas
+      } else if (i === 2) {
+        kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
+        kingX = 0;
+      } else if (i === 3) {
+        kingY = Math.floor(GRID_SIZE / 2); // Joueur 4 au centre droit
+        kingX = GRID_SIZE - 1;
+      }
+    }
+    
+    const kingImageKey = `king-${playerFactions[i].toLowerCase()}`;
+    const kingSprite = scene.add.image(0, 0, kingImageKey);
+    
+    const kingPiece = {
+      sprite: kingSprite,
+      type: 'king',
+      x: kingX,
+      y: kingY,
+      player: i,
+      name: `Roi ${playerNames[i]}`,
+      image: `public/images/${playerFactions[i].toLowerCase()}/characters/king.png`,
+      moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
+      range: 1
+    };
+    
+    pieces.push(kingPiece);
+  }
+
+  // 2) Placer les pièces sélectionnées pour chaque joueur
+  for (let i = 0; i < playerCount; i++) {
+    const army = playerArmies[i] || [];
+    let pieceCount = 0;
+    
+    console.log(`Joueur ${i + 1} - Armée:`, army);
+    
+    army.forEach(piece => {
+      // Positionner les pièces autour du roi
+      let kingX = Math.floor(GRID_SIZE / 2);
+      let kingY;
+      
+      if (playerCount === 2) {
+        kingY = i === 0 ? 0 : GRID_SIZE - 1;
+      } else if (playerCount === 3) {
+        kingY = i === 0 ? 0 : (i === 1 ? GRID_SIZE - 1 : 0);
+      } else { // 4 joueurs
+        if (i === 0) {
+          kingY = 0; // Joueur 1 en haut
+        } else if (i === 1) {
+          kingY = GRID_SIZE - 1; // Joueur 2 en bas
+        } else if (i === 2) {
+          kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
+          kingX = 0;
+        } else if (i === 3) {
+          kingY = Math.floor(GRID_SIZE / 2); // Joueur 4 au centre droit
+          kingX = GRID_SIZE - 1;
+        }
+      }
+      
+      // Calculer la position de la pièce
+      let pieceX, pieceY;
+      
+      if (playerCount === 2) {
+        const offsetX = (pieceCount % 3) - 1;
+        const offsetY = Math.floor(pieceCount / 3);
+        pieceX = kingX + offsetX;
+        pieceY = kingY + (i === 0 ? offsetY + 1 : -(offsetY + 1));
+      } else if (playerCount === 3) {
+        const offsetX = (pieceCount % 3) - 1;
+        const offsetY = Math.floor(pieceCount / 3);
+        pieceX = kingX + offsetX;
+        pieceY = kingY + (i < 2 ? offsetY + 1 : -(offsetY + 1));
+      } else { // 4 joueurs
+        if (i < 2) { // Joueurs 1 et 2 (haut et bas)
+          const offsetX = (pieceCount % 3) - 1;
+          const offsetY = Math.floor(pieceCount / 3);
+          pieceX = kingX + offsetX;
+          pieceY = kingY + (i === 0 ? offsetY + 1 : -(offsetY + 1));
+        } else { // Joueurs 3 et 4 (gauche et droite)
+          const offsetX = (pieceCount % 3) - 1; // -1, 0, 1
+          const offsetY = Math.floor(pieceCount / 3);
+          if (i === 2) { // Joueur 3 (gauche)
+            pieceX = kingX + (offsetY + 1); // À droite du roi (pour éviter les limites)
+            pieceY = kingY + offsetX;
+          } else { // Joueur 4 (droite)
+            pieceX = kingX - (offsetY + 1); // À gauche du roi
+            pieceY = kingY + offsetX;
+          }
+        }
+      }
+      
+      console.log(`Joueur ${i + 1} - Pièce ${pieceCount + 1}:`, {
+        name: piece.name,
+        kingX, kingY,
+        pieceX, pieceY,
+        inBounds: pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE
+      });
+      
+      if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE) {
+        // Utiliser la clé d'image de la pièce
+        const imageKey = piece.image.split('/').pop().split('.')[0];
+        const sprite = scene.add.image(0, 0, imageKey);
+        
+        const gamePiece = {
+          sprite: sprite,
+          type: 'piece',
+          x: pieceX,
+          y: pieceY,
+          player: i,
+          name: piece.name,
+          image: piece.image,
+          moves: piece.moves,
+          range: piece.range,
+          cost: piece.cost,
+          tier: piece.tier
+        };
+        
+        pieces.push(gamePiece);
+        pieceCount++;
+        console.log(`✓ Pièce créée pour Joueur ${i + 1}:`, gamePiece.name, `à (${pieceX}, ${pieceY})`);
+      } else {
+        console.log(`✗ Pièce hors limites pour Joueur ${i + 1}:`, piece.name, `(${pieceX}, ${pieceY})`);
+      }
+    });
+  }
+
+  console.log(`Total de pièces créées: ${pieces.length}`);
+  console.log('Pièces par joueur:', pieces.reduce((acc, p) => {
+    acc[p.player] = (acc[p.player] || 0) + 1;
+    return acc;
+  }, {}));
+  
   updatePieces();
+  
+  // Mettre à jour la sidebar après la création de toutes les pièces
+  setTimeout(() => {
+    updateRulesSidebar();
+  }, 100);
+  
   // Bandeau "Début de la partie" en haut de la grille
-  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 26, "Début de la partie !", { font: "20px Arial", fill: "#000", backgroundColor: "#fff" })
+  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 30, "🎮 DÉBUT DE LA PARTIE ! 🎮", { 
+    font: "24px Arial", 
+    fill: "#ffffff", 
+    backgroundColor: "#2c3e50",
+    padding: { x: 20, y: 10 },
+    stroke: "#000000",
+    strokeThickness: 3
+  })
     .setOrigin(0.5, 0)
     .setDepth(2000);
-  scene.time.delayedCall(1500, () => { startText.destroy(); });
+  scene.time.delayedCall(2000, () => { startText.destroy(); });
 
   // Timers: init par taille
   const baseMinutes = (GRID_SIZE === 9) ? 5 : (GRID_SIZE === 11) ? 10 : 15;
@@ -1880,8 +2134,8 @@ function handleClick(scene, pos) {
               if (winnerId === null || pid !== winnerId) ranking.push(pid);
             }
             endGameWithRanking(ranking);
-            return;
-          }
+          return;
+        }
         }
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
@@ -3032,9 +3286,25 @@ function getPieceMovementData(piece) {
     // Données du roi pour cette faction
     return kings[faction];
   } else {
-    // Données de la pièce dans le catalogue de faction
+    // Utiliser les données de mouvement stockées dans la pièce
+    if (piece.moves && piece.range) {
+      return {
+        moves: piece.moves,
+        range: piece.range
+      };
+    }
+    
+    // Fallback : chercher dans le catalogue par nom
     const catalog = factionCatalogs[faction];
-    return catalog ? catalog[piece.type] : null;
+    if (catalog && piece.name) {
+      // Chercher par nom de pièce
+      const pieceKey = Object.keys(catalog).find(key => 
+        piece.name.toLowerCase().includes(key.toLowerCase())
+      );
+      return pieceKey ? catalog[pieceKey] : null;
+    }
+    
+    return null;
   }
 }
 
@@ -3661,7 +3931,7 @@ function showEndGameMessage(message) {
   button.on('pointerdown', reloadGame);
 }
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
 
 // --- Publicités ---
 const ADS = [
@@ -3688,6 +3958,738 @@ function updateAdInfo(reset = false) {
   const plural = nextIn >= 2 ? 's' : '';
   info.textContent = `Mise à jour dans ${nextIn} action${plural} (toutes les 5 actions)`;
 }
+
+// ========================================
+// SYSTÈME DE SÉLECTION DES PERSONNAGES
+// ========================================
+
+function startCharacterSelection() {
+  // Récupérer les paramètres de configuration
+  const gridSizeSelect = document.getElementById('grid-size-select');
+  const playerCountSelect = document.getElementById('player-count-select');
+  
+  GRID_SIZE = parseInt(gridSizeSelect.value);
+  TILE_SIZE = Math.floor(780 / GRID_SIZE);
+  playerCount = parseInt(playerCountSelect.value);
+  
+  // Réinitialiser les données
+  characterSelectionMode = true;
+  currentPlayerIndex = 0;
+  playerArmies = [];
+  playerMoney = [];
+  playerNames = [];
+  playerFactions = [];
+  
+  // Initialiser les joueurs
+  for (let i = 0; i < playerCount; i++) {
+    playerArmies.push([]);
+    playerMoney.push(100);
+    playerNames.push(`Joueur ${i + 1}`);
+    playerFactions.push('Nintendo');
+  }
+  
+  // Charger toutes les pièces disponibles
+  availablePieces = piecesData.filter(piece => piece.type !== 'king');
+  
+  // Créer l'interface de sélection
+  createCharacterSelectionUI();
+}
+
+function createCharacterSelectionUI() {
+  // Créer le conteneur principal
+  const selectionContainer = document.createElement('div');
+  selectionContainer.id = 'character-selection-container';
+  selectionContainer.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-family);
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    background: var(--secondary-bg);
+    padding: 20px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  `;
+  
+  const title = document.createElement('h1');
+  title.textContent = '🎮 Sélection des Personnages';
+  title.style.cssText = `
+    color: var(--accent-gold);
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.addEventListener('click', () => {
+    const container = document.getElementById('character-selection-container');
+    if (container) container.remove();
+    characterSelectionMode = false;
+  });
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Contenu principal
+  const mainContent = document.createElement('div');
+  mainContent.style.cssText = `
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  `;
+  
+  // Zone de sélection (2/3)
+  const selectionArea = document.createElement('div');
+  selectionArea.style.cssText = `
+    width: 66.67%;
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--primary-bg);
+  `;
+  
+  // Informations du joueur actuel
+  const playerInfo = document.createElement('div');
+  playerInfo.style.cssText = `
+    background: var(--accent-color);
+    color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  `;
+  
+  const playerNameDiv = document.createElement('div');
+  playerNameDiv.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  `;
+  
+  const playerNameInput = document.createElement('input');
+  playerNameInput.type = 'text';
+  playerNameInput.value = playerNames[currentPlayerIndex];
+  playerNameInput.id = 'player-name-input';
+  playerNameInput.style.cssText = `
+    background: white;
+    color: #000000;
+    border: none;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    font-size: 18px;
+    font-weight: bold;
+    min-width: 150px;
+  `;
+  
+  const factionSelect = document.createElement('select');
+  factionSelect.id = 'faction-select';
+  factionSelect.style.cssText = `
+    background: white;
+    color: #000000;
+    border: none;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    min-width: 120px;
+  `;
+  
+  const factions = ['Nintendo', 'PlayStation', 'Xbox', 'SEGA'];
+  factions.forEach(faction => {
+    const option = document.createElement('option');
+    option.value = faction;
+    option.textContent = faction;
+    if (faction === playerFactions[currentPlayerIndex]) option.selected = true;
+    factionSelect.appendChild(option);
+  });
+  
+  playerNameDiv.appendChild(playerNameInput);
+  playerNameDiv.appendChild(factionSelect);
+  
+  const moneyDisplay = document.createElement('div');
+  moneyDisplay.id = 'money-display';
+  moneyDisplay.style.cssText = `
+    font-size: 18px;
+    font-weight: bold;
+  `;
+  
+  playerInfo.appendChild(playerNameDiv);
+  playerInfo.appendChild(moneyDisplay);
+  
+  // Grille des personnages
+  const charactersGrid = document.createElement('div');
+  charactersGrid.id = 'characters-grid';
+  charactersGrid.style.cssText = `
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  `;
+  
+  // Zone des équipes (1/3)
+  const teamsArea = document.createElement('div');
+  teamsArea.style.cssText = `
+    width: 33.33%;
+    background: var(--secondary-bg);
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 2px solid var(--border-color);
+  `;
+  
+  const teamsTitle = document.createElement('h2');
+  teamsTitle.textContent = 'Équipes des Joueurs';
+  teamsTitle.style.cssText = `
+    color: var(--accent-gold);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 20px;
+  `;
+  
+  const teamsContainer = document.createElement('div');
+  teamsContainer.id = 'teams-container';
+  teamsContainer.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  `;
+  
+  // Créer les équipes
+  for (let i = 0; i < playerCount; i++) {
+    const teamDiv = document.createElement('div');
+    teamDiv.id = `team-${i}`;
+    teamDiv.style.cssText = `
+      background: var(--card-bg);
+      border: 2px solid ${i === currentPlayerIndex ? 'var(--accent-gold)' : 'var(--border-color)'};
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--shadow-light);
+    `;
+    
+    const teamHeader = document.createElement('div');
+    teamHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    `;
+    
+    const teamTitle = document.createElement('h3');
+    teamTitle.textContent = playerNames[i];
+    teamTitle.id = `team-title-${i}`;
+    teamTitle.style.cssText = `
+      color: var(--accent-gold);
+      margin: 0;
+      font-size: 16px;
+    `;
+    
+    const teamMoney = document.createElement('div');
+    teamMoney.id = `team-money-${i}`;
+    teamMoney.style.cssText = `
+      color: var(--text-secondary);
+      font-size: 12px;
+    `;
+    
+    teamHeader.appendChild(teamTitle);
+    teamHeader.appendChild(teamMoney);
+    
+    const teamUnits = document.createElement('div');
+    teamUnits.id = `team-units-${i}`;
+    teamUnits.style.cssText = `
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 40px;
+    `;
+    
+    teamDiv.appendChild(teamHeader);
+    teamDiv.appendChild(teamUnits);
+    teamsContainer.appendChild(teamDiv);
+  }
+  
+  // Boutons de contrôle
+  const controlsDiv = document.createElement('div');
+  controlsDiv.style.cssText = `
+    background: var(--secondary-bg);
+    padding: 20px;
+    border-top: 2px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  `;
+  
+  const prevPlayerBtn = document.createElement('button');
+  prevPlayerBtn.textContent = '← Joueur précédent';
+  prevPlayerBtn.id = 'prev-player-btn';
+  prevPlayerBtn.style.cssText = `
+    padding: 12px 24px;
+    background: ${currentPlayerIndex > 0 ? 'var(--accent-color)' : 'var(--text-muted)'};
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: ${currentPlayerIndex > 0 ? 'pointer' : 'not-allowed'};
+    transition: all 0.3s ease;
+    opacity: ${currentPlayerIndex > 0 ? '1' : '0.5'};
+  `;
+  
+  const nextPlayerBtn = document.createElement('button');
+  nextPlayerBtn.textContent = 'Joueur suivant →';
+  nextPlayerBtn.id = 'next-player-btn';
+  nextPlayerBtn.style.cssText = `
+    padding: 12px 24px;
+    background: var(--accent-gold);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  `;
+  
+  const startGameBtn = document.createElement('button');
+  startGameBtn.textContent = '🚀 Démarrer la partie';
+  startGameBtn.id = 'start-game-btn';
+  startGameBtn.style.cssText = `
+    padding: 12px 24px;
+    background: var(--accent-gold);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: none;
+    transition: all 0.3s ease;
+  `;
+  
+  // Assembler l'interface
+  selectionArea.appendChild(playerInfo);
+  selectionArea.appendChild(charactersGrid);
+  
+  teamsArea.appendChild(teamsTitle);
+  teamsArea.appendChild(teamsContainer);
+  
+  mainContent.appendChild(selectionArea);
+  mainContent.appendChild(teamsArea);
+  
+  controlsDiv.appendChild(prevPlayerBtn);
+  controlsDiv.appendChild(nextPlayerBtn);
+  controlsDiv.appendChild(startGameBtn);
+  
+  selectionContainer.appendChild(header);
+  selectionContainer.appendChild(mainContent);
+  selectionContainer.appendChild(controlsDiv);
+  
+  document.body.appendChild(selectionContainer);
+  
+  // Générer les cartes de personnages
+  generateCharacterCards();
+  updateTeamsDisplay();
+  updatePlayerInfo();
+  
+  // Événements
+  prevPlayerBtn.addEventListener('click', prevPlayer);
+  nextPlayerBtn.addEventListener('click', nextPlayer);
+  startGameBtn.addEventListener('click', startGameFromSelection);
+  playerNameInput.addEventListener('change', (e) => {
+    playerNames[currentPlayerIndex] = e.target.value;
+    updateTeamsDisplay();
+  });
+  factionSelect.addEventListener('change', (e) => {
+    playerFactions[currentPlayerIndex] = e.target.value;
+    generateCharacterCards();
+  });
+}
+
+function generateCharacterCards() {
+  const grid = document.getElementById('characters-grid');
+  grid.innerHTML = '';
+  
+  // Filtrer les pièces par faction du joueur actuel
+  const currentFaction = playerFactions[currentPlayerIndex];
+  const factionPieces = availablePieces.filter(piece => piece.faction === currentFaction);
+  
+  factionPieces.forEach(piece => {
+    const card = document.createElement('div');
+    card.className = 'character-card';
+    card.dataset.pieceId = piece.name;
+    
+    // Vérifier si le personnage peut être acheté
+    const canAfford = playerMoney[currentPlayerIndex] >= piece.cost;
+    const selectedCount = playerArmies[currentPlayerIndex].filter(p => p.name === piece.name).length;
+    
+    card.style.cssText = `
+      background: var(--card-bg);
+      border: 2px solid ${selectedCount > 0 ? 'var(--accent-gold)' : canAfford ? 'var(--border-color)' : 'var(--text-muted)'};
+      border-radius: var(--border-radius);
+      padding: 12px;
+      text-align: center;
+      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+      transition: all 0.3s ease;
+      position: relative;
+      opacity: ${canAfford ? '1' : '0.5'};
+      box-shadow: var(--shadow-light);
+    `;
+    
+    // Image du personnage
+    const img = document.createElement('img');
+    img.src = piece.image;
+    img.alt = piece.name;
+    img.style.cssText = `
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 8px auto;
+    `;
+    
+    // Nom et coût
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = piece.name;
+    nameDiv.style.cssText = `
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      font-size: 14px;
+    `;
+    
+    const costDiv = document.createElement('div');
+    costDiv.textContent = `${piece.cost} pts`;
+    costDiv.style.cssText = `
+      color: ${canAfford ? 'var(--accent-gold)' : 'var(--text-muted)'};
+      font-weight: bold;
+      font-size: 12px;
+    `;
+    
+    // Compteur de sélection
+    if (selectedCount > 0) {
+      const countBadge = document.createElement('div');
+      countBadge.textContent = selectedCount;
+      countBadge.style.cssText = `
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: var(--accent-gold);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      `;
+      card.appendChild(countBadge);
+    }
+    
+    card.appendChild(img);
+    card.appendChild(nameDiv);
+    card.appendChild(costDiv);
+    
+    // Événement de clic
+    if (canAfford) {
+      card.addEventListener('click', () => selectCharacter(piece));
+    }
+    
+    // Hover effect
+    if (canAfford) {
+      card.addEventListener('mouseenter', () => {
+        card.style.borderColor = selectedCount > 0 ? 'var(--accent-color)' : 'var(--accent-gold)';
+        card.style.transform = 'translateY(-2px)';
+        card.style.boxShadow = 'var(--shadow-medium)';
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.borderColor = selectedCount > 0 ? 'var(--accent-gold)' : 'var(--border-color)';
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = 'var(--shadow-light)';
+      });
+    }
+    
+    grid.appendChild(card);
+  });
+}
+
+function selectCharacter(piece) {
+  if (playerMoney[currentPlayerIndex] < piece.cost) {
+    showInfoMessage('Pas assez de points !', 2000);
+    return;
+  }
+  
+  // Ajouter à l'armée du joueur
+  playerArmies[currentPlayerIndex].push(piece);
+  playerMoney[currentPlayerIndex] -= piece.cost;
+  
+  updateTeamsDisplay();
+  updatePlayerInfo();
+  generateCharacterCards();
+}
+
+function removeCharacter(piece) {
+  // Trouver et supprimer le personnage de l'armée du joueur
+  const index = playerArmies[currentPlayerIndex].findIndex(p => p.name === piece.name);
+  if (index !== -1) {
+    playerArmies[currentPlayerIndex].splice(index, 1);
+    playerMoney[currentPlayerIndex] += piece.cost;
+    
+    updateTeamsDisplay();
+    updatePlayerInfo();
+    generateCharacterCards();
+  }
+}
+
+function nextPlayer() {
+  if (currentPlayerIndex < playerCount - 1) {
+    currentPlayerIndex++;
+    updatePlayerInfo();
+    updateTeamsDisplay();
+    generateCharacterCards();
+  } else {
+    // Dernier joueur - afficher le bouton de démarrage
+    document.getElementById('next-player-btn').style.display = 'none';
+    document.getElementById('prev-player-btn').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'block';
+    showInfoMessage('Tous les joueurs ont terminé leur sélection ! Vous pouvez démarrer la partie.', 3000);
+  }
+}
+
+function prevPlayer() {
+  if (currentPlayerIndex > 0) {
+    currentPlayerIndex--;
+    updatePlayerInfo();
+    updateTeamsDisplay();
+    generateCharacterCards();
+  }
+}
+
+function updatePlayerInfo() {
+  const playerNameInput = document.getElementById('player-name-input');
+  const factionSelect = document.getElementById('faction-select');
+  const moneyDisplay = document.getElementById('money-display');
+  
+  if (playerNameInput) {
+    playerNameInput.value = playerNames[currentPlayerIndex];
+  }
+  
+  if (factionSelect) {
+    factionSelect.value = playerFactions[currentPlayerIndex];
+  }
+  
+  if (moneyDisplay) {
+    moneyDisplay.textContent = `${playerMoney[currentPlayerIndex]} points restants`;
+  }
+  
+  // Mettre à jour l'argent de chaque équipe
+  for (let i = 0; i < playerCount; i++) {
+    const teamMoney = document.getElementById(`team-money-${i}`);
+    const teamTitle = document.getElementById(`team-title-${i}`);
+    if (teamMoney) {
+      teamMoney.textContent = `${playerMoney[i]} points`;
+    }
+    if (teamTitle) {
+      teamTitle.textContent = playerNames[i];
+    }
+  }
+  
+  // Mettre à jour les bordures des équipes
+  for (let i = 0; i < playerCount; i++) {
+    const teamDiv = document.getElementById(`team-${i}`);
+    if (teamDiv) {
+      teamDiv.style.borderColor = i === currentPlayerIndex ? 'var(--accent-gold)' : 'var(--border-color)';
+    }
+  }
+  
+  // Mettre à jour l'état des boutons de navigation
+  updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+  const prevPlayerBtn = document.getElementById('prev-player-btn');
+  const nextPlayerBtn = document.getElementById('next-player-btn');
+  const startGameBtn = document.getElementById('start-game-btn');
+  
+  if (prevPlayerBtn) {
+    const canGoBack = currentPlayerIndex > 0;
+    prevPlayerBtn.style.background = canGoBack ? 'var(--accent-color)' : 'var(--text-muted)';
+    prevPlayerBtn.style.cursor = canGoBack ? 'pointer' : 'not-allowed';
+    prevPlayerBtn.style.opacity = canGoBack ? '1' : '0.5';
+  }
+  
+  if (nextPlayerBtn) {
+    const canGoForward = currentPlayerIndex < playerCount - 1;
+    nextPlayerBtn.style.background = canGoForward ? 'var(--accent-gold)' : 'var(--text-muted)';
+    nextPlayerBtn.style.cursor = canGoForward ? 'pointer' : 'not-allowed';
+    nextPlayerBtn.style.opacity = canGoForward ? '1' : '0.5';
+    
+    // Si c'est le dernier joueur, changer le texte du bouton
+    if (currentPlayerIndex === playerCount - 1) {
+      nextPlayerBtn.textContent = 'Terminer la sélection →';
+      nextPlayerBtn.style.background = 'var(--accent-gold)';
+      nextPlayerBtn.style.cursor = 'pointer';
+      nextPlayerBtn.style.opacity = '1';
+    } else {
+      nextPlayerBtn.textContent = 'Joueur suivant →';
+    }
+  }
+  
+  // Afficher le bouton de démarrage si tous les joueurs ont fini
+  if (startGameBtn) {
+    const allPlayersFinished = currentPlayerIndex === playerCount - 1;
+    startGameBtn.style.display = allPlayersFinished ? 'block' : 'none';
+  }
+}
+
+function updateTeamsDisplay() {
+  for (let i = 0; i < playerCount; i++) {
+    const teamUnits = document.getElementById(`team-units-${i}`);
+    teamUnits.innerHTML = '';
+    
+    playerArmies[i].forEach((piece, index) => {
+      const unitDiv = document.createElement('div');
+      unitDiv.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: var(--primary-bg);
+        padding: 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        min-width: 50px;
+        position: relative;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+      `;
+      
+      // Bouton de suppression (seulement pour le joueur actuel)
+      if (i === currentPlayerIndex) {
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = `
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: var(--accent-color);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          font-size: 12px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+        `;
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeCharacter(piece);
+        });
+        unitDiv.appendChild(removeBtn);
+      }
+      
+      const img = document.createElement('img');
+      img.src = piece.image;
+      img.alt = piece.name;
+      img.style.cssText = `
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+      `;
+      
+      unitDiv.appendChild(img);
+      
+      // Hover effect
+      unitDiv.addEventListener('mouseenter', () => {
+        unitDiv.style.transform = 'translateY(-2px)';
+        unitDiv.style.boxShadow = 'var(--shadow-medium)';
+      });
+      
+      unitDiv.addEventListener('mouseleave', () => {
+        unitDiv.style.transform = 'translateY(0)';
+        unitDiv.style.boxShadow = 'var(--shadow-light)';
+      });
+      
+      teamUnits.appendChild(unitDiv);
+    });
+  }
+}
+
+function startGameFromSelection() {
+  // Cacher l'interface de sélection
+  const selectionContainer = document.getElementById('character-selection-container');
+  if (selectionContainer) {
+    selectionContainer.remove();
+  }
+  
+  // Cacher la configuration de la partie
+  const gameSetup = document.getElementById('game-setup');
+  if (gameSetup) {
+    gameSetup.style.display = 'none';
+  }
+  
+  characterSelectionMode = false;
+  
+  // Créer les pièces sur le plateau selon les sélections
+  createPiecesFromSelection();
+  
+  // Les pièces seront mises à jour dans startGame après création des sprites
+  
+  // Mettre à jour l'affichage des pièces en jeu après la création des pièces
+  setTimeout(() => {
+    updateRulesSidebar();
+  }, 200);
+  
+  // Afficher le canvas après un court délai pour s'assurer qu'il est créé
+  setTimeout(() => {
+    const canvas = document.querySelector('.game-root canvas');
+    if (canvas) {
+      canvas.classList.add('game-started');
+    }
+  }, 100);
+  
+  showInfoMessage('La partie commence !', 3000);
+  
+  // Démarrer le jeu directement
+  startGame(game.scene.scenes[0]);
+}
+
+function createPiecesFromSelection() {
+  // Cette fonction ne fait que préparer les données
+  // Les sprites et joueurs seront créés dans startGame
+  console.log('Données de sélection préparées');
+}
+
+// Fonction supprimée - les sprites sont créés dans startGame
 
 /* https://www.reddit.com/r/retrogaming/comments/1hkzmcw/i_redrew_some_nes_sprites_of_various_nintendo/?tl=fr */
 </script>
