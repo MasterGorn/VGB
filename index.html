@@ -418,7 +418,6 @@ let isEndGameMessage = false; // Flag pour empêcher le masquage du message de f
 // plus de garde: décrément à chaque fin de tour
 let adRotationIndex = 0;
 let playerNameTexts = [];
-let turnIcon;
 let currentChoicesFaction = null;
 let choiceListBottomY = 0;
 let pendingPlayerIndex = 0;
@@ -1780,9 +1779,7 @@ function startGame(scene) {
     playerNameTexts.push(txt);
   });
 
-  // Indicateur de tour (icône)
-  if (turnIcon) { turnIcon.destroy(); }
-  turnIcon = scene.add.text(0,0,"🎮", { font: "22px Arial" }).setDepth(2000);
+  // Plus besoin d'icône - le nom du joueur sera mis en évidence
   updateTurnUI();
   updateRulesSidebar();
 }
@@ -1884,13 +1881,13 @@ function updatePieces() {
               e.sprite.x = nameText.x + 38 + k*25;
               e.sprite.y = nameText.y + 20;
             } else if (side === 'left') {
-              // Joueur de gauche : objets à gauche du nom, alignés verticalement
-              e.sprite.x = nameText.x - nameText.displayWidth - 30;
-              e.sprite.y = nameText.y - nameText.displayHeight/2 + 15 + k*25;
+              // Joueur de gauche (J3) : objets à gauche du texte, alignés horizontalement
+              e.sprite.x = nameText.x - 60 - k * 28;
+              e.sprite.y = nameText.y - 15;
             } else { // right
-              // Joueur de droite : objets à droite du nom, alignés verticalement
-              e.sprite.x = nameText.x + nameText.displayWidth + 30;
-              e.sprite.y = nameText.y - nameText.displayHeight/2 + 15 + k*25;
+              // Joueur de droite (J4) : objets à droite du texte, alignés horizontalement
+              e.sprite.x = nameText.x + nameText.displayWidth + 60 + k * 28;
+              e.sprite.y = nameText.y - 15;
             }
             e.sprite.setAngle(0); // pas de rotation pour les objets
             
@@ -3945,32 +3942,28 @@ function updateTurnUI() {
     clearHighlights();
   }
   
-  // Positionner l'icône de tour à côté du nom du joueur actif
-  if (turnIcon && playerNameTexts[currentPlayer]) {
-    const t = playerNameTexts[currentPlayer];
-    const side = (currentPlayer===0)?'top':(currentPlayer===1)?'bottom':(currentPlayer===2)?'left':'right';
-    
-    if (side === 'top') {
-      // Joueur du haut : manette à gauche du nom, bien éloignée
-      turnIcon.x = t.x - 56;
-      turnIcon.y = t.y - 34;
-    } else if (side === 'bottom') {
-      // Joueur du bas : manette à gauche du nom, bien éloignée
-      turnIcon.x = t.x - 56;
-      turnIcon.y = t.y + 10;
-    } else if (side === 'left') {
-      // Joueur de gauche : manette au-dessus du nom, bien éloignée
-      turnIcon.x = t.x;
-      turnIcon.y = t.y - 50;
-    } else { // right
-      // Joueur de droite : manette au-dessus du nom, bien éloignée
-      turnIcon.x = t.x;
-      turnIcon.y = t.y - t.displayHeight/2 - 50;
+  // Mettre en évidence le nom du joueur actif (vert et bold)
+  playerNameTexts.forEach((text, index) => {
+    if (text) {
+      if (index === currentPlayer) {
+        // Joueur actif : vert et bold
+        text.setStyle({ 
+          font: "bold 16px Arial", 
+          fill: "#27ae60",
+          stroke: "#ffffff",
+          strokeThickness: 2
+        });
+      } else {
+        // Autres joueurs : style normal
+        text.setStyle({ 
+          font: "16px Arial", 
+          fill: "#333",
+          stroke: "#ffffff",
+          strokeThickness: 1
+        });
+      }
     }
-    
-    // Rotation de l'icône selon côté
-    if (side === 'left') turnIcon.setAngle(-90); else if (side === 'right') turnIcon.setAngle(90); else turnIcon.setAngle(0);
-  }
+  });
   // Mettre à jour la position des icônes d'objets à côté des noms
   updatePieces();
 }
@@ -4051,15 +4044,13 @@ function positionTimerTextNearName(timerText, nameText) {
     timerText.x = nameText.x - 20;
     timerText.y = nameText.y + nameText.displayHeight - 5;
   } else if (side === 'left') {
-    // Joueur de gauche : timer à gauche du nom, aligné avec les objets
-    //timerText.x = nameText.x - nameText.displayWidth - 30;
-    timerText.x = nameText.x - 20;
-    //timerText.y = nameText.y - nameText.displayHeight/2 + 15;
-    timerText.y = nameText.y - 15;
+    // Joueur de gauche (J3) : timer au-dessus du texte
+    timerText.x = nameText.x;
+    timerText.y = nameText.y - nameText.displayHeight - 25;
   } else { // right
-    // Joueur de droite : timer à droite du nom, aligné avec les objets
-    timerText.x = nameText.x + nameText.displayWidth + 30;
-    timerText.y = nameText.y - nameText.displayHeight/2 + 15;
+    // Joueur de droite (J4) : timer au-dessus du texte
+    timerText.x = nameText.x;
+    timerText.y = nameText.y - nameText.displayHeight - 25;
   }
 }
 
