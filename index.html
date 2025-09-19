@@ -1767,8 +1767,8 @@ function startGame(scene) {
     let nx = 0, ny = 0;
     if (side === 'top') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y - 20; }
     if (side === 'bottom') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y + GRID_SIZE*TILE_SIZE + 20; }
-    if (side === 'left') { nx = GRID_OFFSET_X - 20; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
-    if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 20; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
+    if (side === 'left') { nx = GRID_OFFSET_X - 30; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
+    if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 30; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
     const tintColor = brandTints[p.faction || 'nintendo'] || 0x000000;
     const factionLabel = getFactionDisplayName(p.faction || 'nintendo');
     const label = `${p.name} (${factionLabel})`;
@@ -1881,13 +1881,13 @@ function updatePieces() {
               e.sprite.x = nameText.x + 38 + k*25;
               e.sprite.y = nameText.y + 20;
             } else if (side === 'left') {
-              // Joueur de gauche (J3) : objets à gauche du texte, alignés horizontalement
-              e.sprite.x = nameText.x - 60 - k * 28;
-              e.sprite.y = nameText.y - 15;
+              // Joueur de gauche (J3) : objets au-dessus du timer, alignés horizontalement
+              e.sprite.x = nameText.x + 20 - k * 20;
+              e.sprite.y = nameText.y - nameText.displayHeight - 100;
             } else { // right
-              // Joueur de droite (J4) : objets à droite du texte, alignés horizontalement
-              e.sprite.x = nameText.x + nameText.displayWidth + 60 + k * 28;
-              e.sprite.y = nameText.y - 15;
+              // Joueur de droite (J4) : objets au-dessus du timer, alignés horizontalement
+              e.sprite.x = nameText.x + 20 - k * 20;
+              e.sprite.y = nameText.y - nameText.displayHeight - 100;
             }
             e.sprite.setAngle(0); // pas de rotation pour les objets
             
@@ -4044,13 +4044,13 @@ function positionTimerTextNearName(timerText, nameText) {
     timerText.x = nameText.x - 20;
     timerText.y = nameText.y + nameText.displayHeight - 5;
   } else if (side === 'left') {
-    // Joueur de gauche (J3) : timer au-dessus du texte
-    timerText.x = nameText.x;
-    timerText.y = nameText.y - nameText.displayHeight - 25;
+    // Joueur de gauche (J3) : timer plus haut, bien espacé du nom et du plateau
+    timerText.x = nameText.x - 20;
+    timerText.y = nameText.y - nameText.displayHeight - 75;
   } else { // right
-    // Joueur de droite (J4) : timer au-dessus du texte
-    timerText.x = nameText.x;
-    timerText.y = nameText.y - nameText.displayHeight - 25;
+    // Joueur de droite (J4) : timer plus haut, bien espacé du nom et du plateau
+    timerText.x = nameText.x - 22;
+    timerText.y = nameText.y - nameText.displayHeight - 75;
   }
 }
 
