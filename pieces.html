@@ -121,10 +121,30 @@ function displayPieces(pieces) {
     // Obtenir le chemin de l'image de démonstration
     const demoImagePath = getMovementDemoImage(piece);
     
+    // Utiliser la même logique que la page des objets avec fallback
+    const nameKey = piece.nameKey || piece.name.toLowerCase().replace(/\s+/g, '-');
+    const descriptionKey = piece.descriptionKey || piece.name.toLowerCase().replace(/\s+/g, '-') + '-desc';
+    
+    // Traduire avec fallback sur la valeur originale
+    const translatedName = piece.nameKey ? t(nameKey) : piece.name;
+    const translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
+    
+    console.log('Piece:', piece.name, 'nameKey:', nameKey, 'translatedName:', translatedName);
+    console.log('Description key:', descriptionKey, 'translatedDescription:', translatedDescription);
+    console.log('Function t available:', typeof t);
+    console.log('Current language:', window.currentLanguage);
+    console.log('Test translation for luigi:', t('luigi-desc'));
+    console.log('Test translation for link:', t('link-desc'));
+    console.log('Translations object keys:', Object.keys(translations));
+    console.log('Current language translations available:', translations[window.currentLanguage] ? 'YES' : 'NO');
+    if (translations[window.currentLanguage]) {
+      console.log('Available keys in current language:', Object.keys(translations[window.currentLanguage]).filter(k => k.includes('desc')));
+    }
+    
     card.innerHTML = `
-      <img src="${piece.image}" alt="${t(piece.nameKey || piece.name)}" class="piece-image" onerror="this.style.display='none'">
-      <div class="piece-name">${t(piece.nameKey || piece.name)}</div>
-      <div class="piece-description">${t(piece.descriptionKey || piece.description)}</div>
+      <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
+      <div class="piece-name">${translatedName}</div>
+      <div class="piece-description">${translatedDescription}</div>
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
         <span class="badge">${t(piece.universeKey || piece.universe)}</span>
@@ -334,8 +354,35 @@ document.getElementById('tierFilter').addEventListener('change', (e) => {
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   VGBHeader.injectHeader('pieces');
-  initTranslation(); // Initialiser les traductions
-  applyFiltersAndSort();
+  
+  // Attendre que les traductions soient chargées avant d'afficher les pièces
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      
+      // Attendre un peu pour que les traductions soient prêtes
+      setTimeout(() => {
+        if (typeof t === 'function' && window.currentLanguage) {
+          console.log('Traductions chargées, langue:', window.currentLanguage, 'affichage des pièces...');
+          applyFiltersAndSort();
+        } else {
+          console.error('Fonction t ou currentLanguage non disponible, t:', typeof t, 'currentLanguage:', window.currentLanguage);
+          setTimeout(initTranslations, 100);
+        }
+      }, 200);
+    } else {
+      console.error('initTranslation non disponible');
+      setTimeout(initTranslations, 100);
+    }
+  };
+  
+  initTranslations();
+  
+  // Écouter les changements de langue
+  window.addEventListener('languageChanged', () => {
+    console.log('Langue changée, mise à jour des pièces...');
+    applyFiltersAndSort();
+  });
 });
 </script>
 </body>
