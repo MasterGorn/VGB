@@ -65,25 +65,25 @@
       <label for="universeFilter" data-t="universe">Univers :</label>
       <select id="universeFilter" class="form-control">
         <option value="" data-t="all">Tous</option>
-        <option value="Super Mario">Super Mario</option>
-        <option value="The Legend of Zelda">The Legend of Zelda</option>
-        <option value="Metroid">Metroid</option>
-        <option value="Kid Icarus">Kid Icarus</option>
-        <option value="Sonic">Sonic</option>
-        <option value="Streets of Rage">Streets of Rage</option>
-        <option value="Halo">Halo</option>
-        <option value="Gears of War">Gears of War</option>
+        <option value="Super Mario" data-t="super-mario">Super Mario</option>
+        <option value="The Legend of Zelda" data-t="legend-of-zelda">The Legend of Zelda</option>
+        <option value="Metroid" data-t="metroid">Metroid</option>
+        <option value="Kid Icarus" data-t="kid-icarus">Kid Icarus</option>
+        <option value="Sonic" data-t="sonic">Sonic</option>
+        <option value="Streets of Rage" data-t="streets-of-rage">Streets of Rage</option>
+        <option value="Halo" data-t="halo">Halo</option>
+        <option value="Gears of War" data-t="gears-of-war">Gears of War</option>
       </select>
     </div>
     
     <div class="control-group">
-      <label for="tierFilter">Force :</label>
+      <label for="tierFilter" data-t="strength">Force :</label>
       <select id="tierFilter" class="form-control">
-        <option value="">Toutes</option>
-        <option value="1">Faible</option>
-        <option value="2">Moyen</option>
-        <option value="3">Fort</option>
-        <option value="4">Unique</option>
+        <option value="" data-t="all-strengths">Toutes</option>
+        <option value="1" data-t="weak">Faible</option>
+        <option value="2" data-t="medium">Moyen</option>
+        <option value="3" data-t="strong">Fort</option>
+        <option value="4" data-t="unique">Unique</option>
       </select>
     </div>
   </div>
@@ -122,15 +122,15 @@ function displayPieces(pieces) {
     const demoImagePath = getMovementDemoImage(piece);
     
     card.innerHTML = `
-      <img src="${piece.image}" alt="${piece.name}" class="piece-image" onerror="this.style.display='none'">
-      <div class="piece-name">${piece.name}</div>
-      <div class="piece-description">${piece.description}</div>
+      <img src="${piece.image}" alt="${t(piece.nameKey || piece.name)}" class="piece-image" onerror="this.style.display='none'">
+      <div class="piece-name">${t(piece.nameKey || piece.name)}</div>
+      <div class="piece-description">${t(piece.descriptionKey || piece.description)}</div>
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
-        <span class="badge">${piece.universe}</span>
+        <span class="badge">${t(piece.universeKey || piece.universe)}</span>
         <span class="badge tier" data-t="tier-${piece.tier}">${getTierLabel(piece.tier)}</span>
-        <span class="badge cost" data-t="cost">${t('cost')}: ${piece.cost} pts</span>
-        <span class="badge range" data-t="range">${t('range')}: ${piece.range}</span>
+        <span class="badge cost">${t('cost')}: ${piece.cost} ${t('points')}</span>
+        <span class="badge range">${t('range')}: ${piece.range}</span>
       </div>
       <div class="moves" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
         <strong data-t="movements">${t('movements')}:</strong> ${getMovesDescription(piece.moves)}
@@ -144,29 +144,30 @@ function displayPieces(pieces) {
     grid.appendChild(card);
   });
   
-  // Mettre à jour les traductions des éléments générés dynamiquement
+  // Mettre à jour seulement les éléments statiques, pas les valeurs dynamiques
   if (typeof updateAllTexts === 'function') {
-    updateAllTexts();
+    // Ne pas appeler updateAllTexts() car cela écrase les valeurs dynamiques
+    // Les traductions sont déjà appliquées dans le HTML généré
   }
 }
 
 // Fonction pour obtenir la description des mouvements
 function getMovesDescription(moves) {
   if (moves.length === 8) {
-    return "Toutes les directions (comme une reine)";
+    return t('all-directions');
   }
-  return `${moves.length} directions possibles`;
+  return `${moves.length} ${t('directions-possible')}`;
 }
 
 // Fonction pour obtenir le libellé du tier
 function getTierLabel(tier) {
   const labels = {
-    1: "Faible",
-    2: "Moyen", 
-    3: "Fort",
-    4: "Unique"
+    1: t('weak'),
+    2: t('medium'), 
+    3: t('strong'),
+    4: t('unique')
   };
-  return labels[tier] || "Inconnu";
+  return labels[tier] || t('unknown');
 }
 
 // Fonction pour obtenir le chemin de l'image de démonstration

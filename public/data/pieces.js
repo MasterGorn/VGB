@@ -7,6 +7,7 @@ const piecesData = [
   // Rois (toutes factions)
   {
     name: "Roi Nintendo",
+    nameKey: "king-nintendo",
     faction: "Nintendo",
     universe: "Nintendo",
     cost: 0,
@@ -14,11 +15,13 @@ const piecesData = [
     range: 1,
     moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
     description: "Le roi de Nintendo. Se déplace d'une case dans toutes les directions. Capturer le roi adverse fait gagner la partie.",
+    descriptionKey: "king-nintendo-desc",
     image: "public/images/nintendo/characters/king.png",
     type: "king"
   },
   {
     name: "Roi PlayStation",
+    nameKey: "king-playstation",
     faction: "PlayStation",
     universe: "PlayStation",
     cost: 0,
@@ -26,11 +29,13 @@ const piecesData = [
     range: 1,
     moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
     description: "Le roi de PlayStation. Se déplace d'une case dans toutes les directions. Capturer le roi adverse fait gagner la partie.",
+    descriptionKey: "king-playstation-desc",
     image: "public/images/playstation/characters/king.png",
     type: "king"
   },
   {
     name: "Roi SEGA",
+    nameKey: "king-sega",
     faction: "SEGA",
     universe: "SEGA",
     cost: 0,
@@ -38,11 +43,13 @@ const piecesData = [
     range: 1,
     moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
     description: "Le roi de SEGA. Se déplace d'une case dans toutes les directions. Capturer le roi adverse fait gagner la partie.",
+    descriptionKey: "king-sega-desc",
     image: "public/images/sega/characters/king.png",
     type: "king"
   },
   {
     name: "Roi Xbox",
+    nameKey: "king-xbox",
     faction: "Xbox",
     universe: "Xbox",
     cost: 0,
@@ -50,6 +57,7 @@ const piecesData = [
     range: 1,
     moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
     description: "Le roi de Xbox. Se déplace d'une case dans toutes les directions. Capturer le roi adverse fait gagner la partie.",
+    descriptionKey: "king-xbox-desc",
     image: "public/images/xbox/characters/king.png",
     type: "king"
   },
@@ -57,6 +65,7 @@ const piecesData = [
   // Nintendo
   {
     name: "Link",
+    nameKey: "link",
     faction: "Nintendo", 
     universe: "The Legend of Zelda",
     cost: 5,
@@ -64,11 +73,13 @@ const piecesData = [
     range: 3,
     moves: [[1,0], [-1,0], [0,1], [0,-1]],
     description: "Le héros de la Triforce. Se déplace en ligne droite sur 3 cases maximum. Maître de l'épée et de la magie.",
+    descriptionKey: "link-desc",
     image: "public/images/nintendo/characters/link.png",
     type: "link"
   },
   {
     name: "Mario",
+    nameKey: "mario",
     faction: "Nintendo",
     universe: "Super Mario", 
     cost: 3,
@@ -76,11 +87,13 @@ const piecesData = [
     range: 2,
     moves: [[1,1], [1,-1], [-1,1], [-1,-1]],
     description: "Le plombier le plus célèbre du monde. Se déplace en diagonale sur 2 cases. Agilité et saut exceptionnels.",
+    descriptionKey: "mario-desc",
     image: "public/images/nintendo/characters/mario.png",
     type: "mario"
   },
   {
     name: "Zelda",
+    nameKey: "zelda",
     faction: "Nintendo",
     universe: "The Legend of Zelda",
     cost: 7,
@@ -88,6 +101,7 @@ const piecesData = [
     range: 8,
     moves: [[1,0], [-1,0], [0,1], [0,-1], [1,1], [1,-1], [-1,1], [-1,-1]],
     description: "Princesse d'Hyrule et gardienne de la Triforce. Se déplace dans toutes les directions sur 8 cases. Puissance magique immense.",
+    descriptionKey: "zelda-desc",
     image: "public/images/nintendo/characters/zelda.png",
     type: "zelda"
   },
