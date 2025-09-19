@@ -2,10 +2,11 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Chesstendo - Draft + Plateau</title>
+<title data-t="page-title">Chesstendo - Draft + Plateau</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
 <link rel="stylesheet" href="public/css/header.css" />
 <link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/global.css" />
 <style>
 /* Styles spécifiques à la page d'accueil */
 .game-container {
@@ -319,6 +320,7 @@
   position: relative;
   z-index: 1;
 }
+
 </style>
 </head>
 <body>
@@ -326,57 +328,58 @@
 
 <!-- Accroche principale -->
 <div class="tagline">
-  <h1>Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !</h1>
+  <h1 data-t="tagline">Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !</h1>
 </div>
 
 <div class="game-container">
   <!-- Configuration de la partie -->
   <div id="game-setup" class="game-setup">
     <div class="setup-card">
-      <h2 class="setup-title">Configuration de la partie</h2>
+      <h2 class="setup-title" data-t="game-title">Configuration de la partie</h2>
       
       <div class="setup-options">
         <div class="option-group">
-          <label for="grid-size-select">Taille du plateau :</label>
+          <label for="grid-size-select" data-t="select-board-size">Taille du plateau :</label>
           <select id="grid-size-select" class="setup-select">
-            <option value="9">9x9 (Petit)</option>
-            <option value="11">11x11 (Moyen)</option>
-            <option value="15" selected>15x15 (Grand)</option>
+            <option value="9" data-t="board-small">9x9 (Petit)</option>
+            <option value="11" data-t="board-medium">11x11 (Moyen)</option>
+            <option value="15" selected data-t="board-large">15x15 (Grand)</option>
           </select>
         </div>
         
         <div class="option-group">
-          <label for="player-count-select">Nombre de joueurs :</label>
+          <label for="player-count-select" data-t="select-players">Nombre de joueurs :</label>
           <select id="player-count-select" class="setup-select">
-            <option value="2">2 joueurs</option>
-            <option value="3">3 joueurs</option>
-            <option value="4" selected>4 joueurs</option>
+            <option value="2">2 <span data-t="players">joueurs</span></option>
+            <option value="3">3 <span data-t="players">joueurs</span></option>
+            <option value="4" selected>4 <span data-t="players">joueurs</span></option>
           </select>
         </div>
       </div>
       
-      <button id="start-character-selection" class="setup-btn">🎮 Sélection des personnages</button>
+      <button id="start-character-selection" class="setup-btn" data-t="start-game">🎮 Sélection des personnages</button>
     </div>
   </div>
   
   <div id="game-root" class="game-root"></div>
   <div class="sidebar">
     <div id="rules-panel" class="rules-panel">
-      <div class="rules-title">Pièces en jeu</div>
+      <div class="rules-title" data-t="pieces-in-play">Pièces en jeu</div>
       <div id="rules-list" class="rules-list"></div>
     </div>
     
     <div id="ads-panel" class="ads-panel">
-      <div id="ads-title" class="ads-title">Publicités</div>
-      <div id="ad-slot-1" class="ad-slot">Annonce 1</div>
-      <div id="ad-slot-2" class="ad-slot">Annonce 2</div>
-      <div id="ad-info" class="ad-info">Mise à jour toutes les 5 actions</div>
+      <div id="ads-title" class="ads-title" data-t="advertisements">Publicités</div>
+      <div id="ad-slot-1" class="ad-slot" data-t="ad-1">Annonce 1</div>
+      <div id="ad-slot-2" class="ad-slot" data-t="ad-2">Annonce 2</div>
+      <div id="ad-info" class="ad-info" data-t="ad-update">Mise à jour toutes les 5 actions</div>
     </div>
   </div>
 </div>
 <script src="public/js/header.js"></script>
 <script src="public/data/pieces.js"></script>
 <script src="public/data/items.js"></script>
+<script src="public/js/translations.js"></script>
 <script>
 VGBHeader.injectHeader('index');
 
@@ -441,7 +444,7 @@ let portalBlue = null;   // { x, y, sprite }
 let characterSelectionMode = false;
 let currentPlayerIndex = 0;
 let playerCount = 4;
-let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4'];
+let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4']; // Sera mis à jour par initTranslation
 let playerFactions = ['Nintendo', 'Nintendo', 'Nintendo', 'Nintendo'];
 let playerArmies = [[], [], [], []]; // Armées des joueurs
 let playerMoney = [100, 100, 100, 100]; // Argent de chaque joueur
@@ -497,6 +500,7 @@ function initItemWeights() {
 // Initialiser immédiatement au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
   initItemWeights();
+  initTranslation();
 });
 // Timers
 let playerTimersMs = [];
@@ -607,6 +611,17 @@ function preload() {
   this.load.image('wii-fit-trainer', 'wii-fit-trainer.png');
   // nintendo utilise le sprite de pit (fallback)
   this.load.image('nintendo', 'pit.png');
+  
+  // Nouveaux personnages Nintendo
+  this.load.image('luigi', 'luigi.png');
+  this.load.image('peach', 'peach.png');
+  this.load.image('kirby', 'kirby.png');
+  this.load.image('king-k-rool', 'king-k-rool.png');
+  this.load.image('waluigi', 'waluigi.png');
+  this.load.image('captain-falcon', 'captain-falcon.png');
+  this.load.image('bayonetta', 'bayonetta.png');
+  this.load.image('banjo-kazooie', 'banjo-&.png');
+  this.load.image('ayo-et-oli', 'ayo-et-oli.png');
 
   // Rois par faction (images à fournir) - chemins par dossier faction
   this.load.setPath('public/images/nintendo/characters/');
@@ -615,6 +630,20 @@ function preload() {
   this.load.image('king-sega', 'king.png');
   this.load.setPath('public/images/playstation/characters/');
   this.load.image('king-playstation', 'king.png');
+  
+  // Personnages PlayStation
+  this.load.image('nathan-drake', 'nathan-drake.png');
+  this.load.image('kratos', 'kratos.png');
+  this.load.image('astro-bot', 'astro-bot.png');
+  this.load.image('aloy', 'aloy.png');
+  this.load.image('sackboy', 'sackboy.png');
+  this.load.image('jak', 'jak.png');
+  this.load.image('daxter', 'daxter.png');
+  this.load.image('kat', 'kat.png');
+  this.load.image('parappa', 'parappa-the-rapper.png');
+  this.load.image('sam-porter', 'sam-porter-bridges (1).png');
+  this.load.image('ico', 'ico (1).png');
+  
   this.load.setPath('public/images/xbox/characters/');
   this.load.image('king-xbox', 'king.png');
 
@@ -624,16 +653,60 @@ function preload() {
   this.load.image('masterchief', 'masterchief.png');
   this.load.image('marcus-fenix', 'marcus-fenix.png');
   this.load.image('joanna-dark', 'joanna-dark.png');
+  // Nouveaux personnages Xbox
+  this.load.image('cortana', 'cortana.png');
+  this.load.image('juno', 'juno.png');
+  this.load.image('jd-fenix', 'jd-fenix.png');
+  this.load.image('general-raam', 'general-raam.png');
+  this.load.image('cyclops-drone', 'cyclops-drone.png');
+  this.load.image('ori', 'ori.png');
+  this.load.image('reaver', 'reaver.png');
+  this.load.image('senua', 'senua.png');
+  this.load.image('jago', 'jago.png');
+  this.load.image('orchid', 'orchid.png');
+  this.load.image('capitaine-flameheart', 'capitaine-flameheart.png');
+  this.load.image('pirate', 'pirate.png');
+  this.load.image('rash', 'rash.png');
+  this.load.image('conker', 'conker.png');
+  this.load.image('blinx', 'blinx.png');
+  this.load.image('crash-bandicoot', 'crash-bandicoot.png');
+  this.load.image('spyro', 'spyro.png');
+  this.load.image('viva-pinata', 'viva-pinata.png');
+  this.load.image('joule-adams', 'joule-adams.png');
+  this.load.image('steeve', 'steeve.png');
+  this.load.image('cooper', 'cooper.png');
+  this.load.image('hornet', 'hornet.png');
+  this.load.image('shu', 'shu.png');
+  this.load.image('lupus', 'lupus.png');
+  this.load.image('moine', 'moine.png');
+  this.load.image('vela', 'vela.png');
   // SEGA
   this.load.setPath('public/images/sega/characters/');
   this.load.image('sonic', 'sonic.png');
   this.load.image('ryo', 'ryo.png');
   this.load.image('joe-musashi', 'joe-musashi.png');
-  // PlayStation
-  this.load.setPath('public/images/playstation/characters/');
-  this.load.image('nathan-drake', 'nathan-drake.png');
-  this.load.image('kratos', 'kratos.png');
-  this.load.image('astro-bot', 'astro-bot.png');
+  
+  // Nouveaux personnages SEGA
+  this.load.image('tails', 'tails.png');
+  this.load.image('dr-robotnik', 'dr.robotnik.png');
+  this.load.image('blaze-fielding', 'blaze-fielding.png');
+  this.load.image('axel-stone', 'axel-stone.png');
+  this.load.image('adam-hunter', 'adam-hunter.png');
+  this.load.image('hatsune-miku', 'hatsune-miku.png');
+  this.load.image('sakura-shinguji', 'sakura-shinguji.png');
+  this.load.image('vyse', 'vyse.png');
+  this.load.image('aika', 'aika.png');
+  this.load.image('amigo', 'amigo.png');
+  this.load.image('ecco', 'ecco-the-dolphin.png');
+  this.load.image('pilote-hang-on', 'pilote-hang-on.png');
+  this.load.image('dj-professeur-k', 'dj-professeur-k.png');
+  this.load.image('ulala', 'ulala.png');
+  this.load.image('la-fille', 'la-fille.png');
+  this.load.image('le-joueur', 'le-joueur.png');
+  this.load.image('zombie', 'zombie-the-house-of-the-dead.png');
+  this.load.image('chupea', 'chupea.png');
+  this.load.image('chubach', 'chubach.png');
+  this.load.image('chuih', 'chuih.png');
 
   // Items
   this.load.setPath('public/images/items/');
@@ -1161,7 +1234,7 @@ function updateRulesSidebar() {
     if (isKing) {
       ruleKey = kings[faction] && kings[faction].key;
       img = getImgSrc(faction, 'king', true);
-      name = `Roi ${p.name}`;
+      name = translateKingName(p.name);
       pieceData = {
         name: name,
         moves: p.moves || [],
@@ -1609,8 +1682,8 @@ function startGame(scene) {
       const isOnKing = (pieceX === kingX && pieceY === kingY);
       
       if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE && !isOnKing) {
-        // Utiliser la clé d'image de la pièce
-        const imageKey = piece.image.split('/').pop().split('.')[0];
+        // Utiliser le type de la pièce comme clé d'image
+        const imageKey = piece.type;
         const sprite = scene.add.image(0, 0, imageKey);
         
         const gamePiece = {
@@ -1656,7 +1729,7 @@ function startGame(scene) {
   }, 100);
   
   // Bandeau "Début de la partie" en haut de la grille
-  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 30, "🎮 DÉBUT DE LA PARTIE ! 🎮", { 
+  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 30, "🎮 " + t('game-start').toUpperCase() + " ! 🎮", { 
     font: "24px Arial", 
     fill: "#ffffff", 
     backgroundColor: "#2c3e50",
@@ -2750,7 +2823,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'tetrimino') {
     // Activer mode pose de tetrimino: prochain clic sur une case pose le mur
     currentItemAction = { playerId, type: 'tetrimino', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case pour placer le tetrimino`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-position')} ${t('tetrimino').toLowerCase()}`, 5000);
     // Highlight des cases possibles
     const allowed = getTetriminoPlacablePositions();
     highlightPositions(allowed, 0xce93d8); // violet pâle
@@ -2758,7 +2831,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'tornado') {
     // Activer mode téléportation du roi: prochain clic sur une case vide téléporte le roi
     currentItemAction = { playerId, type: 'tornado', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case vide pour téléporter votre roi`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-position')} ${t('tornado').toLowerCase()}`, 5000);
     // Highlight des cases possibles (cases vides sauf caisses d'objets)
     const allowed = getTornadoTeleportPositions();
     highlightPositions(allowed, 0x81c784); // vert pâle
@@ -2766,7 +2839,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'banana') {
     // Activer mode pose de banane: prochain clic sur une case vide pose la banane
     currentItemAction = { playerId, type: 'banana', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une case vide pour placer la banane`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-position')} ${t('banana').toLowerCase()}`, 5000);
     // Highlight des cases possibles (cases vides)
     const allowed = getBananaPlacablePositions();
     highlightPositions(allowed, 0xffd54f); // jaune pâle
@@ -2782,13 +2855,13 @@ function tryUseItem(playerId, clickedIconSprite) {
       updatePieces();
     } else {
       // Aucune pièce à ressusciter
-      showInfoMessage(`Joueur ${playerId+1}: aucune pièce perdue à ressusciter`, 2000);
+      showInfoMessage(`${t('player')} ${playerId+1}: ${t('phoenix-desc')}`, 2000);
     }
   }
   if (icon.item === 'cursor') {
     // Activer mode possession: prochain clic sur une pièce faible/moyenne adverse la possède
     currentItemAction = { playerId, type: 'cursor', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce faible ou moyenne adverse à posséder`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('cursor').toLowerCase()}`, 5000);
     // Highlight des pièces possibles (faibles et moyennes adverses) en vert pâle
     const allowed = getPossessablePieces(playerId);
     highlightPieces(allowed, 0x81c784); // vert pâle
@@ -2796,7 +2869,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'heart') {
     // Activer mode don de cœur: prochain clic sur une pièce lui donne un cœur
     currentItemAction = { playerId, type: 'heart', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce pour lui donner un cœur`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('heart').toLowerCase()}`, 5000);
     // Highlight de toutes les pièces (alliées et adverses)
     highlightPieces(pieces, 0xffb3ba); // rose pâle
   }
@@ -2837,13 +2910,13 @@ function tryUseItem(playerId, clickedIconSprite) {
       }
       updatePieces();
     } else {
-      showInfoMessage(`Joueur ${playerId+1}: le timer n'est pas activé !`, 2000);
+      showInfoMessage(`${t('player')} ${playerId+1}: ${t('timer')} ${t('not-activated')}`, 2000);
     }
   }
   if (icon.item === 'mask') {
     // Activer mode masque de Majora: prochain clic sur une pièce adverse la force
     currentItemAction = { playerId, type: 'mask', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce adverse à forcer`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('mask').toLowerCase()}`, 5000);
     // Highlight des pièces adverses possibles
     const allowed = pieces.filter(p => p.player !== playerId);
     highlightPieces(allowed, 0xff9800); // orange
@@ -2851,7 +2924,7 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'ocarina') {
     // Activer mode ocarina: prochain clic sur une pièce la transforme en cavalier
     currentItemAction = { playerId, type: 'ocarina', active: true, inventoryIndex: idx };
-    showInfoMessage(`Joueur ${playerId+1}: cliquez sur une pièce à transformer en cavalier`, 5000);
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('ocarina').toLowerCase()}`, 5000);
     // Highlight de toutes les pièces (alliées et adverses)
     highlightPieces(pieces, 0x9c27b0); // violet
   }
@@ -4230,7 +4303,7 @@ function createCharacterSelectionUI() {
   `;
   
   const title = document.createElement('h1');
-  title.textContent = '🎮 Sélection des Personnages';
+  title.textContent = '🎮 ' + t('game-title');
   title.style.cssText = `
     color: var(--accent-gold);
     margin: 0;
@@ -4303,6 +4376,7 @@ function createCharacterSelectionUI() {
   playerNameInput.type = 'text';
   playerNameInput.value = playerNames[currentPlayerIndex];
   playerNameInput.id = 'player-name-input';
+  playerNameInput.setAttribute('data-t', 'player');
   playerNameInput.style.cssText = `
     background: white;
     color: #000000;
@@ -4369,7 +4443,7 @@ function createCharacterSelectionUI() {
   `;
   
   const teamsTitle = document.createElement('h2');
-  teamsTitle.textContent = 'Équipes des Joueurs';
+  teamsTitle.textContent = t('team');
   teamsTitle.style.cssText = `
     color: var(--accent-gold);
     text-align: center;
@@ -4450,7 +4524,7 @@ function createCharacterSelectionUI() {
   `;
   
   const prevPlayerBtn = document.createElement('button');
-  prevPlayerBtn.textContent = '← Joueur précédent';
+  prevPlayerBtn.textContent = '← ' + t('previous-player');
   prevPlayerBtn.id = 'prev-player-btn';
   prevPlayerBtn.style.cssText = `
     padding: 12px 24px;
@@ -4466,7 +4540,7 @@ function createCharacterSelectionUI() {
   `;
   
   const nextPlayerBtn = document.createElement('button');
-  nextPlayerBtn.textContent = 'Joueur suivant →';
+  nextPlayerBtn.textContent = t('next-player') + ' →';
   nextPlayerBtn.id = 'next-player-btn';
   nextPlayerBtn.style.cssText = `
     padding: 12px 24px;
@@ -4481,7 +4555,7 @@ function createCharacterSelectionUI() {
   `;
   
   const startGameBtn = document.createElement('button');
-  startGameBtn.textContent = '🚀 Démarrer la partie';
+  startGameBtn.textContent = '🚀 ' + t('start-game-button');
   startGameBtn.id = 'start-game-btn';
   startGameBtn.style.cssText = `
     padding: 12px 24px;
@@ -4730,6 +4804,7 @@ function updatePlayerInfo() {
   
   if (playerNameInput) {
     playerNameInput.value = playerNames[currentPlayerIndex];
+    playerNameInput.placeholder = t('player') + ' ' + (currentPlayerIndex + 1);
   }
   
   if (factionSelect) {

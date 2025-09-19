@@ -1,0 +1,1528 @@
+// ========================================
+// SYSTÈME DE TRADUCTION - VIDEO GAMES BATTLE
+// ========================================
+
+const translations = {
+  fr: {
+    // Interface principale
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Plateau',
+    'tagline': 'Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !',
+    'select-players': 'Nombre de joueurs',
+    'select-board-size': 'Taille du plateau',
+    'start-game': 'Commencer la partie',
+    'player': 'Joueur',
+    'players': 'joueurs',
+    'faction': 'Faction',
+    'money': 'Points',
+    'team': 'Équipe',
+    'next-player': 'Joueur suivant',
+    'previous-player': 'Joueur précédent',
+    'finish-selection': 'Terminer la sélection',
+    'start-game-button': 'Démarrer la partie',
+    
+    // Tailles de plateau
+    'board-small': '9x9 (Petit)',
+    'board-medium': '11x11 (Moyen)',
+    'board-large': '15x15 (Grand)',
+    
+    // Factions
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Rois
+    'king-nintendo': 'Roi Nintendo',
+    'king-playstation': 'Roi PlayStation',
+    'king-sega': 'Roi SEGA',
+    'king-xbox': 'Roi Xbox',
+    
+    // Messages de jeu
+    'game-start': 'Début de la partie !',
+    'your-turn': 'Votre tour',
+    'player-turn': 'Tour du Joueur',
+    'pieces-in-play': 'Pièces en jeu',
+    'rules': 'Règles',
+    'captured-pieces': 'Pièces capturées',
+    'items': 'Objets',
+    'timer': 'Chronomètre',
+    
+    // Actions
+    'move': 'Déplacer',
+    'capture': 'Capturer',
+    'use-item': 'Utiliser objet',
+    'end-turn': 'Finir le tour',
+    'restart': 'Recommencer',
+    'quit': 'Quitter',
+    
+    // Messages d'erreur
+    'invalid-move': 'Mouvement invalide',
+    'not-your-turn': 'Ce n\'est pas votre tour',
+    'no-piece-selected': 'Aucune pièce sélectionnée',
+    'cannot-move-there': 'Impossible de se déplacer ici',
+    
+    // Objets
+    'bobomb': 'Bob-omb',
+    'portals': 'Portails',
+    'lightning': 'Foudre',
+    'star': 'Étoile',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornade',
+    'banana': 'Banane',
+    'phoenix': 'Queue de Phoenix',
+    'cursor': 'Cursor Sims',
+    'heart': 'Cœur',
+    'sandglass': 'Sablière du Temps',
+    'mask': 'Masque de Majora',
+    'ocarina': 'Ocarina du Temps',
+    
+    // Descriptions des objets
+    'bobomb-desc': 'Bombe explosive de Mario ! Place une bombe sur une case vide qui explosera au prochain tour.',
+    'portals-desc': 'Téléportation instantanée ! Crée deux portails connectés sur le plateau.',
+    'lightning-desc': 'Éclair destructeur ! Élimine instantanément une pièce de votre choix.',
+    'star-desc': 'Révélation mystique ! Révèle toutes les pièces cachées sur le plateau pendant 3 tours.',
+    'tetrimino-desc': 'Bloc de construction ! Place un mur Tetrimino sur le plateau.',
+    'tornado-desc': 'Vent destructeur ! Téléporte une pièce à une position aléatoire du plateau.',
+    'banana-desc': 'Piège glissant ! Place une banane sur une case vide qui fera glisser la prochaine pièce qui s\'y arrête.',
+    'phoenix-desc': 'Renaissance ! Ressuscite une pièce perdue de votre faction.',
+    'cursor-desc': 'Contrôle total ! Prend le contrôle d\'une pièce adverse pendant 1 tour.',
+    'heart-desc': 'Vie supplémentaire ! Protège une pièce de la capture pendant 2 tours.',
+    'sandglass-desc': 'Le temps de l\'adversaire s\'effrite ! Réduit le chrono de tous les adversaires selon la taille du plateau.',
+    'mask-desc': 'Le masque maudit de Termina ! Force un adversaire à jouer une pièce spécifique lors de son prochain tour.',
+    'ocarina-desc': 'L\'instrument magique d\'Hyrule ! Transforme permanentement une pièce en cavalier (mouvements en L).',
+    
+    // Messages d'objets
+    'item-used': 'Objet utilisé',
+    'item-charging': 'Objet en charge',
+    'select-target': 'Sélectionnez une cible',
+    'select-position': 'Sélectionnez une position',
+    'not-activated': 'n\'est pas activé',
+    
+    // Navigation
+    'play': 'Jouer',
+    'pieces': 'Les pièces',
+    'rules': 'Les règles',
+    'items': 'Les objets',
+    'credits': 'Crédits',
+    'movements': 'Mouvements',
+    'login': 'Se connecter',
+    
+    // Pages
+    'available-pieces': 'Pièces disponibles',
+    'available-items': 'Objets disponibles',
+    'game-rules': 'Règles du jeu',
+    'movement-demos': 'Démonstrations de Mouvements',
+    'sort-by': 'Trier par',
+    'strength': 'Force',
+    'editor': 'Éditeur',
+    'universe': 'Univers',
+    'all': 'Tous',
+    
+    // Règles du jeu
+    'game-objective': 'Objectif du jeu',
+    'game-objective-desc': 'Video Games Battle est un jeu de stratégie inspiré des échecs où les joueurs s\'affrontent avec des personnages emblématiques de l\'univers vidéoludique. L\'objectif est de capturer le roi adverse pour éliminer le joueur et devenir le dernier survivant.',
+    'victory': 'Victoire',
+    'victory-desc': 'Être le dernier joueur en vie en capturant tous les rois adverses ou en éliminant tous les adversaires par timeout.',
+    'piece-types': 'Types de pièces',
+    'king': 'Roi',
+    'king-desc': 'Pièce la plus importante de chaque joueur. Se déplace d\'une case dans toutes les directions. Si votre roi est capturé, vous êtes éliminé de la partie.',
+    'special-pieces': 'Pièces spéciales',
+    'special-pieces-desc': 'Chaque faction dispose de personnages uniques avec des mouvements et capacités spécifiques :',
+    'movements': 'Mouvements',
+    'movements-desc': 'Chaque pièce a ses propres règles de déplacement définies par :',
+    'directions': 'Directions',
+    'directions-desc': 'Cases adjacentes accessibles',
+    'range': 'Portée',
+    'range-desc': 'Nombre maximum de cases en ligne droite',
+    'specialties': 'Spécialités',
+    'specialties-desc': 'Capacités uniques (saut, vol, etc.)',
+    'object-system': 'Système d\'objets',
+    'acquisition': 'Acquisition',
+    'acquisition-desc': 'Les objets apparaissent aléatoirement sur le plateau dans des caisses. Chaque joueur peut en ramasser un maximum de 3 en réserve.',
+    'usage': 'Utilisation',
+    'usage-desc': 'Un seul objet peut être utilisé par tour. Les objets ont des effets variés :',
+    'time-sand': 'Sablière du Temps',
+    'time-sand-desc': 'Réduit le temps des adversaires',
+    'majora-mask': 'Masque de Majora',
+    'majora-mask-desc': 'Force un adversaire à jouer une pièce spécifique',
+    'time-ocarina': 'Ocarina du Temps',
+    'time-ocarina-desc': 'Transforme une pièce en cavalier',
+    'bomb': 'Bombe',
+    'bomb-desc': 'Explose et endommage les pièces adjacentes',
+    'star': 'Étoile',
+    'star-desc': 'Révèle les pièces cachées',
+    'weight-desc': 'Chaque objet a un poids différent qui influence la probabilité d\'apparition. Plus le poids est élevé, plus l\'objet est rare.',
+    
+    // Descriptions des objets
+    'bobomb-desc': 'Bombe explosive de Mario ! Place une <strong>bombe sur une case vide</strong> qui explosera au prochain tour.',
+    'bobomb-details': 'La bombe endommage toutes les pièces adjacentes (alliées et ennemies). Parfait pour créer des zones de danger ou éliminer plusieurs pièces d\'un coup. Inspiré de Super Mario Bros.',
+    'portals-desc': 'Téléportation instantanée ! Crée <strong>deux portails connectés</strong> sur le plateau.',
+    'portals-details': 'Placez deux portails sur des cases vides. Toute pièce entrant dans un portail ressort instantanément de l\'autre. Parfait pour les mouvements tactiques et les échappatoires. Inspiré de Portal.',
+    'lightning-desc': 'Éclair destructeur ! <strong>Élimine instantanément une pièce</strong> de votre choix.',
+    'lightning-details': 'Choisissez n\'importe quelle pièce sur le plateau (alliée ou ennemie) pour l\'éliminer immédiatement. Puissant mais coûteux, parfait pour éliminer des menaces majeures. Inspiré de la magie élémentaire classique.',
+    'star-desc': 'Révélation mystique ! <strong>Révèle toutes les pièces cachées</strong> sur le plateau pendant 3 tours.',
+    'star-details': 'Permet de voir les pièces adverses même si elles sont normalement invisibles. Utile pour planifier des attaques ou éviter des pièges. Inspiré de Super Mario Bros, l\'étoile apporte la clairvoyance.',
+    'tetrimino-desc': 'Bloc de construction ! Place un <strong>mur Tetrimino</strong> sur le plateau.',
+    'tetrimino-details': 'Crée un obstacle permanent sur le plateau qui bloque les mouvements. Parfait pour contrôler les zones de passage ou protéger des positions stratégiques. Inspiré de Tetris.',
+    'tornado-desc': 'Vent destructeur ! <strong>Téléporte une pièce</strong> à une position aléatoire du plateau.',
+    'tornado-details': 'Choisissez une pièce qui sera téléportée vers une case aléatoire libre. Peut créer des situations inattendues et tactiques. Inspiré des phénomènes météorologiques extrêmes.',
+    'banana-desc': 'Piège glissant ! Place une <strong>banane sur une case vide</strong> qui fera glisser la prochaine pièce qui s\'y arrête.',
+    'banana-details': 'La pièce qui atterrit sur la banane glisse vers la case suivante dans la direction de son mouvement. Peut créer des situations inattendues et tactiques. Inspiré de Mario Kart, la banane est un piège classique.',
+    'phoenix-desc': 'Renaissance ! <strong>Ressuscite une pièce perdue</strong> de votre faction.',
+    'phoenix-details': 'Choisissez une pièce que vous avez perdue pour la faire revenir sur le plateau. Parfait pour compenser les pertes ou renforcer votre armée. Inspiré de la mythologie du phénix.',
+    'cursor-desc': 'Contrôle total ! <strong>Prend le contrôle d\'une pièce adverse</strong> pendant 1 tour.',
+    'cursor-details': 'Vous pouvez déplacer la pièce adverse comme si c\'était la vôtre. Idéal pour créer des situations tactiques ou éliminer des menaces. Inspiré de The Sims, ce curseur magique permet de manipuler les autres.',
+    'heart-desc': 'Vie supplémentaire ! <strong>Protège une pièce</strong> de la capture pendant 2 tours.',
+    'heart-details': 'La pièce protégée ne peut pas être capturée, même par le roi adverse. Parfait pour protéger une pièce importante ou créer une diversion. Inspiré de The Legend of Zelda, le cœur apporte la protection divine.',
+    'sandglass-desc': 'Le temps de l\'adversaire s\'effrite ! Réduit le <strong>chrono de tous les adversaires</strong> selon la taille du plateau.',
+    'sandglass-details': '<strong>9×9 :</strong> -1 minute | <strong>11×11 :</strong> -2 minutes | <strong>15×15 :</strong> -3 minutes<br>Cet objet ne fonctionne que si le timer est activé. Inspiré de Prince of Persia: The Sands of Time, il permet de prendre l\'avantage temporel sur ses ennemis.',
+    'mask-desc': 'Le masque maudit de Termina ! Force un <strong>adversaire à jouer une pièce spécifique</strong> lors de son prochain tour.',
+    'mask-details': 'Choisissez une pièce adverse que l\'adversaire sera obligé de déplacer. L\'effet disparaît après que la pièce ait joué. Inspiré de The Legend of Zelda: Majora\'s Mask, ce masque maléfique manipule les esprits.',
+    'ocarina-desc': 'L\'instrument magique d\'Hyrule ! Transforme <strong>permanentement une pièce en cavalier</strong> (mouvements en L).',
+    'ocarina-details': 'Choisissez n\'importe quelle pièce (alliée ou ennemie) qui se déplacera désormais comme un cavalier d\'échecs. L\'ocarina reste visible au-dessus de la pièce. Inspiré de The Legend of Zelda: Ocarina of Time, cet objet légendaire change les règles du jeu.',
+    
+    // Conseils stratégiques
+    'strategic-tips': 'Conseils stratégiques',
+    'king-protection': 'Protection du roi',
+    'king-protection-desc': 'Votre roi est votre pièce la plus précieuse. Gardez-le toujours protégé par d\'autres pièces et évitez de l\'exposer inutilement.',
+    'object-management': 'Gestion des objets',
+    'object-management-desc': 'Les objets peuvent changer le cours d\'une partie. Utilisez-les au bon moment pour maximiser leur impact.',
+    'positioning': 'Positionnement',
+    'positioning-desc': 'Contrôlez le centre du plateau pour avoir plus d\'options de déplacement et de capture.',
+    'temporary-cooperation': 'Coopération temporaire',
+    'temporary-cooperation-desc': 'Dans les parties à plusieurs joueurs, vous pouvez temporairement vous allier avec un adversaire pour éliminer une menace commune.',
+    
+    // FAQ
+    'faq': 'Questions fréquentes',
+    'can-capture-own': 'Puis-je capturer mes propres pièces ?',
+    'can-capture-own-desc': 'Non, vous ne pouvez capturer que les pièces adverses. Vos propres pièces bloquent vos mouvements.',
+    'no-valid-moves': 'Que se passe-t-il si je n\'ai plus de mouvements valides ?',
+    'no-valid-moves-desc': 'Si vous ne pouvez plus bouger aucune pièce, vous passez votre tour automatiquement.',
+    'can-steal-objects': 'Les objets peuvent-ils être volés ?',
+    'can-steal-objects-desc': 'Non, les objets sont personnels et ne peuvent pas être pris par d\'autres joueurs.',
+    'can-change-piece': 'Puis-je changer de pièce après l\'avoir sélectionnée ?',
+    'can-change-piece-desc': 'Non, une fois qu\'une pièce est sélectionnée, vous devez la déplacer ou passer votre tour.',
+    
+    // Pièces
+    'cost': 'Coût',
+    'range': 'Portée',
+    'movements': 'Mouvements',
+    'movement-demo': 'Démonstration de mouvement',
+    'tier-1': 'Faible',
+    'tier-2': 'Moyen',
+    'tier-3': 'Fort',
+    'tier-4': 'Très fort',
+    'tier-5': 'Légendaire',
+    'weight': 'Poids',
+    
+    // Publicités
+    'advertisements': 'Publicités',
+    'ad-1': 'Annonce 1',
+    'ad-2': 'Annonce 2',
+    'ad-update': 'Mise à jour toutes les 5 actions',
+    
+    // Langues
+    'language': 'Langue',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português',
+    'italian': 'Italiano'
+  },
+  
+  en: {
+    // Main interface
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Board',
+    'tagline': 'Forget classic chess, here video game heroes make the rules!',
+    'select-players': 'Number of players',
+    'select-board-size': 'Board size',
+    'start-game': 'Start game',
+    'player': 'Player',
+    'players': 'players',
+    'faction': 'Faction',
+    'money': 'Points',
+    'team': 'Team',
+    'next-player': 'Next player',
+    'previous-player': 'Previous player',
+    'finish-selection': 'Finish selection',
+    'start-game-button': 'Start game',
+    
+    // Board sizes
+    'board-small': '9x9 (Small)',
+    'board-medium': '11x11 (Medium)',
+    'board-large': '15x15 (Large)',
+    
+    // Factions
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Kings
+    'king-nintendo': 'Nintendo King',
+    'king-playstation': 'PlayStation King',
+    'king-sega': 'SEGA King',
+    'king-xbox': 'Xbox King',
+    
+    // Game messages
+    'game-start': 'Game starts!',
+    'your-turn': 'Your turn',
+    'player-turn': 'Player turn',
+    'pieces-in-play': 'Pieces in play',
+    'rules': 'Rules',
+    'captured-pieces': 'Captured pieces',
+    'items': 'Items',
+    'timer': 'Timer',
+    
+    // Actions
+    'move': 'Move',
+    'capture': 'Capture',
+    'use-item': 'Use item',
+    'end-turn': 'End turn',
+    'restart': 'Restart',
+    'quit': 'Quit',
+    
+    // Error messages
+    'invalid-move': 'Invalid move',
+    'not-your-turn': 'Not your turn',
+    'no-piece-selected': 'No piece selected',
+    'cannot-move-there': 'Cannot move there',
+    
+    // Items
+    'bobomb': 'Bob-omb',
+    'portals': 'Portals',
+    'lightning': 'Lightning',
+    'star': 'Star',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornado',
+    'banana': 'Banana',
+    'phoenix': 'Phoenix Down',
+    'cursor': 'Sims Cursor',
+    'heart': 'Heart',
+    'sandglass': 'Sands of Time',
+    'mask': 'Majora\'s Mask',
+    'ocarina': 'Ocarina of Time',
+    
+    // Item descriptions
+    'bobomb-desc': 'Mario\'s explosive bomb! Places a bomb on an empty tile that will explode next turn.',
+    'portals-desc': 'Instant teleportation! Creates two connected portals on the board.',
+    'lightning-desc': 'Destructive lightning! Instantly eliminates a piece of your choice.',
+    'star-desc': 'Mystical revelation! Reveals all hidden pieces on the board for 3 turns.',
+    'tetrimino-desc': 'Building block! Places a Tetrimino wall on the board.',
+    'tornado-desc': 'Destructive wind! Teleports a piece to a random position on the board.',
+    'banana-desc': 'Slippery trap! Places a banana on an empty tile that will make the next piece that lands there slide.',
+    'phoenix-desc': 'Rebirth! Resurrects a lost piece from your faction.',
+    'cursor-desc': 'Total control! Takes control of an enemy piece for 1 turn.',
+    'heart-desc': 'Extra life! Protects a piece from capture for 2 turns.',
+    'sandglass-desc': 'The enemy\'s time crumbles! Reduces all opponents\' timer based on board size.',
+    'mask-desc': 'Termina\'s cursed mask! Forces an opponent to play a specific piece on their next turn.',
+    'ocarina-desc': 'Hyrule\'s magical instrument! Permanently transforms a piece into a knight (L-shaped moves).',
+    
+    // Item messages
+    'item-used': 'Item used',
+    'item-charging': 'Item charging',
+    'select-target': 'Select a target',
+    'select-position': 'Select a position',
+    'not-activated': 'not activated',
+    
+    // Navigation
+    'play': 'Play',
+    'pieces': 'Pieces',
+    'rules': 'Rules',
+    'items': 'Items',
+    'credits': 'Credits',
+    'movements': 'Movements',
+    'login': 'Login',
+    
+    // Pages
+    'available-pieces': 'Available Pieces',
+    'available-items': 'Available Items',
+    'game-rules': 'Game Rules',
+    'movement-demos': 'Movement Demonstrations',
+    'sort-by': 'Sort by',
+    'strength': 'Strength',
+    'editor': 'Editor',
+    'universe': 'Universe',
+    'all': 'All',
+    
+    // Game Rules
+    'game-objective': 'Game Objective',
+    'game-objective-desc': 'Video Games Battle is a strategy game inspired by chess where players battle with iconic characters from the video game universe. The goal is to capture the opponent\'s king to eliminate the player and become the last survivor.',
+    'victory': 'Victory',
+    'victory-desc': 'Be the last player alive by capturing all opponent kings or eliminating all opponents by timeout.',
+    'piece-types': 'Piece Types',
+    'king': 'King',
+    'king-desc': 'Most important piece of each player. Moves one square in all directions. If your king is captured, you are eliminated from the game.',
+    'special-pieces': 'Special Pieces',
+    'special-pieces-desc': 'Each faction has unique characters with specific movements and abilities:',
+    'movements': 'Movements',
+    'movements-desc': 'Each piece has its own movement rules defined by:',
+    'directions': 'Directions',
+    'directions-desc': 'Adjacent accessible squares',
+    'range': 'Range',
+    'range-desc': 'Maximum number of squares in a straight line',
+    'specialties': 'Specialties',
+    'specialties-desc': 'Unique abilities (jump, flight, etc.)',
+    'object-system': 'Object System',
+    'acquisition': 'Acquisition',
+    'acquisition-desc': 'Objects appear randomly on the board in crates. Each player can collect a maximum of 3 in reserve.',
+    'usage': 'Usage',
+    'usage-desc': 'Only one object can be used per turn. Objects have various effects:',
+    'time-sand': 'Time Sand',
+    'time-sand-desc': 'Reduces opponents\' time',
+    'majora-mask': 'Majora\'s Mask',
+    'majora-mask-desc': 'Forces an opponent to play a specific piece',
+    'time-ocarina': 'Ocarina of Time',
+    'time-ocarina-desc': 'Transforms a piece into a knight',
+    'bomb': 'Bomb',
+    'bomb-desc': 'Explodes and damages adjacent pieces',
+    'star': 'Star',
+    'star-desc': 'Reveals hidden pieces',
+    'weight-desc': 'Each object has a different weight that influences the probability of appearance. The higher the weight, the rarer the object.',
+    
+    // Object descriptions
+    'bobomb-desc': 'Mario\'s explosive bomb! Places a <strong>bomb on an empty square</strong> that will explode next turn.',
+    'bobomb-details': 'The bomb damages all adjacent pieces (allies and enemies). Perfect for creating danger zones or eliminating multiple pieces at once. Inspired by Super Mario Bros.',
+    'portals-desc': 'Instant teleportation! Creates <strong>two connected portals</strong> on the board.',
+    'portals-details': 'Place two portals on empty squares. Any piece entering a portal instantly exits the other. Perfect for tactical movements and escapes. Inspired by Portal.',
+    'lightning-desc': 'Destructive lightning! <strong>Instantly eliminates a piece</strong> of your choice.',
+    'lightning-details': 'Choose any piece on the board (ally or enemy) to eliminate it immediately. Powerful but costly, perfect for eliminating major threats. Inspired by classic elemental magic.',
+    'star-desc': 'Mystical revelation! <strong>Reveals all hidden pieces</strong> on the board for 3 turns.',
+    'star-details': 'Allows you to see enemy pieces even if they are normally invisible. Useful for planning attacks or avoiding traps. Inspired by Super Mario Bros, the star brings clairvoyance.',
+    'tetrimino-desc': 'Building block! Places a <strong>Tetrimino wall</strong> on the board.',
+    'tetrimino-details': 'Creates a permanent obstacle on the board that blocks movements. Perfect for controlling passage areas or protecting strategic positions. Inspired by Tetris.',
+    'tornado-desc': 'Destructive wind! <strong>Teleports a piece</strong> to a random position on the board.',
+    'tornado-details': 'Choose a piece that will be teleported to a random free square. Can create unexpected and tactical situations. Inspired by extreme weather phenomena.',
+    'banana-desc': 'Slippery trap! Places a <strong>banana on an empty square</strong> that will make the next piece that lands there slide.',
+    'banana-details': 'The piece that lands on the banana slides to the next square in the direction of its movement. Can create unexpected and tactical situations. Inspired by Mario Kart, the banana is a classic trap.',
+    'phoenix-desc': 'Rebirth! <strong>Resurrects a lost piece</strong> from your faction.',
+    'phoenix-details': 'Choose a piece you have lost to bring it back to the board. Perfect for compensating losses or strengthening your army. Inspired by phoenix mythology.',
+    'cursor-desc': 'Total control! <strong>Takes control of an enemy piece</strong> for 1 turn.',
+    'cursor-details': 'You can move the enemy piece as if it were yours. Ideal for creating tactical situations or eliminating threats. Inspired by The Sims, this magical cursor allows you to manipulate others.',
+    'heart-desc': 'Extra life! <strong>Protects a piece</strong> from capture for 2 turns.',
+    'heart-details': 'The protected piece cannot be captured, even by the enemy king. Perfect for protecting an important piece or creating a diversion. Inspired by The Legend of Zelda, the heart brings divine protection.',
+    'sandglass-desc': 'The enemy\'s time crumbles! Reduces the <strong>timer of all enemies</strong> according to board size.',
+    'sandglass-details': '<strong>9×9:</strong> -1 minute | <strong>11×11:</strong> -2 minutes | <strong>15×15:</strong> -3 minutes<br>This object only works if the timer is activated. Inspired by Prince of Persia: The Sands of Time, it allows you to gain a temporal advantage over your enemies.',
+    'mask-desc': 'Termina\'s cursed mask! Forces an <strong>enemy to play a specific piece</strong> on their next turn.',
+    'mask-details': 'Choose an enemy piece that the opponent will be forced to move. The effect disappears after the piece has played. Inspired by The Legend of Zelda: Majora\'s Mask, this evil mask manipulates minds.',
+    'ocarina-desc': 'Hyrule\'s magical instrument! <strong>Permanently transforms a piece into a knight</strong> (L-shaped movements).',
+    'ocarina-details': 'Choose any piece (ally or enemy) that will now move like a chess knight. The ocarina remains visible above the piece. Inspired by The Legend of Zelda: Ocarina of Time, this legendary object changes the rules of the game.',
+    
+    // Strategic tips
+    'strategic-tips': 'Strategic Tips',
+    'king-protection': 'King Protection',
+    'king-protection-desc': 'Your king is your most precious piece. Always keep it protected by other pieces and avoid exposing it unnecessarily.',
+    'object-management': 'Object Management',
+    'object-management-desc': 'Objects can change the course of a game. Use them at the right moment to maximize their impact.',
+    'positioning': 'Positioning',
+    'positioning-desc': 'Control the center of the board to have more movement and capture options.',
+    'temporary-cooperation': 'Temporary Cooperation',
+    'temporary-cooperation-desc': 'In multi-player games, don\'t hesitate to form temporary alliances against common threats.',
+    
+    // FAQ
+    'faq': 'FAQ',
+    'can-capture-own': 'Can I capture my own pieces?',
+    'can-capture-own-desc': 'No, you can only capture enemy pieces. Your own pieces block your movements.',
+    'no-valid-moves': 'What happens if I have no valid moves?',
+    'no-valid-moves-desc': 'If you can\'t move any piece, you automatically skip your turn.',
+    'can-steal-objects': 'Can objects be stolen?',
+    'can-steal-objects-desc': 'No, objects are personal and cannot be taken by other players.',
+    'can-change-piece': 'Can I change pieces after selecting one?',
+    'can-change-piece-desc': 'No, once a piece is selected, you must move it or skip your turn.',
+    
+    // Pieces
+    'cost': 'Cost',
+    'range': 'Range',
+    'movements': 'Movements',
+    'movement-demo': 'Movement Demo',
+    'tier-1': 'Weak',
+    'tier-2': 'Medium',
+    'tier-3': 'Strong',
+    'tier-4': 'Very Strong',
+    'tier-5': 'Legendary',
+    'weight': 'Weight',
+    
+    // Advertisements
+    'advertisements': 'Advertisements',
+    'ad-1': 'Ad 1',
+    'ad-2': 'Ad 2',
+    'ad-update': 'Updates every 5 actions',
+    
+    // Languages
+    'language': 'Language',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português'
+  },
+  
+  es: {
+    // Interfaz principal
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Tablero',
+    'tagline': '¡Olvida el ajedrez clásico, aquí los héroes de videojuegos hacen las reglas!',
+    'select-players': 'Número de jugadores',
+    'select-board-size': 'Tamaño del tablero',
+    'start-game': 'Comenzar partida',
+    'player': 'Jugador',
+    'players': 'jugadores',
+    'faction': 'Facción',
+    'money': 'Puntos',
+    'team': 'Equipo',
+    'next-player': 'Siguiente jugador',
+    'previous-player': 'Jugador anterior',
+    'finish-selection': 'Terminar selección',
+    'start-game-button': 'Iniciar partida',
+    
+    // Tamaños de tablero
+    'board-small': '9x9 (Pequeño)',
+    'board-medium': '11x11 (Mediano)',
+    'board-large': '15x15 (Grande)',
+    
+    // Facciones
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Reyes
+    'king-nintendo': 'Rey Nintendo',
+    'king-playstation': 'Rey PlayStation',
+    'king-sega': 'Rey SEGA',
+    'king-xbox': 'Rey Xbox',
+    
+    // Mensajes de juego
+    'game-start': '¡Comienza la partida!',
+    'your-turn': 'Tu turno',
+    'player-turn': 'Turno del Jugador',
+    'pieces-in-play': 'Piezas en juego',
+    'rules': 'Reglas',
+    'captured-pieces': 'Piezas capturadas',
+    'items': 'Objetos',
+    'timer': 'Cronómetro',
+    
+    // Acciones
+    'move': 'Mover',
+    'capture': 'Capturar',
+    'use-item': 'Usar objeto',
+    'end-turn': 'Terminar turno',
+    'restart': 'Reiniciar',
+    'quit': 'Salir',
+    
+    // Mensajes de error
+    'invalid-move': 'Movimiento inválido',
+    'not-your-turn': 'No es tu turno',
+    'no-piece-selected': 'Ninguna pieza seleccionada',
+    'cannot-move-there': 'No se puede mover ahí',
+    
+    // Objetos
+    'bobomb': 'Bob-omb',
+    'portals': 'Portales',
+    'lightning': 'Rayo',
+    'star': 'Estrella',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornado',
+    'banana': 'Plátano',
+    'phoenix': 'Pluma de Fénix',
+    'cursor': 'Cursor Sims',
+    'heart': 'Corazón',
+    'sandglass': 'Reloj de Arena',
+    'mask': 'Máscara de Majora',
+    'ocarina': 'Ocarina del Tiempo',
+    
+    // Descripciones de objetos
+    'bobomb-desc': '¡Bomba explosiva de Mario! Coloca una bomba en una casilla vacía que explotará el próximo turno.',
+    'portals-desc': '¡Teletransportación instantánea! Crea dos portales conectados en el tablero.',
+    'lightning-desc': '¡Rayo destructivo! Elimina instantáneamente una pieza de tu elección.',
+    'star-desc': '¡Revelación mística! Revela todas las piezas ocultas en el tablero durante 3 turnos.',
+    'tetrimino-desc': '¡Bloque de construcción! Coloca un muro Tetrimino en el tablero.',
+    'tornado-desc': '¡Viento destructivo! Teletransporta una pieza a una posición aleatoria del tablero.',
+    'banana-desc': '¡Trampa resbaladiza! Coloca un plátano en una casilla vacía que hará resbalar a la próxima pieza que aterrice ahí.',
+    'phoenix-desc': '¡Renacimiento! Resucita una pieza perdida de tu facción.',
+    'cursor-desc': '¡Control total! Toma el control de una pieza enemiga durante 1 turno.',
+    'heart-desc': '¡Vida extra! Protege una pieza de la captura durante 2 turnos.',
+    'sandglass-desc': '¡El tiempo del enemigo se desmorona! Reduce el cronómetro de todos los oponentes según el tamaño del tablero.',
+    'mask-desc': '¡La máscara maldita de Termina! Fuerza a un oponente a jugar una pieza específica en su próximo turno.',
+    'ocarina-desc': '¡El instrumento mágico de Hyrule! Transforma permanentemente una pieza en caballo (movimientos en L).',
+    
+    // Mensajes de objetos
+    'item-used': 'Objeto usado',
+    'item-charging': 'Objeto cargando',
+    'select-target': 'Selecciona un objetivo',
+    'select-position': 'Selecciona una posición',
+    'not-activated': 'no activado',
+    
+    // Navegación
+    'play': 'Jugar',
+    'pieces': 'Piezas',
+    'rules': 'Reglas',
+    'items': 'Objetos',
+    'credits': 'Créditos',
+    'movements': 'Movimientos',
+    'login': 'Iniciar sesión',
+    
+    // Páginas
+    'available-pieces': 'Piezas Disponibles',
+    'available-items': 'Objetos Disponibles',
+    'game-rules': 'Reglas del Juego',
+    'movement-demos': 'Demostraciones de Movimientos',
+    'sort-by': 'Ordenar por',
+    'strength': 'Fuerza',
+    'editor': 'Editor',
+    'universe': 'Universo',
+    'all': 'Todos',
+    
+    // Reglas del Juego
+    'game-objective': 'Objetivo del Juego',
+    'game-objective-desc': 'Video Games Battle es un juego de estrategia inspirado en el ajedrez donde los jugadores se enfrentan con personajes icónicos del universo de los videojuegos. El objetivo es capturar el rey adversario para eliminar al jugador y convertirse en el último superviviente.',
+    'victory': 'Victoria',
+    'victory-desc': 'Ser el último jugador vivo capturando todos los reyes adversarios o eliminando a todos los oponentes por tiempo agotado.',
+    'piece-types': 'Tipos de Piezas',
+    'king': 'Rey',
+    'king-desc': 'Pieza más importante de cada jugador. Se mueve una casilla en todas las direcciones. Si tu rey es capturado, quedas eliminado de la partida.',
+    'special-pieces': 'Piezas Especiales',
+    'special-pieces-desc': 'Cada facción dispone de personajes únicos con movimientos y capacidades específicas:',
+    'movements': 'Movimientos',
+    'movements-desc': 'Cada pieza tiene sus propias reglas de movimiento definidas por:',
+    'directions': 'Direcciones',
+    'directions-desc': 'Casillas adyacentes accesibles',
+    'range': 'Alcance',
+    'range-desc': 'Número máximo de casillas en línea recta',
+    'specialties': 'Especialidades',
+    'specialties-desc': 'Capacidades únicas (salto, vuelo, etc.)',
+    'object-system': 'Sistema de Objetos',
+    'acquisition': 'Adquisición',
+    'acquisition-desc': 'Los objetos aparecen aleatoriamente en el tablero en cajas. Cada jugador puede recoger un máximo de 3 en reserva.',
+    'usage': 'Uso',
+    'usage-desc': 'Solo se puede usar un objeto por turno. Los objetos tienen efectos variados:',
+    'time-sand': 'Arena del Tiempo',
+    'time-sand-desc': 'Reduce el tiempo de los adversarios',
+    'majora-mask': 'Máscara de Majora',
+    'majora-mask-desc': 'Fuerza a un adversario a jugar una pieza específica',
+    'time-ocarina': 'Ocarina del Tiempo',
+    'time-ocarina-desc': 'Transforma una pieza en caballo',
+    'bomb': 'Bomba',
+    'bomb-desc': 'Explota y daña las piezas adyacentes',
+    'star': 'Estrella',
+    'star-desc': 'Revela las piezas ocultas',
+    'weight-desc': 'Cada objeto tiene un peso diferente que influye en la probabilidad de aparición. Cuanto mayor es el peso, más raro es el objeto.',
+    
+    // Descripciones de objetos
+    'bobomb-desc': '¡Bomba explosiva de Mario! Coloca una <strong>bomba en una casilla vacía</strong> que explotará en el próximo turno.',
+    'bobomb-details': 'La bomba daña todas las piezas adyacentes (aliadas y enemigas). Perfecto para crear zonas de peligro o eliminar múltiples piezas de una vez. Inspirado en Super Mario Bros.',
+    'portals-desc': '¡Teletransportación instantánea! Crea <strong>dos portales conectados</strong> en el tablero.',
+    'portals-details': 'Coloca dos portales en casillas vacías. Cualquier pieza que entre en un portal sale instantáneamente del otro. Perfecto para movimientos tácticos y escapes. Inspirado en Portal.',
+    'lightning-desc': '¡Rayo destructivo! <strong>Elimina instantáneamente una pieza</strong> de tu elección.',
+    'lightning-details': 'Elige cualquier pieza en el tablero (aliada o enemiga) para eliminarla inmediatamente. Poderoso pero costoso, perfecto para eliminar amenazas mayores. Inspirado en la magia elemental clásica.',
+    'star-desc': '¡Revelación mística! <strong>Revela todas las piezas ocultas</strong> en el tablero durante 3 turnos.',
+    'star-details': 'Permite ver las piezas enemigas incluso si normalmente son invisibles. Útil para planificar ataques o evitar trampas. Inspirado en Super Mario Bros, la estrella aporta clarividencia.',
+    'tetrimino-desc': '¡Bloque de construcción! Coloca un <strong>muro Tetrimino</strong> en el tablero.',
+    'tetrimino-details': 'Crea un obstáculo permanente en el tablero que bloquea los movimientos. Perfecto para controlar zonas de paso o proteger posiciones estratégicas. Inspirado en Tetris.',
+    'tornado-desc': '¡Viento destructivo! <strong>Teletransporta una pieza</strong> a una posición aleatoria del tablero.',
+    'tornado-details': 'Elige una pieza que será teletransportada a una casilla libre aleatoria. Puede crear situaciones inesperadas y tácticas. Inspirado en fenómenos meteorológicos extremos.',
+    'banana-desc': '¡Trampa resbaladiza! Coloca una <strong>banana en una casilla vacía</strong> que hará resbalar a la próxima pieza que aterrice allí.',
+    'banana-details': 'La pieza que aterrice en la banana resbala hacia la siguiente casilla en la dirección de su movimiento. Puede crear situaciones inesperadas y tácticas. Inspirado en Mario Kart, la banana es una trampa clásica.',
+    'phoenix-desc': '¡Renacimiento! <strong>Resucita una pieza perdida</strong> de tu facción.',
+    'phoenix-details': 'Elige una pieza que has perdido para hacerla volver al tablero. Perfecto para compensar pérdidas o reforzar tu ejército. Inspirado en la mitología del fénix.',
+    'cursor-desc': '¡Control total! <strong>Toma el control de una pieza enemiga</strong> durante 1 turno.',
+    'cursor-details': 'Puedes mover la pieza enemiga como si fuera tuya. Ideal para crear situaciones tácticas o eliminar amenazas. Inspirado en The Sims, este cursor mágico permite manipular a otros.',
+    'heart-desc': '¡Vida extra! <strong>Protege una pieza</strong> de la captura durante 2 turnos.',
+    'heart-details': 'La pieza protegida no puede ser capturada, ni siquiera por el rey enemigo. Perfecto para proteger una pieza importante o crear una distracción. Inspirado en The Legend of Zelda, el corazón aporta protección divina.',
+    'sandglass-desc': '¡El tiempo del enemigo se desmorona! Reduce el <strong>cronómetro de todos los enemigos</strong> según el tamaño del tablero.',
+    'sandglass-details': '<strong>9×9:</strong> -1 minuto | <strong>11×11:</strong> -2 minutos | <strong>15×15:</strong> -3 minutos<br>Este objeto solo funciona si el cronómetro está activado. Inspirado en Prince of Persia: The Sands of Time, permite obtener una ventaja temporal sobre tus enemigos.',
+    'mask-desc': '¡La máscara maldita de Termina! Fuerza a un <strong>enemigo a jugar una pieza específica</strong> en su próximo turno.',
+    'mask-details': 'Elige una pieza enemiga que el oponente estará obligado a mover. El efecto desaparece después de que la pieza haya jugado. Inspirado en The Legend of Zelda: Majora\'s Mask, esta máscara maléfica manipula las mentes.',
+    'ocarina-desc': '¡El instrumento mágico de Hyrule! Transforma <strong>permanentemente una pieza en caballo</strong> (movimientos en L).',
+    'ocarina-details': 'Elige cualquier pieza (aliada o enemiga) que ahora se moverá como un caballo de ajedrez. La ocarina permanece visible sobre la pieza. Inspirado en The Legend of Zelda: Ocarina of Time, este objeto legendario cambia las reglas del juego.',
+    
+    // Piezas
+    'cost': 'Costo',
+    'range': 'Alcance',
+    'movements': 'Movimientos',
+    'movement-demo': 'Demo de Movimiento',
+    'tier-1': 'Débil',
+    'tier-2': 'Medio',
+    'tier-3': 'Fuerte',
+    'tier-4': 'Muy Fuerte',
+    'tier-5': 'Legendario',
+    'weight': 'Peso',
+    
+    // Anuncios
+    'advertisements': 'Anuncios',
+    'ad-1': 'Anuncio 1',
+    'ad-2': 'Anuncio 2',
+    'ad-update': 'Actualización cada 5 acciones',
+    
+    // Idiomas
+    'language': 'Idioma',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português'
+  },
+  
+  de: {
+    // Hauptinterface
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Brett',
+    'tagline': 'Vergessen Sie klassisches Schach, hier machen Videospielhelden die Regeln!',
+    'select-players': 'Anzahl der Spieler',
+    'select-board-size': 'Brettgröße',
+    'start-game': 'Spiel starten',
+    'player': 'Spieler',
+    'players': 'Spieler',
+    'faction': 'Fraktion',
+    'money': 'Punkte',
+    'team': 'Team',
+    'next-player': 'Nächster Spieler',
+    'previous-player': 'Vorheriger Spieler',
+    'finish-selection': 'Auswahl beenden',
+    'start-game-button': 'Spiel starten',
+    
+    // Brettgrößen
+    'board-small': '9x9 (Klein)',
+    'board-medium': '11x11 (Mittel)',
+    'board-large': '15x15 (Groß)',
+    
+    // Fraktionen
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Könige
+    'king-nintendo': 'Nintendo König',
+    'king-playstation': 'PlayStation König',
+    'king-sega': 'SEGA König',
+    'king-xbox': 'Xbox König',
+    
+    // Spielnachrichten
+    'game-start': 'Spiel beginnt!',
+    'your-turn': 'Dein Zug',
+    'player-turn': 'Spielerzug',
+    'pieces-in-play': 'Spielsteine',
+    'rules': 'Regeln',
+    'captured-pieces': 'Geschlagene Steine',
+    'items': 'Gegenstände',
+    'timer': 'Timer',
+    
+    // Aktionen
+    'move': 'Bewegen',
+    'capture': 'Schlagen',
+    'use-item': 'Gegenstand verwenden',
+    'end-turn': 'Zug beenden',
+    'restart': 'Neustart',
+    'quit': 'Beenden',
+    
+    // Fehlermeldungen
+    'invalid-move': 'Ungültiger Zug',
+    'not-your-turn': 'Nicht dein Zug',
+    'no-piece-selected': 'Kein Stein ausgewählt',
+    'cannot-move-there': 'Kann nicht dorthin ziehen',
+    
+    // Gegenstände
+    'bobomb': 'Bob-omb',
+    'portals': 'Portale',
+    'lightning': 'Blitz',
+    'star': 'Stern',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornado',
+    'banana': 'Banane',
+    'phoenix': 'Phönixfeder',
+    'cursor': 'Sims-Cursor',
+    'heart': 'Herz',
+    'sandglass': 'Sanduhr',
+    'mask': 'Majoras Maske',
+    'ocarina': 'Ocarina der Zeit',
+    
+    // Gegenstandsbeschreibungen
+    'bobomb-desc': 'Marios explosive Bombe! Platziert eine Bombe auf einem leeren Feld, die nächsten Zug explodiert.',
+    'portals-desc': 'Sofortige Teleportation! Erstellt zwei verbundene Portale auf dem Brett.',
+    'lightning-desc': 'Zerstörerischer Blitz! Eliminiert sofort eine Figur deiner Wahl.',
+    'star-desc': 'Mystische Offenbarung! Zeigt alle versteckten Figuren auf dem Brett für 3 Züge.',
+    'tetrimino-desc': 'Baustein! Platziert eine Tetrimino-Wand auf dem Brett.',
+    'tornado-desc': 'Zerstörerischer Wind! Teleportiert eine Figur zu einer zufälligen Position auf dem Brett.',
+    'banana-desc': 'Rutschiger Fallen! Platziert eine Banane auf einem leeren Feld, die die nächste Figur, die dort landet, zum Rutschen bringt.',
+    'phoenix-desc': 'Wiedergeburt! Erweckt eine verlorene Figur deiner Fraktion wieder zum Leben.',
+    'cursor-desc': 'Totale Kontrolle! Übernimmt die Kontrolle über eine gegnerische Figur für 1 Zug.',
+    'heart-desc': 'Extra Leben! Schützt eine Figur vor dem Schlagen für 2 Züge.',
+    'sandglass-desc': 'Die Zeit des Gegners zerbröckelt! Reduziert den Timer aller Gegner basierend auf der Brettgröße.',
+    'mask-desc': 'Majoras verfluchte Maske! Zwingt einen Gegner, eine bestimmte Figur in seinem nächsten Zug zu spielen.',
+    'ocarina-desc': 'Hyrules magisches Instrument! Verwandelt eine Figur permanent in einen Springer (L-förmige Züge).',
+    
+    // Gegenstandsnachrichten
+    'item-used': 'Gegenstand verwendet',
+    'item-charging': 'Gegenstand lädt',
+    'select-target': 'Ziel auswählen',
+    'select-position': 'Position auswählen',
+    'not-activated': 'nicht aktiviert',
+    
+    // Navigation
+    'play': 'Spielen',
+    'pieces': 'Figuren',
+    'rules': 'Regeln',
+    'items': 'Gegenstände',
+    'credits': 'Credits',
+    'movements': 'Bewegungen',
+    'login': 'Anmelden',
+    
+    // Seiten
+    'available-pieces': 'Verfügbare Figuren',
+    'available-items': 'Verfügbare Gegenstände',
+    'game-rules': 'Spielregeln',
+    'movement-demos': 'Bewegungsdemonstrationen',
+    'sort-by': 'Sortieren nach',
+    'strength': 'Stärke',
+    'editor': 'Herausgeber',
+    'universe': 'Universum',
+    'all': 'Alle',
+    
+    // Spielregeln
+    'game-objective': 'Spielziel',
+    'game-objective-desc': 'Video Games Battle ist ein Strategiespiel, das vom Schach inspiriert ist, bei dem Spieler mit ikonischen Charakteren aus dem Videospieluniversum kämpfen. Das Ziel ist es, den gegnerischen König zu fangen, um den Spieler zu eliminieren und der letzte Überlebende zu werden.',
+    'victory': 'Sieg',
+    'victory-desc': 'Der letzte lebende Spieler sein, indem man alle gegnerischen Könige fängt oder alle Gegner durch Timeout eliminiert.',
+    'piece-types': 'Figurentypen',
+    'king': 'König',
+    'king-desc': 'Wichtigste Figur jedes Spielers. Bewegt sich ein Feld in alle Richtungen. Wenn dein König gefangen wird, bist du aus dem Spiel eliminiert.',
+    'special-pieces': 'Spezielle Figuren',
+    'special-pieces-desc': 'Jede Fraktion verfügt über einzigartige Charaktere mit spezifischen Bewegungen und Fähigkeiten:',
+    'movements': 'Bewegungen',
+    'movements-desc': 'Jede Figur hat ihre eigenen Bewegungsregeln, definiert durch:',
+    'directions': 'Richtungen',
+    'directions-desc': 'Angrenzende zugängliche Felder',
+    'range': 'Reichweite',
+    'range-desc': 'Maximale Anzahl von Feldern in gerader Linie',
+    'specialties': 'Spezialitäten',
+    'specialties-desc': 'Einzigartige Fähigkeiten (Sprung, Flug, etc.)',
+    'object-system': 'Gegenstandssystem',
+    'acquisition': 'Erwerb',
+    'acquisition-desc': 'Gegenstände erscheinen zufällig auf dem Brett in Kisten. Jeder Spieler kann maximal 3 in Reserve sammeln.',
+    'usage': 'Verwendung',
+    'usage-desc': 'Nur ein Gegenstand kann pro Zug verwendet werden. Gegenstände haben verschiedene Effekte:',
+    'time-sand': 'Zeitsand',
+    'time-sand-desc': 'Reduziert die Zeit der Gegner',
+    'majora-mask': 'Majoras Maske',
+    'majora-mask-desc': 'Zwingt einen Gegner, eine bestimmte Figur zu spielen',
+    'time-ocarina': 'Ocarina der Zeit',
+    'time-ocarina-desc': 'Verwandelt eine Figur in einen Springer',
+    'bomb': 'Bombe',
+    'bomb-desc': 'Explodiert und beschädigt angrenzende Figuren',
+    'star': 'Stern',
+    'star-desc': 'Enthüllt versteckte Figuren',
+    'weight-desc': 'Jeder Gegenstand hat ein anderes Gewicht, das die Wahrscheinlichkeit des Erscheinens beeinflusst. Je höher das Gewicht, desto seltener ist der Gegenstand.',
+    
+    // Figuren
+    'cost': 'Kosten',
+    'range': 'Reichweite',
+    'movements': 'Bewegungen',
+    'movement-demo': 'Bewegungsdemo',
+    'tier-1': 'Schwach',
+    'tier-2': 'Mittel',
+    'tier-3': 'Stark',
+    'tier-4': 'Sehr Stark',
+    'tier-5': 'Legendär',
+    'weight': 'Gewicht',
+    
+    // Werbung
+    'advertisements': 'Werbung',
+    'ad-1': 'Anzeige 1',
+    'ad-2': 'Anzeige 2',
+    'ad-update': 'Aktualisierung alle 5 Aktionen',
+    
+    // Sprachen
+    'language': 'Sprache',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português'
+  },
+  
+  pt: {
+    // Interface principal
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Tabuleiro',
+    'tagline': 'Esqueça o xadrez clássico, aqui os heróis dos videogames fazem as regras!',
+    'select-players': 'Número de jogadores',
+    'select-board-size': 'Tamanho do tabuleiro',
+    'start-game': 'Iniciar jogo',
+    'player': 'Jogador',
+    'players': 'jogadores',
+    'faction': 'Facção',
+    'money': 'Pontos',
+    'team': 'Equipe',
+    'next-player': 'Próximo jogador',
+    'previous-player': 'Jogador anterior',
+    'finish-selection': 'Terminar seleção',
+    'start-game-button': 'Iniciar jogo',
+    
+    // Tamanhos de tabuleiro
+    'board-small': '9x9 (Pequeno)',
+    'board-medium': '11x11 (Médio)',
+    'board-large': '15x15 (Grande)',
+    
+    // Facções
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Reis
+    'king-nintendo': 'Rei Nintendo',
+    'king-playstation': 'Rei PlayStation',
+    'king-sega': 'Rei SEGA',
+    'king-xbox': 'Rei Xbox',
+    
+    // Mensagens de jogo
+    'game-start': 'Jogo começa!',
+    'your-turn': 'Sua vez',
+    'player-turn': 'Vez do Jogador',
+    'pieces-in-play': 'Peças em jogo',
+    'rules': 'Regras',
+    'captured-pieces': 'Peças capturadas',
+    'items': 'Itens',
+    'timer': 'Cronômetro',
+    
+    // Ações
+    'move': 'Mover',
+    'capture': 'Capturar',
+    'use-item': 'Usar item',
+    'end-turn': 'Terminar turno',
+    'restart': 'Reiniciar',
+    'quit': 'Sair',
+    
+    // Mensagens de erro
+    'invalid-move': 'Movimento inválido',
+    'not-your-turn': 'Não é sua vez',
+    'no-piece-selected': 'Nenhuma peça selecionada',
+    'cannot-move-there': 'Não pode mover para lá',
+    
+    // Itens
+    'bobomb': 'Bob-omb',
+    'portals': 'Portais',
+    'lightning': 'Raio',
+    'star': 'Estrela',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornado',
+    'banana': 'Banana',
+    'phoenix': 'Pena de Fênix',
+    'cursor': 'Cursor Sims',
+    'heart': 'Coração',
+    'sandglass': 'Ampulheta',
+    'mask': 'Máscara de Majora',
+    'ocarina': 'Ocarina do Tempo',
+    
+    // Descrições dos itens
+    'bobomb-desc': 'Bomba explosiva do Mario! Coloca uma bomba em uma casa vazia que explodirá no próximo turno.',
+    'portals-desc': 'Teletransporte instantâneo! Cria dois portais conectados no tabuleiro.',
+    'lightning-desc': 'Raio destrutivo! Elimina instantaneamente uma peça de sua escolha.',
+    'star-desc': 'Revelação mística! Revela todas as peças escondidas no tabuleiro por 3 turnos.',
+    'tetrimino-desc': 'Bloco de construção! Coloca uma parede Tetrimino no tabuleiro.',
+    'tornado-desc': 'Vento destrutivo! Teletransporta uma peça para uma posição aleatória no tabuleiro.',
+    'banana-desc': 'Armadilha escorregadia! Coloca uma banana em uma casa vazia que fará a próxima peça que pousar lá escorregar.',
+    'phoenix-desc': 'Renascimento! Ressuscita uma peça perdida de sua facção.',
+    'cursor-desc': 'Controle total! Assume o controle de uma peça inimiga por 1 turno.',
+    'heart-desc': 'Vida extra! Protege uma peça da captura por 2 turnos.',
+    'sandglass-desc': 'O tempo do inimigo se desfaz! Reduz o cronômetro de todos os oponentes baseado no tamanho do tabuleiro.',
+    'mask-desc': 'A máscara amaldiçoada de Termina! Força um oponente a jogar uma peça específica em seu próximo turno.',
+    'ocarina-desc': 'O instrumento mágico de Hyrule! Transforma permanentemente uma peça em cavalo (movimentos em L).',
+    
+    // Mensagens de itens
+    'item-used': 'Item usado',
+    'item-charging': 'Item carregando',
+    'select-target': 'Selecione um alvo',
+    'select-position': 'Selecione uma posição',
+    'not-activated': 'não ativado',
+    
+    // Navegação
+    'play': 'Jogar',
+    'pieces': 'Peças',
+    'rules': 'Regras',
+    'items': 'Itens',
+    'credits': 'Créditos',
+    'movements': 'Movimentos',
+    'login': 'Entrar',
+    
+    // Páginas
+    'available-pieces': 'Peças Disponíveis',
+    'available-items': 'Itens Disponíveis',
+    'game-rules': 'Regras do Jogo',
+    'movement-demos': 'Demonstrações de Movimentos',
+    'sort-by': 'Ordenar por',
+    'strength': 'Força',
+    'editor': 'Editor',
+    'universe': 'Universo',
+    'all': 'Todos',
+    
+    // Regras do Jogo
+    'game-objective': 'Objetivo do Jogo',
+    'game-objective-desc': 'Video Games Battle é um jogo de estratégia inspirado no xadrez onde os jogadores se enfrentam com personagens icônicos do universo dos videogames. O objetivo é capturar o rei adversário para eliminar o jogador e se tornar o último sobrevivente.',
+    'victory': 'Vitória',
+    'victory-desc': 'Ser o último jogador vivo capturando todos os reis adversários ou eliminando todos os oponentes por tempo esgotado.',
+    'piece-types': 'Tipos de Peças',
+    'king': 'Rei',
+    'king-desc': 'Peça mais importante de cada jogador. Move-se uma casa em todas as direções. Se seu rei for capturado, você é eliminado da partida.',
+    'special-pieces': 'Peças Especiais',
+    'special-pieces-desc': 'Cada facção possui personagens únicos com movimentos e habilidades específicas:',
+    'movements': 'Movimentos',
+    'movements-desc': 'Cada peça tem suas próprias regras de movimento definidas por:',
+    'directions': 'Direções',
+    'directions-desc': 'Casas adjacentes acessíveis',
+    'range': 'Alcance',
+    'range-desc': 'Número máximo de casas em linha reta',
+    'specialties': 'Especialidades',
+    'specialties-desc': 'Habilidades únicas (pulo, voo, etc.)',
+    'object-system': 'Sistema de Objetos',
+    'acquisition': 'Aquisição',
+    'acquisition-desc': 'Objetos aparecem aleatoriamente no tabuleiro em caixas. Cada jogador pode coletar no máximo 3 em reserva.',
+    'usage': 'Uso',
+    'usage-desc': 'Apenas um objeto pode ser usado por turno. Os objetos têm efeitos variados:',
+    'time-sand': 'Areia do Tempo',
+    'time-sand-desc': 'Reduz o tempo dos adversários',
+    'majora-mask': 'Máscara de Majora',
+    'majora-mask-desc': 'Força um adversário a jogar uma peça específica',
+    'time-ocarina': 'Ocarina do Tempo',
+    'time-ocarina-desc': 'Transforma uma peça em cavalo',
+    'bomb': 'Bomba',
+    'bomb-desc': 'Explode e danifica peças adjacentes',
+    'star': 'Estrela',
+    'star-desc': 'Revela peças ocultas',
+    'weight-desc': 'Cada objeto tem um peso diferente que influencia a probabilidade de aparecimento. Quanto maior o peso, mais raro é o objeto.',
+    
+    // Peças
+    'cost': 'Custo',
+    'range': 'Alcance',
+    'movements': 'Movimentos',
+    'movement-demo': 'Demo de Movimento',
+    'tier-1': 'Fraco',
+    'tier-2': 'Médio',
+    'tier-3': 'Forte',
+    'tier-4': 'Muito Forte',
+    'tier-5': 'Lendário',
+    'weight': 'Peso',
+    
+    // Anúncios
+    'advertisements': 'Anúncios',
+    'ad-1': 'Anúncio 1',
+    'ad-2': 'Anúncio 2',
+    'ad-update': 'Atualização a cada 5 ações',
+    
+    // Idiomas
+    'language': 'Idioma',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português'
+  },
+  
+  it: {
+    // Interfaccia principale
+    'game-title': 'Video Games Battle',
+    'page-title': 'Chesstendo - Draft + Scacchiera',
+    'tagline': 'Dimentica gli scacchi classici, qui gli eroi dei videogiochi fanno le regole!',
+    'select-players': 'Numero di giocatori',
+    'select-board-size': 'Dimensione della scacchiera',
+    'start-game': 'Inizia partita',
+    'player': 'Giocatore',
+    'players': 'giocatori',
+    'faction': 'Fazione',
+    'money': 'Punti',
+    'team': 'Squadra',
+    'next-player': 'Prossimo giocatore',
+    'previous-player': 'Giocatore precedente',
+    'finish-selection': 'Termina selezione',
+    'start-game-button': 'Inizia partita',
+    
+    // Dimensioni scacchiera
+    'board-small': '9x9 (Piccola)',
+    'board-medium': '11x11 (Media)',
+    'board-large': '15x15 (Grande)',
+    
+    // Fazioni
+    'nintendo': 'Nintendo',
+    'sega': 'SEGA',
+    'playstation': 'PlayStation',
+    'xbox': 'Xbox',
+    
+    // Re
+    'king-nintendo': 'Re Nintendo',
+    'king-playstation': 'Re PlayStation',
+    'king-sega': 'Re SEGA',
+    'king-xbox': 'Re Xbox',
+    
+    // Messaggi di gioco
+    'game-start': 'La partita inizia!',
+    'your-turn': 'Il tuo turno',
+    'player-turn': 'Turno del Giocatore',
+    'pieces-in-play': 'Pezzi in gioco',
+    'rules': 'Regole',
+    'captured-pieces': 'Pezzi catturati',
+    'items': 'Oggetti',
+    'timer': 'Timer',
+    
+    // Azioni
+    'move': 'Muovi',
+    'capture': 'Cattura',
+    'use-item': 'Usa oggetto',
+    'end-turn': 'Termina turno',
+    'restart': 'Riavvia',
+    'quit': 'Esci',
+    
+    // Messaggi di errore
+    'invalid-move': 'Mossa non valida',
+    'not-your-turn': 'Non è il tuo turno',
+    'no-piece-selected': 'Nessun pezzo selezionato',
+    'cannot-move-there': 'Non puoi muoverti lì',
+    
+    // Oggetti
+    'bobomb': 'Bob-omb',
+    'portals': 'Portali',
+    'lightning': 'Fulmine',
+    'star': 'Stella',
+    'tetrimino': 'Tetrimino',
+    'tornado': 'Tornado',
+    'banana': 'Banana',
+    'phoenix': 'Piuma di Fenice',
+    'cursor': 'Cursore Sims',
+    'heart': 'Cuore',
+    'sandglass': 'Clessidra',
+    'mask': 'Maschera di Majora',
+    'ocarina': 'Ocarina del Tempo',
+    
+    // Descrizioni oggetti
+    'bobomb-desc': 'Bomba esplosiva di Mario! Piazzare una bomba su una casella vuota che esploderà al prossimo turno.',
+    'portals-desc': 'Teletrasporto istantaneo! Crea due portali collegati sulla scacchiera.',
+    'lightning-desc': 'Fulmine distruttivo! Elimina istantaneamente un pezzo a tua scelta.',
+    'star-desc': 'Rivelazione mistica! Rivela tutti i pezzi nascosti sulla scacchiera per 3 turni.',
+    'tetrimino-desc': 'Blocco da costruzione! Piazzare un muro Tetrimino sulla scacchiera.',
+    'tornado-desc': 'Vento distruttivo! Teletrasporta un pezzo in una posizione casuale sulla scacchiera.',
+    'banana-desc': 'Trappola scivolosa! Piazzare una banana su una casella vuota che farà scivolare il prossimo pezzo che ci atterra.',
+    'phoenix-desc': 'Rinascita! Resuscita un pezzo perso della tua fazione.',
+    'cursor-desc': 'Controllo totale! Prendi il controllo di un pezzo nemico per 1 turno.',
+    'heart-desc': 'Vita extra! Protegge un pezzo dalla cattura per 2 turni.',
+    'sandglass-desc': 'Il tempo del nemico si sgretola! Riduce il timer di tutti gli avversari in base alla dimensione della scacchiera.',
+    'mask-desc': 'La maschera maledetta di Termina! Forza un avversario a giocare un pezzo specifico nel suo prossimo turno.',
+    'ocarina-desc': 'Lo strumento magico di Hyrule! Trasforma permanentemente un pezzo in cavallo (mosse a L).',
+    
+    // Messaggi oggetti
+    'item-used': 'Oggetto usato',
+    'item-charging': 'Oggetto in carica',
+    'select-target': 'Seleziona un bersaglio',
+    'select-position': 'Seleziona una posizione',
+    'not-activated': 'non attivato',
+    
+    // Navigazione
+    'play': 'Gioca',
+    'pieces': 'Pezzi',
+    'rules': 'Regole',
+    'items': 'Oggetti',
+    'credits': 'Crediti',
+    'movements': 'Movimenti',
+    'login': 'Accedi',
+    
+    // Pagine
+    'available-pieces': 'Pezzi Disponibili',
+    'available-items': 'Oggetti Disponibili',
+    'game-rules': 'Regole del Gioco',
+    'movement-demos': 'Dimostrazioni di Movimenti',
+    'sort-by': 'Ordina per',
+    'strength': 'Forza',
+    'editor': 'Editore',
+    'universe': 'Universo',
+    'all': 'Tutti',
+    
+    // Regole del Gioco
+    'game-objective': 'Obiettivo del Gioco',
+    'game-objective-desc': 'Video Games Battle è un gioco di strategia ispirato agli scacchi dove i giocatori si affrontano con personaggi iconici dell\'universo videoludico. L\'obiettivo è catturare il re avversario per eliminare il giocatore e diventare l\'ultimo sopravvissuto.',
+    'victory': 'Vittoria',
+    'victory-desc': 'Essere l\'ultimo giocatore vivo catturando tutti i re avversari o eliminando tutti gli avversari per timeout.',
+    'piece-types': 'Tipi di Pezzi',
+    'king': 'Re',
+    'king-desc': 'Pezzo più importante di ogni giocatore. Si muove di una casella in tutte le direzioni. Se il tuo re viene catturato, sei eliminato dalla partita.',
+    'special-pieces': 'Pezzi Speciali',
+    'special-pieces-desc': 'Ogni fazione dispone di personaggi unici con movimenti e capacità specifiche:',
+    'movements': 'Movimenti',
+    'movements-desc': 'Ogni pezzo ha le sue regole di movimento definite da:',
+    'directions': 'Direzioni',
+    'directions-desc': 'Caselle adiacenti accessibili',
+    'range': 'Gittata',
+    'range-desc': 'Numero massimo di caselle in linea retta',
+    'specialties': 'Specialità',
+    'specialties-desc': 'Capacità uniche (salto, volo, ecc.)',
+    'object-system': 'Sistema di Oggetti',
+    'acquisition': 'Acquisizione',
+    'acquisition-desc': 'Gli oggetti appaiono casualmente sulla scacchiera in casse. Ogni giocatore può raccoglierne un massimo di 3 in riserva.',
+    'usage': 'Utilizzo',
+    'usage-desc': 'Solo un oggetto può essere usato per turno. Gli oggetti hanno effetti vari:',
+    'time-sand': 'Sabbia del Tempo',
+    'time-sand-desc': 'Riduce il tempo degli avversari',
+    'majora-mask': 'Maschera di Majora',
+    'majora-mask-desc': 'Forza un avversario a giocare un pezzo specifico',
+    'time-ocarina': 'Ocarina del Tempo',
+    'time-ocarina-desc': 'Trasforma un pezzo in cavallo',
+    'bomb': 'Bomba',
+    'bomb-desc': 'Esplode e danneggia i pezzi adiacenti',
+    'star': 'Stella',
+    'star-desc': 'Rivela i pezzi nascosti',
+    'weight-desc': 'Ogni oggetto ha un peso diverso che influenza la probabilità di apparizione. Più alto è il peso, più raro è l\'oggetto.',
+    
+    // Pezzi
+    'cost': 'Costo',
+    'range': 'Gittata',
+    'movements': 'Movimenti',
+    'movement-demo': 'Demo di Movimento',
+    'tier-1': 'Debole',
+    'tier-2': 'Medio',
+    'tier-3': 'Forte',
+    'tier-4': 'Molto Forte',
+    'tier-5': 'Leggendario',
+    'weight': 'Peso',
+    
+    // Pubblicità
+    'advertisements': 'Pubblicità',
+    'ad-1': 'Annuncio 1',
+    'ad-2': 'Annuncio 2',
+    'ad-update': 'Aggiornamento ogni 5 azioni',
+    
+    // Lingue
+    'language': 'Lingua',
+    'french': 'Français',
+    'english': 'English',
+    'spanish': 'Español',
+    'german': 'Deutsch',
+    'portuguese': 'Português',
+    'italian': 'Italiano'
+  }
+};
+
+// Détection de la langue du navigateur
+function detectLanguage() {
+  // 1. Vérifier le localStorage pour une langue sauvegardée
+  const savedLanguage = localStorage.getItem('vgb-language');
+  if (savedLanguage && translations[savedLanguage]) {
+    return savedLanguage;
+  }
+  
+  // 2. Détecter la langue du navigateur
+  const browserLanguage = navigator.language || navigator.userLanguage;
+  const languageCode = browserLanguage.split('-')[0].toLowerCase();
+  
+  // 3. Vérifier si la langue est supportée
+  if (translations[languageCode]) {
+    return languageCode;
+  }
+  
+  // 4. Détecter par géolocalisation (pays francophones)
+  const francophoneCountries = ['FR', 'BE', 'CH', 'CA', 'LU', 'MC', 'SN', 'CI', 'ML', 'BF', 'NE', 'TD', 'MG', 'CM', 'CD', 'CF', 'GA', 'CG', 'BI', 'RW', 'DJ', 'KM', 'SC', 'VU', 'NC', 'PF', 'WF', 'YT', 'RE', 'MQ', 'GP', 'GF', 'BL', 'MF', 'PM'];
+  
+  // 5. Fallback par défaut
+  return 'fr'; // Français par défaut
+}
+
+// Fonction de traduction
+function t(key, ...args) {
+  const currentLanguage = window.currentLanguage || 'fr';
+  let translation = translations[currentLanguage]?.[key] || translations['fr'][key] || key;
+  
+  // Remplacer les arguments si fournis
+  if (args.length > 0) {
+    args.forEach((arg, index) => {
+      translation = translation.replace(`{${index}}`, arg);
+    });
+  }
+  
+  return translation;
+}
+
+// Fonction pour traduire les noms des rois
+function translateKingName(originalName) {
+  const currentLanguage = window.currentLanguage || 'fr';
+  
+  // Mapper les noms originaux aux clés de traduction
+  const kingMapping = {
+    'Roi Nintendo': 'king-nintendo',
+    'Roi PlayStation': 'king-playstation',
+    'Roi SEGA': 'king-sega',
+    'Roi Xbox': 'king-xbox'
+  };
+  
+  const translationKey = kingMapping[originalName];
+  if (translationKey) {
+    return t(translationKey);
+  }
+  
+  return originalName;
+}
+
+// Fonction pour obtenir les noms par défaut des joueurs selon la langue
+function getDefaultPlayerNames(count) {
+  const names = [];
+  for (let i = 1; i <= count; i++) {
+    names.push(`${t('player')} ${i}`);
+  }
+  return names;
+}
+
+// Changer de langue
+function changeLanguage(languageCode) {
+  if (translations[languageCode]) {
+    window.currentLanguage = languageCode;
+    localStorage.setItem('vgb-language', languageCode);
+    updateAllTexts();
+    updatePlayerNames(true); // Forcer la mise à jour des noms
+    
+    // Mettre à jour le sélecteur de langue dans le header
+    updateHeaderLanguageSelector();
+    
+    // Mettre à jour les éléments dynamiques selon la page
+    updateDynamicContent();
+  }
+}
+
+// Mettre à jour le contenu dynamique selon la page
+function updateDynamicContent() {
+  // Page des pièces
+  if (typeof displayPieces === 'function' && typeof applyFiltersAndSort === 'function') {
+    applyFiltersAndSort();
+  }
+  
+  // Page des objets
+  if (typeof generateItemsHTML === 'function') {
+    generateItemsHTML();
+  }
+  
+  // Page principale (jeu)
+  if (typeof updateTeamsDisplay === 'function') {
+    updateTeamsDisplay();
+  }
+}
+
+// Mettre à jour les noms des joueurs selon la langue
+function updatePlayerNames(forceUpdate = false) {
+  if (typeof playerNames !== 'undefined' && playerNames.length > 0) {
+    const newNames = getDefaultPlayerNames(playerNames.length);
+    for (let i = 0; i < playerNames.length; i++) {
+      // Mettre à jour si c'est forcé ou si le nom est encore le nom par défaut
+      if (forceUpdate || playerNames[i].includes('Joueur') || playerNames[i].includes('Player') || 
+          playerNames[i].includes('Jugador') || playerNames[i].includes('Spieler') || 
+          playerNames[i].includes('Jogador') || playerNames[i].includes('Giocatore')) {
+        playerNames[i] = newNames[i];
+      }
+    }
+    
+    // Mettre à jour l'affichage si on est en mode sélection de personnages
+    if (typeof updateTeamsDisplay === 'function') {
+      updateTeamsDisplay();
+    }
+    
+    // Mettre à jour l'input du nom du joueur actuel
+    if (typeof updatePlayerInfo === 'function') {
+      updatePlayerInfo();
+    }
+  }
+}
+
+// Mettre à jour le sélecteur de langue dans le header
+function updateHeaderLanguageSelector() {
+  const currentFlag = document.getElementById('current-flag');
+  const languageDropdown = document.getElementById('language-dropdown');
+  
+  if (!currentFlag || !languageDropdown) {
+    return;
+  }
+  
+  // Mapper les langues aux drapeaux
+  const languageFlags = {
+    'fr': '🇫🇷',
+    'en': '🇬🇧',
+    'es': '🇪🇸',
+    'de': '🇩🇪',
+    'pt': '🇵🇹',
+    'it': '🇮🇹'
+  };
+  
+  // Mettre à jour le drapeau actuel
+  currentFlag.textContent = languageFlags[window.currentLanguage] || '🇫🇷';
+  
+  // Mettre à jour les options actives
+  const langOptions = languageDropdown.querySelectorAll('.lang-option');
+  langOptions.forEach(option => {
+    option.classList.remove('active');
+    if (option.getAttribute('data-lang') === window.currentLanguage) {
+      option.classList.add('active');
+    }
+  });
+}
+
+// Mettre à jour tous les textes de la page
+function updateAllTexts() {
+  // Mettre à jour le titre de la page
+  const pageTitle = document.querySelector('title[data-t]');
+  if (pageTitle) {
+    const key = pageTitle.getAttribute('data-t');
+    pageTitle.textContent = t(key);
+  }
+  
+  // Mettre à jour les éléments avec data-t
+  document.querySelectorAll('[data-t]').forEach(element => {
+    const key = element.getAttribute('data-t');
+    const text = t(key);
+    
+    if (element.tagName === 'INPUT' && element.type === 'text') {
+      element.placeholder = text;
+    } else if (element.tagName === 'SELECT') {
+      // Pour les selects, mettre à jour les options
+      const options = element.querySelectorAll('option');
+      options.forEach(option => {
+        const optionKey = option.getAttribute('data-t');
+        if (optionKey) {
+          option.textContent = t(optionKey);
+        }
+      });
+    } else if (element.tagName !== 'TITLE') {
+      element.textContent = text;
+    }
+  });
+  
+  // Mettre à jour les attributs title
+  document.querySelectorAll('[data-t-title]').forEach(element => {
+    const key = element.getAttribute('data-t-title');
+    element.title = t(key);
+  });
+  
+  // Mettre à jour les attributs alt
+  document.querySelectorAll('[data-t-alt]').forEach(element => {
+    const key = element.getAttribute('data-t-alt');
+    element.alt = t(key);
+  });
+}
+
+// Initialiser le système de traduction
+function initTranslation() {
+  window.currentLanguage = detectLanguage();
+  updateAllTexts();
+  
+  // Initialiser les noms des joueurs
+  if (typeof playerNames !== 'undefined' && playerNames.length > 0) {
+    playerNames = getDefaultPlayerNames(playerNames.length);
+  }
+  
+  // Initialiser le sélecteur de langue dans le header
+  // Attendre que le header soit injecté
+  const initHeader = () => {
+    if (document.getElementById('current-lang-btn')) {
+      initHeaderLanguageSelector();
+    } else {
+      setTimeout(initHeader, 100);
+    }
+  };
+  initHeader();
+}
+
+// Initialiser le sélecteur de langue dans le header
+function initHeaderLanguageSelector() {
+  const currentLangBtn = document.getElementById('current-lang-btn');
+  const languageDropdown = document.getElementById('language-dropdown');
+  const currentFlag = document.getElementById('current-flag');
+  
+  if (!currentLangBtn || !languageDropdown || !currentFlag) {
+    return;
+  }
+  
+  // Éviter les doublons d'event listeners
+  if (currentLangBtn.hasAttribute('data-lang-initialized')) {
+    return;
+  }
+  currentLangBtn.setAttribute('data-lang-initialized', 'true');
+  
+  // Mapper les langues aux drapeaux
+  const languageFlags = {
+    'fr': '🇫🇷',
+    'en': '🇬🇧',
+    'es': '🇪🇸',
+    'de': '🇩🇪',
+    'pt': '🇵🇹',
+    'it': '🇮🇹'
+  };
+  
+  // Mettre à jour le drapeau actuel
+  currentFlag.textContent = languageFlags[window.currentLanguage] || '🇫🇷';
+  
+  // Gérer l'ouverture/fermeture du dropdown
+  currentLangBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isVisible = languageDropdown.style.display !== 'none';
+    languageDropdown.style.display = isVisible ? 'none' : 'block';
+  });
+  
+  // Gérer la sélection d'une langue
+  const langOptions = languageDropdown.querySelectorAll('.lang-option');
+  langOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const selectedLang = option.getAttribute('data-lang');
+      changeLanguage(selectedLang);
+      languageDropdown.style.display = 'none';
+    });
+    
+    // Marquer l'option active
+    if (option.getAttribute('data-lang') === window.currentLanguage) {
+      option.classList.add('active');
+    }
+  });
+  
+  // Fermer le dropdown en cliquant ailleurs
+  document.addEventListener('click', (e) => {
+    if (!currentLangBtn.contains(e.target) && !languageDropdown.contains(e.target)) {
+      languageDropdown.style.display = 'none';
+    }
+  });
+}
+
+// Export pour utilisation dans d'autres fichiers
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    translations,
+    detectLanguage,
+    t,
+    changeLanguage,
+    updateAllTexts,
+    initTranslation
+  };
+} else {
+  // Export global pour le navigateur
+  window.translations = translations;
+  window.detectLanguage = detectLanguage;
+  window.t = t;
+  window.changeLanguage = changeLanguage;
+  window.updateAllTexts = updateAllTexts;
+  window.initTranslation = initTranslation;
+  window.translateKingName = translateKingName;
+  window.getDefaultPlayerNames = getDefaultPlayerNames;
+  window.updatePlayerNames = updatePlayerNames;
+  window.updateDynamicContent = updateDynamicContent;
+  
+  // Fonction de test pour vérifier les traductions
+  window.testTranslations = function() {
+    console.log('=== Test des traductions ===');
+    console.log('Langue actuelle:', window.currentLanguage);
+    console.log('Noms des joueurs:', typeof playerNames !== 'undefined' ? playerNames : 'Non défini');
+    console.log('Traduction "player":', t('player'));
+    console.log('Traduction "players":', t('players'));
+    console.log('Noms par défaut:', getDefaultPlayerNames(4));
+    console.log('Roi Nintendo:', translateKingName('Roi Nintendo'));
+    
+    // Test de changement de langue
+    console.log('=== Test changement de langue ===');
+    console.log('Avant changement:', playerNames);
+    updatePlayerNames(true);
+    console.log('Après changement:', playerNames);
+  };
+}

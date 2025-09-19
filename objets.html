@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="public/css/header.css" />
 <link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/global.css" />
 <style>
 /* Styles spécifiques à la page des objets */
 .items-grid {
@@ -100,7 +101,7 @@
 <div id="header-root"></div>
 
 <main class="site-main">
-  <h1 class="page-title">🎁 <span class="title-text">Objets disponibles</span> 🎁</h1>
+  <h1 class="page-title">🎁 <span class="title-text" data-t="available-items">Objets disponibles</span> 🎁</h1>
   
   <div class="note">
     <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
@@ -120,6 +121,7 @@
   </div>
 </main>
 
+<script src="public/js/translations.js"></script>
 <script src="public/js/header.js"></script>
 <script src="public/data/items.js"></script>
 <script>
@@ -128,13 +130,43 @@
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   VGBHeader.injectHeader('objets');
-  generateItemsHTML();
+  
+  // Attendre que les traductions soient chargées
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      
+      // Générer le HTML des objets
+      generateItemsHTML();
+      
+      // Forcer la mise à jour des traductions
+      setTimeout(() => {
+        if (typeof updateAllTexts === 'function') {
+          console.log('Mise à jour des traductions...');
+          updateAllTexts();
+        } else {
+          console.error('updateAllTexts non disponible');
+        }
+      }, 200);
+    } else {
+      console.error('initTranslation non disponible');
+      setTimeout(initTranslations, 100);
+    }
+  };
+  
+  initTranslations();
 });
 
 // Fonction pour générer le HTML des objets dynamiquement
 function generateItemsHTML() {
   const itemsGrid = document.querySelector('.items-grid');
   if (!itemsGrid) return;
+  
+  // Vérifier que la fonction t est disponible
+  if (typeof t !== 'function') {
+    console.error('Fonction t() non disponible');
+    return;
+  }
   
   itemsGrid.innerHTML = '';
   
@@ -143,14 +175,24 @@ function generateItemsHTML() {
     itemCard.className = 'item-card';
     
     itemCard.innerHTML = `
-      <h2>${item.name} <span class="pill">Poids: ${item.weight}</span></h2>
+      <h2>${item.name} <span class="pill" data-t="weight">Poids: ${item.weight}</span></h2>
       <img src="${item.image}" alt="${item.name}" />
-      <div class="description">${item.description}</div>
-      <div class="details">${item.details}</div>
+      <div class="description" data-t="${item.description}">${t(item.description)}</div>
+      <div class="details" data-t="${item.details}">${t(item.details)}</div>
     `;
     
     itemsGrid.appendChild(itemCard);
   });
+  
+  // Mettre à jour les traductions des éléments générés dynamiquement
+  setTimeout(() => {
+    if (typeof updateAllTexts === 'function') {
+      console.log('Mise à jour des traductions des objets...');
+      updateAllTexts();
+    } else {
+      console.error('updateAllTexts non disponible dans generateItemsHTML');
+    }
+  }, 100);
 }
 </script>
 </body>

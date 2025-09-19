@@ -4,8 +4,9 @@
 <meta charset="UTF-8" />
 <title>Chesstendo - Crédits</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="public/css/header.css" />
-  <link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/header.css" />
+<link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/global.css" />
   <style>
   /* Styles spécifiques à la page crédits */
   
@@ -394,10 +395,12 @@
   ⬇️ Faites défiler pour voir tous les crédits ⬇️
 </div>
 
+<script src="public/js/translations.js"></script>
 <script src="public/js/header.js"></script>
 <script>
 // Injecter le header
 VGBHeader.injectHeader('credits');
+initTranslation(); // Initialiser les traductions
 
 // Créer l'effet d'étoiles
 function createStars() {

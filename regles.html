@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="public/css/header.css" />
 <link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/global.css" />
 <style>
 /* Styles spécifiques à la page des règles */
 .rules-section {
@@ -65,25 +66,25 @@
 <div id="header-root"></div>
 
 <main class="site-main">
-  <h1 class="page-title">🎯 <span class="title-text">Règles du jeu</span> 🎯</h1>
+  <h1 class="page-title">🎯 <span class="title-text" data-t="game-rules">Règles du jeu</span> 🎯</h1>
   
   <div class="rules-section">
-    <h2>🎯 Objectif du jeu</h2>
-    <p>Video Games Battle est un jeu de stratégie inspiré des échecs où les joueurs s'affrontent avec des personnages emblématiques de l'univers vidéoludique. L'objectif est de capturer le roi adverse pour éliminer le joueur et devenir le dernier survivant.</p>
+    <h2>🎯 <span data-t="game-objective">Objectif du jeu</span></h2>
+    <p data-t="game-objective-desc">Video Games Battle est un jeu de stratégie inspiré des échecs où les joueurs s'affrontent avec des personnages emblématiques de l'univers vidéoludique. L'objectif est de capturer le roi adverse pour éliminer le joueur et devenir le dernier survivant.</p>
     
     <div class="highlight-box">
-      <strong>Victoire :</strong> Être le dernier joueur en vie en capturant tous les rois adverses ou en éliminant tous les adversaires par timeout.
+      <strong data-t="victory">Victoire :</strong> <span data-t="victory-desc">Être le dernier joueur en vie en capturant tous les rois adverses ou en éliminant tous les adversaires par timeout.</span>
     </div>
   </div>
 
   <div class="rules-section">
-    <h2>♟️ Types de pièces</h2>
+    <h2>♟️ <span data-t="piece-types">Types de pièces</span></h2>
     
-    <h3>Roi</h3>
-    <p>Pièce la plus importante de chaque joueur. Se déplace d'une case dans toutes les directions. Si votre roi est capturé, vous êtes éliminé de la partie.</p>
+    <h3 data-t="king">Roi</h3>
+    <p data-t="king-desc">Pièce la plus importante de chaque joueur. Se déplace d'une case dans toutes les directions. Si votre roi est capturé, vous êtes éliminé de la partie.</p>
     
-    <h3>Pièces spéciales</h3>
-    <p>Chaque faction dispose de personnages uniques avec des mouvements et capacités spécifiques :</p>
+    <h3 data-t="special-pieces">Pièces spéciales</h3>
+    <p data-t="special-pieces-desc">Chaque faction dispose de personnages uniques avec des mouvements et capacités spécifiques :</p>
     <ul>
       <li><strong>Nintendo :</strong> Mario, Link, Samus, Pit</li>
       <li><strong>PlayStation :</strong> Kratos, Nathan Drake, Aloy, Ratchet</li>
@@ -91,33 +92,33 @@
       <li><strong>Xbox :</strong> Master Chief, Marcus Fenix, Banjo, Conker</li>
     </ul>
     
-    <h3>Mouvements</h3>
-    <p>Chaque pièce a ses propres règles de déplacement définies par :</p>
+    <h3 data-t="movements">Mouvements</h3>
+    <p data-t="movements-desc">Chaque pièce a ses propres règles de déplacement définies par :</p>
     <ul>
-      <li><strong>Directions :</strong> Cases adjacentes accessibles</li>
-      <li><strong>Portée :</strong> Nombre maximum de cases en ligne droite</li>
-      <li><strong>Spécialités :</strong> Capacités uniques (saut, vol, etc.)</li>
+      <li><strong data-t="directions">Directions :</strong> <span data-t="directions-desc">Cases adjacentes accessibles</span></li>
+      <li><strong data-t="range">Portée :</strong> <span data-t="range-desc">Nombre maximum de cases en ligne droite</span></li>
+      <li><strong data-t="specialties">Spécialités :</strong> <span data-t="specialties-desc">Capacités uniques (saut, vol, etc.)</span></li>
     </ul>
   </div>
 
   <div class="rules-section">
-    <h2>🎁 Système d'objets</h2>
+    <h2>🎁 <span data-t="object-system">Système d'objets</span></h2>
     
-    <h3>Acquisition</h3>
-    <p>Les objets apparaissent aléatoirement sur le plateau dans des caisses. Chaque joueur peut en ramasser un maximum de 3 en réserve.</p>
+    <h3 data-t="acquisition">Acquisition</h3>
+    <p data-t="acquisition-desc">Les objets apparaissent aléatoirement sur le plateau dans des caisses. Chaque joueur peut en ramasser un maximum de 3 en réserve.</p>
     
-    <h3>Utilisation</h3>
-    <p>Un seul objet peut être utilisé par tour. Les objets ont des effets variés :</p>
+    <h3 data-t="usage">Utilisation</h3>
+    <p data-t="usage-desc">Un seul objet peut être utilisé par tour. Les objets ont des effets variés :</p>
     <ul>
-      <li><strong>Sablière du Temps :</strong> Réduit le temps des adversaires</li>
-      <li><strong>Masque de Majora :</strong> Force un adversaire à jouer une pièce spécifique</li>
-      <li><strong>Ocarina du Temps :</strong> Transforme une pièce en cavalier</li>
-      <li><strong>Bombe :</strong> Explose et endommage les pièces adjacentes</li>
-      <li><strong>Étoile :</strong> Révèle les pièces cachées</li>
+      <li><strong data-t="time-sand">Sablière du Temps :</strong> <span data-t="time-sand-desc">Réduit le temps des adversaires</span></li>
+      <li><strong data-t="majora-mask">Masque de Majora :</strong> <span data-t="majora-mask-desc">Force un adversaire à jouer une pièce spécifique</span></li>
+      <li><strong data-t="time-ocarina">Ocarina du Temps :</strong> <span data-t="time-ocarina-desc">Transforme une pièce en cavalier</span></li>
+      <li><strong data-t="bomb">Bombe :</strong> <span data-t="bomb-desc">Explose et endommage les pièces adjacentes</span></li>
+      <li><strong data-t="star">Étoile :</strong> <span data-t="star-desc">Révèle les pièces cachées</span></li>
     </ul>
     
-    <h3>Poids des objets</h3>
-    <p>Chaque objet a un poids différent qui influence la probabilité d'apparition. Plus le poids est élevé, plus l'objet est rare.</p>
+    <h3 data-t="weight">Poids des objets</h3>
+    <p data-t="weight-desc">Chaque objet a un poids différent qui influence la probabilité d'apparition. Plus le poids est élevé, plus l'objet est rare.</p>
   </div>
 
   <div class="rules-section">
@@ -155,43 +156,66 @@
   </div>
 
   <div class="rules-section">
-    <h2>💡 Conseils stratégiques</h2>
+    <h2>💡 <span data-t="strategic-tips">Conseils stratégiques</span></h2>
     
-    <h3>Protection du roi</h3>
-    <p>Votre roi est votre pièce la plus précieuse. Gardez-le toujours protégé par d'autres pièces et évitez de l'exposer inutilement.</p>
+    <h3 data-t="king-protection">Protection du roi</h3>
+    <p data-t="king-protection-desc">Votre roi est votre pièce la plus précieuse. Gardez-le toujours protégé par d'autres pièces et évitez de l'exposer inutilement.</p>
     
-    <h3>Gestion des objets</h3>
-    <p>Les objets peuvent changer le cours d'une partie. Utilisez-les au bon moment pour maximiser leur impact.</p>
+    <h3 data-t="object-management">Gestion des objets</h3>
+    <p data-t="object-management-desc">Les objets peuvent changer le cours d'une partie. Utilisez-les au bon moment pour maximiser leur impact.</p>
     
-    <h3>Positionnement</h3>
-    <p>Contrôlez le centre du plateau pour avoir plus d'options de déplacement et de capture.</p>
+    <h3 data-t="positioning">Positionnement</h3>
+    <p data-t="positioning-desc">Contrôlez le centre du plateau pour avoir plus d'options de déplacement et de capture.</p>
     
-    <h3>Coopération temporaire</h3>
-    <p>Dans les parties à plusieurs joueurs, n'hésitez pas à former des alliances temporaires contre les menaces communes.</p>
+    <h3 data-t="temporary-cooperation">Coopération temporaire</h3>
+    <p data-t="temporary-cooperation-desc">Dans les parties à plusieurs joueurs, n'hésitez pas à former des alliances temporaires contre les menaces communes.</p>
   </div>
 
   <div class="rules-section">
-    <h2>❓ FAQ</h2>
+    <h2>❓ <span data-t="faq">FAQ</span></h2>
     
-    <h3>Puis-je capturer mes propres pièces ?</h3>
-    <p>Non, vous ne pouvez capturer que les pièces adverses. Vos propres pièces bloquent vos mouvements.</p>
+    <h3 data-t="can-capture-own">Puis-je capturer mes propres pièces ?</h3>
+    <p data-t="can-capture-own-desc">Non, vous ne pouvez capturer que les pièces adverses. Vos propres pièces bloquent vos mouvements.</p>
     
-    <h3>Que se passe-t-il si je n'ai plus de mouvements valides ?</h3>
-    <p>Si vous ne pouvez plus bouger aucune pièce, vous passez votre tour automatiquement.</p>
+    <h3 data-t="no-valid-moves">Que se passe-t-il si je n'ai plus de mouvements valides ?</h3>
+    <p data-t="no-valid-moves-desc">Si vous ne pouvez plus bouger aucune pièce, vous passez votre tour automatiquement.</p>
     
-    <h3>Les objets peuvent-ils être volés ?</h3>
-    <p>Non, les objets sont personnels et ne peuvent pas être pris par d'autres joueurs.</p>
+    <h3 data-t="can-steal-objects">Les objets peuvent-ils être volés ?</h3>
+    <p data-t="can-steal-objects-desc">Non, les objets sont personnels et ne peuvent pas être pris par d'autres joueurs.</p>
     
-    <h3>Puis-je changer de pièce après l'avoir sélectionnée ?</h3>
-    <p>Non, une fois qu'une pièce est sélectionnée, vous devez la déplacer ou passer votre tour.</p>
+    <h3 data-t="can-change-piece">Puis-je changer de pièce après l'avoir sélectionnée ?</h3>
+    <p data-t="can-change-piece-desc">Non, une fois qu'une pièce est sélectionnée, vous devez la déplacer ou passer votre tour.</p>
   </div>
 </main>
 
+<script src="public/js/translations.js"></script>
 <script src="public/js/header.js"></script>
 <script>
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   VGBHeader.injectHeader('regles');
+  
+  // Attendre que les traductions soient chargées
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      
+      // Forcer la mise à jour des traductions
+      setTimeout(() => {
+        if (typeof updateAllTexts === 'function') {
+          console.log('Mise à jour des traductions...');
+          updateAllTexts();
+        } else {
+          console.error('updateAllTexts non disponible');
+        }
+      }, 200);
+    } else {
+      console.error('initTranslation non disponible');
+      setTimeout(initTranslations, 100);
+    }
+  };
+  
+  initTranslations();
 });
 </script>
 </body>
