@@ -161,6 +161,21 @@ const translations = {
     'common-rules-3': 'Les objets apparaissent aléatoirement dans des caisses sur le plateau.',
     'common-rules-4': 'Le poids d\'un objet détermine sa rareté (plus le poids est élevé, plus l\'objet est rare).',
     
+    // Noms des objets
+    'bobomb-name': 'Bob-omb',
+    'portals-name': 'Portails',
+    'lightning-name': 'Éclair',
+    'star-name': 'Étoile',
+    'tetrimino-name': 'Tétromino',
+    'tornado-name': 'Tornade',
+    'banana-name': 'Banane',
+    'phoenix-name': 'Phénix',
+    'cursor-name': 'Curseur Sims',
+    'heart-name': 'Cœur',
+    'sandglass-name': 'Sablier',
+    'mask-name': 'Masque de Majora',
+    'ocarina-name': 'Ocarina du Temps',
+    
     // Descriptions des objets
     'bobomb-desc': 'Bombe explosive de Mario ! Place une <strong>bombe sur une case vide</strong> qui explosera au prochain tour.',
     'bobomb-details': 'La bombe endommage toutes les pièces adjacentes (alliées et ennemies). Parfait pour créer des zones de danger ou éliminer plusieurs pièces d\'un coup. Inspiré de Super Mario Bros.',
@@ -397,6 +412,21 @@ const translations = {
     'common-rules-3': 'Objects appear randomly in crates on the board.',
     'common-rules-4': 'An object\'s weight determines its rarity (the higher the weight, the rarer the object).',
     
+    // Object names
+    'bobomb-name': 'Bob-omb',
+    'portals-name': 'Portals',
+    'lightning-name': 'Lightning',
+    'star-name': 'Star',
+    'tetrimino-name': 'Tetromino',
+    'tornado-name': 'Tornado',
+    'banana-name': 'Banana',
+    'phoenix-name': 'Phoenix',
+    'cursor-name': 'Sims Cursor',
+    'heart-name': 'Heart',
+    'sandglass-name': 'Hourglass',
+    'mask-name': 'Majora\'s Mask',
+    'ocarina-name': 'Ocarina of Time',
+    
     // Object descriptions
     'bobomb-desc': 'Mario\'s explosive bomb! Places a <strong>bomb on an empty square</strong> that will explode next turn.',
     'bobomb-details': 'The bomb damages all adjacent pieces (allies and enemies). Perfect for creating danger zones or eliminating multiple pieces at once. Inspired by Super Mario Bros.',
@@ -631,6 +661,21 @@ const translations = {
     'common-rules-2': 'Solo se puede usar <strong>un objeto por turno</strong>.',
     'common-rules-3': 'Los objetos aparecen aleatoriamente en cajas en el tablero.',
     'common-rules-4': 'El peso de un objeto determina su rareza (cuanto mayor es el peso, más raro es el objeto).',
+    
+    // Nombres de objetos
+    'bobomb-name': 'Bob-omb',
+    'portals-name': 'Portales',
+    'lightning-name': 'Rayo',
+    'star-name': 'Estrella',
+    'tetrimino-name': 'Tetromino',
+    'tornado-name': 'Tornado',
+    'banana-name': 'Plátano',
+    'phoenix-name': 'Fénix',
+    'cursor-name': 'Cursor Sims',
+    'heart-name': 'Corazón',
+    'sandglass-name': 'Reloj de Arena',
+    'mask-name': 'Máscara de Majora',
+    'ocarina-name': 'Ocarina del Tiempo',
     
     // Descripciones de objetos
     'bobomb-desc': '¡Bomba explosiva de Mario! Coloca una <strong>bomba en una casilla vacía</strong> que explotará en el próximo turno.',

@@ -136,10 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initTranslation === 'function') {
       initTranslation();
       
-      // Générer le HTML des objets
-      generateItemsHTML();
-      
-      // Les traductions seront mises à jour par generateItemsHTML()
+      // Attendre un peu pour que les traductions soient chargées
+      setTimeout(() => {
+        console.log('Langue actuelle:', window.currentLanguage);
+        console.log('Fonction t disponible:', typeof t);
+        
+        // Générer le HTML des objets
+        generateItemsHTML();
+      }, 100);
     } else {
       console.error('initTranslation non disponible');
       setTimeout(initTranslations, 100);
@@ -166,9 +170,13 @@ function generateItemsHTML() {
     const itemCard = document.createElement('div');
     itemCard.className = 'item-card';
     
+    const nameKey = item.nameKey || item.key + '-name';
+    const translatedName = t(nameKey);
+    console.log('Item:', item.name, 'nameKey:', nameKey, 'translatedName:', translatedName);
+    
     itemCard.innerHTML = `
-      <h2>${item.name} <span class="pill" data-t="weight">Poids: ${item.weight}</span></h2>
-      <img src="${item.image}" alt="${item.name}" />
+      <h2>${translatedName} <span class="pill" data-t="weight">${t('weight')}: ${item.weight}</span></h2>
+      <img src="${item.image}" alt="${translatedName}" />
       <div class="description" data-t="${item.description}">${t(item.description)}</div>
       <div class="details" data-t="${item.details}">${t(item.details)}</div>
     `;

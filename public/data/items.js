@@ -6,6 +6,7 @@
 const itemsData = [
   {
     name: "Bob-omb",
+    nameKey: "bobomb-name",
     key: "bobomb",
     weight: 4,
     description: "bobomb-desc",
@@ -15,6 +16,7 @@ const itemsData = [
   },
   {
     name: "Portails",
+    nameKey: "portals-name",
     key: "portals",
     weight: 4,
     description: "portals-desc",
@@ -24,6 +26,7 @@ const itemsData = [
   },
   {
     name: "Foudre",
+    nameKey: "lightning-name",
     key: "lightning",
     weight: 1,
     description: "lightning-desc",
@@ -33,6 +36,7 @@ const itemsData = [
   },
   {
     name: "Étoile",
+    nameKey: "star-name",
     key: "star",
     weight: 2,
     description: "star-desc",
@@ -42,6 +46,7 @@ const itemsData = [
   },
   {
     name: "Tetrimino",
+    nameKey: "tetrimino-name",
     key: "tetrimino",
     weight: 3,
     description: "tetrimino-desc",
@@ -51,6 +56,7 @@ const itemsData = [
   },
   {
     name: "Tornade",
+    nameKey: "tornado-name",
     key: "tornado",
     weight: 2,
     description: "tornado-desc",
@@ -60,6 +66,7 @@ const itemsData = [
   },
   {
     name: "Banane",
+    nameKey: "banana-name",
     key: "banana",
     weight: 5,
     description: "banana-desc",
@@ -69,6 +76,7 @@ const itemsData = [
   },
   {
     name: "Queue de Phoenix",
+    nameKey: "phoenix-name",
     key: "phoenix",
     weight: 2,
     description: "phoenix-desc",
@@ -78,6 +86,7 @@ const itemsData = [
   },
   {
     name: "Cursor Sims",
+    nameKey: "cursor-name",
     key: "cursor",
     weight: 3,
     description: "cursor-desc",
@@ -87,6 +96,7 @@ const itemsData = [
   },
   {
     name: "Cœur",
+    nameKey: "heart-name",
     key: "heart",
     weight: 2,
     description: "heart-desc",
@@ -96,6 +106,7 @@ const itemsData = [
   },
   {
     name: "Sablière du Temps",
+    nameKey: "sandglass-name",
     key: "sandglass",
     weight: 3,
     description: "sandglass-desc",
@@ -105,6 +116,7 @@ const itemsData = [
   },
   {
     name: "Masque de Majora",
+    nameKey: "mask-name",
     key: "mask",
     weight: 4,
     description: "mask-desc",
@@ -114,6 +126,7 @@ const itemsData = [
   },
   {
     name: "Ocarina du Temps",
+    nameKey: "ocarina-name",
     key: "ocarina",
     weight: 3,
     description: "ocarina-desc",
