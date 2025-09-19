@@ -154,6 +154,13 @@ const translations = {
     'star-desc': 'Révèle les pièces cachées',
     'weight-desc': 'Chaque objet a un poids différent qui influence la probabilité d\'apparition. Plus le poids est élevé, plus l\'objet est rare.',
     
+    // Règles communes des objets
+    'common-rules': 'Règles communes :',
+    'common-rules-1': 'Chaque joueur peut conserver jusqu\'à <strong>3 objets</strong> en réserve.',
+    'common-rules-2': 'On ne peut utiliser <strong>qu\'un objet par tour</strong>.',
+    'common-rules-3': 'Les objets apparaissent aléatoirement dans des caisses sur le plateau.',
+    'common-rules-4': 'Le poids d\'un objet détermine sa rareté (plus le poids est élevé, plus l\'objet est rare).',
+    
     // Descriptions des objets
     'bobomb-desc': 'Bombe explosive de Mario ! Place une <strong>bombe sur une case vide</strong> qui explosera au prochain tour.',
     'bobomb-details': 'La bombe endommage toutes les pièces adjacentes (alliées et ennemies). Parfait pour créer des zones de danger ou éliminer plusieurs pièces d\'un coup. Inspiré de Super Mario Bros.',
@@ -383,6 +390,13 @@ const translations = {
     'star-desc': 'Reveals hidden pieces',
     'weight-desc': 'Each object has a different weight that influences the probability of appearance. The higher the weight, the rarer the object.',
     
+    // Common object rules
+    'common-rules': 'Common rules:',
+    'common-rules-1': 'Each player can keep up to <strong>3 objects</strong> in reserve.',
+    'common-rules-2': 'You can only use <strong>one object per turn</strong>.',
+    'common-rules-3': 'Objects appear randomly in crates on the board.',
+    'common-rules-4': 'An object\'s weight determines its rarity (the higher the weight, the rarer the object).',
+    
     // Object descriptions
     'bobomb-desc': 'Mario\'s explosive bomb! Places a <strong>bomb on an empty square</strong> that will explode next turn.',
     'bobomb-details': 'The bomb damages all adjacent pieces (allies and enemies). Perfect for creating danger zones or eliminating multiple pieces at once. Inspired by Super Mario Bros.',
@@ -611,6 +625,13 @@ const translations = {
     'star-desc': 'Revela las piezas ocultas',
     'weight-desc': 'Cada objeto tiene un peso diferente que influye en la probabilidad de aparición. Cuanto mayor es el peso, más raro es el objeto.',
     
+    // Reglas comunes de objetos
+    'common-rules': 'Reglas comunes:',
+    'common-rules-1': 'Cada jugador puede conservar hasta <strong>3 objetos</strong> en reserva.',
+    'common-rules-2': 'Solo se puede usar <strong>un objeto por turno</strong>.',
+    'common-rules-3': 'Los objetos aparecen aleatoriamente en cajas en el tablero.',
+    'common-rules-4': 'El peso de un objeto determina su rareza (cuanto mayor es el peso, más raro es el objeto).',
+    
     // Descripciones de objetos
     'bobomb-desc': '¡Bomba explosiva de Mario! Coloca una <strong>bomba en una casilla vacía</strong> que explotará en el próximo turno.',
     'bobomb-details': 'La bomba daña todas las piezas adyacentes (aliadas y enemigas). Perfecto para crear zonas de peligro o eliminar múltiples piezas de una vez. Inspirado en Super Mario Bros.',
@@ -817,6 +838,13 @@ const translations = {
     'star-desc': 'Enthüllt versteckte Figuren',
     'weight-desc': 'Jeder Gegenstand hat ein anderes Gewicht, das die Wahrscheinlichkeit des Erscheinens beeinflusst. Je höher das Gewicht, desto seltener ist der Gegenstand.',
     
+    // Gemeinsame Objektregeln
+    'common-rules': 'Gemeinsame Regeln:',
+    'common-rules-1': 'Jeder Spieler kann bis zu <strong>3 Gegenstände</strong> in Reserve halten.',
+    'common-rules-2': 'Man kann nur <strong>einen Gegenstand pro Zug</strong> verwenden.',
+    'common-rules-3': 'Gegenstände erscheinen zufällig in Kisten auf dem Brett.',
+    'common-rules-4': 'Das Gewicht eines Gegenstands bestimmt seine Seltenheit (je höher das Gewicht, desto seltener der Gegenstand).',
+    
     // Figuren
     'cost': 'Kosten',
     'range': 'Reichweite',
@@ -995,6 +1023,13 @@ const translations = {
     'star-desc': 'Revela peças ocultas',
     'weight-desc': 'Cada objeto tem um peso diferente que influencia a probabilidade de aparecimento. Quanto maior o peso, mais raro é o objeto.',
     
+    // Regras comuns dos objetos
+    'common-rules': 'Regras comuns:',
+    'common-rules-1': 'Cada jogador pode manter até <strong>3 objetos</strong> em reserva.',
+    'common-rules-2': 'Só se pode usar <strong>um objeto por turno</strong>.',
+    'common-rules-3': 'Os objetos aparecem aleatoriamente em caixas no tabuleiro.',
+    'common-rules-4': 'O peso de um objeto determina sua raridade (quanto maior o peso, mais raro o objeto).',
+    
     // Peças
     'cost': 'Custo',
     'range': 'Alcance',
@@ -1172,6 +1207,13 @@ const translations = {
     'star': 'Stella',
     'star-desc': 'Rivela i pezzi nascosti',
     'weight-desc': 'Ogni oggetto ha un peso diverso che influenza la probabilità di apparizione. Più alto è il peso, più raro è l\'oggetto.',
+    
+    // Regole comuni degli oggetti
+    'common-rules': 'Regole comuni:',
+    'common-rules-1': 'Ogni giocatore può conservare fino a <strong>3 oggetti</strong> in riserva.',
+    'common-rules-2': 'Si può usare solo <strong>un oggetto per turno</strong>.',
+    'common-rules-3': 'Gli oggetti appaiono casualmente in casse sulla scacchiera.',
+    'common-rules-4': 'Il peso di un oggetto determina la sua rarità (più alto è il peso, più raro è l\'oggetto).',
     
     // Pezzi
     'cost': 'Costo',
@@ -1383,11 +1425,22 @@ function updateAllTexts() {
       options.forEach(option => {
         const optionKey = option.getAttribute('data-t');
         if (optionKey) {
-          option.textContent = t(optionKey);
+          const optionText = t(optionKey);
+          // Vérifier si le texte contient des balises HTML
+          if (optionText.includes('<') && optionText.includes('>')) {
+            option.innerHTML = optionText;
+          } else {
+            option.textContent = optionText;
+          }
         }
       });
     } else if (element.tagName !== 'TITLE') {
-      element.textContent = text;
+      // Vérifier si le texte contient des balises HTML
+      if (text.includes('<') && text.includes('>')) {
+        element.innerHTML = text;
+      } else {
+        element.textContent = text;
+      }
     }
   });
   

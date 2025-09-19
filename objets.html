@@ -106,13 +106,13 @@
   <div class="note">
     <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
       <img src="public/images/items/box-item-mario-kart.png" alt="Caisse d'objet" style="width: 48px; height: 48px; object-fit: contain;" />
-      <strong style="font-size: 18px;">Règles communes :</strong>
+      <strong style="font-size: 18px;" data-t="common-rules">Règles communes :</strong>
     </div>
     <ul>
-      <li>Chaque joueur peut conserver jusqu'à <strong>3 objets</strong> en réserve.</li>
-      <li>On ne peut utiliser <strong>qu'un objet par tour</strong>.</li>
-      <li>Les objets apparaissent aléatoirement dans des caisses sur le plateau.</li>
-      <li>Le poids d'un objet détermine sa rareté (plus le poids est élevé, plus l'objet est rare).</li>
+      <li data-t="common-rules-1">Chaque joueur peut conserver jusqu'à <strong>3 objets</strong> en réserve.</li>
+      <li data-t="common-rules-2">On ne peut utiliser <strong>qu'un objet par tour</strong>.</li>
+      <li data-t="common-rules-3">Les objets apparaissent aléatoirement dans des caisses sur le plateau.</li>
+      <li data-t="common-rules-4">Le poids d'un objet détermine sa rareté (plus le poids est élevé, plus l'objet est rare).</li>
     </ul>
   </div>
 
@@ -139,15 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Générer le HTML des objets
       generateItemsHTML();
       
-      // Forcer la mise à jour des traductions
-      setTimeout(() => {
-        if (typeof updateAllTexts === 'function') {
-          console.log('Mise à jour des traductions...');
-          updateAllTexts();
-        } else {
-          console.error('updateAllTexts non disponible');
-        }
-      }, 200);
+      // Les traductions seront mises à jour par generateItemsHTML()
     } else {
       console.error('initTranslation non disponible');
       setTimeout(initTranslations, 100);
@@ -184,11 +176,39 @@ function generateItemsHTML() {
     itemsGrid.appendChild(itemCard);
   });
   
-  // Mettre à jour les traductions des éléments générés dynamiquement
+  // Mettre à jour seulement les éléments statiques (pas les objets générés dynamiquement)
   setTimeout(() => {
     if (typeof updateAllTexts === 'function') {
-      console.log('Mise à jour des traductions des objets...');
-      updateAllTexts();
+      console.log('Mise à jour des traductions statiques...');
+      // Mettre à jour seulement les éléments qui ne sont pas dans .items-grid
+      document.querySelectorAll('[data-t]:not(.items-grid [data-t])').forEach(element => {
+        const key = element.getAttribute('data-t');
+        const text = t(key);
+        
+        if (element.tagName === 'INPUT' && element.type === 'text') {
+          element.placeholder = text;
+        } else if (element.tagName === 'SELECT') {
+          // Pour les selects, mettre à jour les options
+          const options = element.querySelectorAll('option');
+          options.forEach(option => {
+            const optionKey = option.getAttribute('data-t');
+            if (optionKey) {
+              const optionText = t(optionKey);
+              if (optionText.includes('<') && optionText.includes('>')) {
+                option.innerHTML = optionText;
+              } else {
+                option.textContent = optionText;
+              }
+            }
+          });
+        } else if (element.tagName !== 'TITLE') {
+          if (text.includes('<') && text.includes('>')) {
+            element.innerHTML = text;
+          } else {
+            element.textContent = text;
+          }
+        }
+      });
     } else {
       console.error('updateAllTexts non disponible dans generateItemsHTML');
     }
