@@ -2334,24 +2334,54 @@ function handleClick(scene, pos) {
   
   // Afficher/désélectionner les mouvements d'une pièce adverse (en rouge atténué) quand on clique dessus
   if (clickedPiece && clickedPiece.player !== currentPlayer) {
-    // Désélectionner toute pièce du joueur courant
-    selectedPiece = null;
-    
-    // Si c'est la même pièce adverse déjà sélectionnée, la désélectionner
-    if (selectedEnemyPiece && selectedEnemyPiece === clickedPiece) {
-      selectedEnemyPiece = null;
+    // Si une pièce du joueur courant est sélectionnée, vérifier si elle peut capturer cette pièce adverse
+    if (selectedPiece && selectedPiece.player === currentPlayer) {
+      const reachable = getReachablePositions(selectedPiece);
+      const canCapture = reachable.some(p => p.x === pos.x && p.y === pos.y);
+      
+      // Si la pièce sélectionnée peut capturer cette pièce adverse, laisser la capture se dérouler
+      if (canCapture) {
+        // Ne pas faire de return, laisser continuer vers la logique de déplacement/capture
+      } else {
+        // Si la pièce ne peut pas capturer, afficher les mouvements adverses
+        selectedPiece = null;
+        
+        // Si c'est la même pièce adverse déjà sélectionnée, la désélectionner
+        if (selectedEnemyPiece && selectedEnemyPiece === clickedPiece) {
+          selectedEnemyPiece = null;
+          clearHighlights();
+          return;
+        }
+        
+        // Sinon, sélectionner la nouvelle pièce adverse
+        selectedEnemyPiece = clickedPiece;
+        clearHighlights();
+        
+        // Afficher les mouvements de la pièce adverse en rouge atténué
+        const enemyReachable = getReachablePositions(clickedPiece);
+        highlightPositions(enemyReachable, 0xff6666); // Rouge atténué pour les mouvements adverses
+        return;
+      }
+    } else {
+      // Si aucune pièce du joueur courant n'est sélectionnée, afficher les mouvements adverses
+      selectedPiece = null;
+      
+      // Si c'est la même pièce adverse déjà sélectionnée, la désélectionner
+      if (selectedEnemyPiece && selectedEnemyPiece === clickedPiece) {
+        selectedEnemyPiece = null;
+        clearHighlights();
+        return;
+      }
+      
+      // Sinon, sélectionner la nouvelle pièce adverse
+      selectedEnemyPiece = clickedPiece;
       clearHighlights();
+      
+      // Afficher les mouvements de la pièce adverse en rouge atténué
+      const enemyReachable = getReachablePositions(clickedPiece);
+      highlightPositions(enemyReachable, 0xff6666); // Rouge atténué pour les mouvements adverses
       return;
     }
-    
-    // Sinon, sélectionner la nouvelle pièce adverse
-    selectedEnemyPiece = clickedPiece;
-    clearHighlights();
-    
-    // Afficher les mouvements de la pièce adverse en rouge atténué
-    const enemyReachable = getReachablePositions(clickedPiece);
-    highlightPositions(enemyReachable, 0xff6666); // Rouge atténué pour les mouvements adverses
-    return;
   }
 
   // Déplacement si une pièce est sélectionnée et la case est atteignable
