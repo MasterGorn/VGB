@@ -1761,8 +1761,10 @@ function startGame(scene) {
     updateRulesSidebar();
   }, 100);
   
-  // Bandeau "Début de la partie" en haut de la grille
-  const startText = scene.add.text(GRID_OFFSET_X + (GRID_SIZE*TILE_SIZE)/2, GRID_OFFSET_Y - 30, "🎮 " + t('game-start').toUpperCase() + " ! 🎮", { 
+  // Bandeau "Début de la partie" centré sur la case du milieu de la grille
+  const centerX = GRID_OFFSET_X + (GRID_SIZE * TILE_SIZE) / 2;
+  const centerY = GRID_OFFSET_Y + (GRID_SIZE * TILE_SIZE) / 2;
+  const startText = scene.add.text(centerX, centerY, "🎮 " + t('game-start').toUpperCase() + " ! 🎮", { 
     font: "24px Arial", 
     fill: "#ffffff", 
     backgroundColor: "#2c3e50",
@@ -1770,26 +1772,13 @@ function startGame(scene) {
     stroke: "#000000",
     strokeThickness: 3
   })
-    .setOrigin(0.5, 0)
+    .setOrigin(0.5, 0.5)
     .setDepth(2000);
   scene.time.delayedCall(2000, () => { startText.destroy(); });
 
   // Timers: init par taille
   const baseMinutes = (GRID_SIZE === 9) ? 5 : (GRID_SIZE === 11) ? 10 : 15;
   playerTimersMs = players.map(() => baseMinutes * 60 * 1000);
-  // Créer/mettre à jour les textes timers près des noms
-  if (timerTexts.length) { timerTexts.forEach(t => t && t.destroy()); }
-  timerTexts = players.map((p,i) => {
-    const nameText = playerNameTexts[i];
-    const t = scene.add.text(0,0, formatMs(playerTimersMs[i]), { font: "14px Arial", fill: "#333", backgroundColor: "#fff" }).setDepth(1600);
-    positionTimerTextNearName(t, nameText);
-    return t;
-  });
-  // Lancer tick si activé
-  if (timerEvent) timerEvent.remove(false);
-  if (timerEnabled) {
-    timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
-  }
 
   // Textes des noms des joueurs hors de la grille
   playerNameTexts.forEach(t => t && t.destroy());
@@ -1812,6 +1801,21 @@ function startGame(scene) {
     txt.setDepth(1500);
     playerNameTexts.push(txt);
   });
+
+  // Créer les textes de timer pour chaque joueur (après la création des noms)
+  if (timerTexts.length) { timerTexts.forEach(t => t && t.destroy()); }
+  timerTexts = players.map((p,i) => {
+    const nameText = playerNameTexts[i];
+    const t = scene.add.text(0,0, formatMs(playerTimersMs[i]), { font: "14px Arial", fill: "#333", backgroundColor: "#fff" }).setDepth(1600);
+    positionTimerTextNearName(t, nameText);
+    return t;
+  });
+  
+  // Lancer tick si activé
+  if (timerEvent) timerEvent.remove(false);
+  if (timerEnabled) {
+    timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
+  }
 
   // Plus besoin d'icône - le nom du joueur sera mis en évidence
   updateTurnUI();
