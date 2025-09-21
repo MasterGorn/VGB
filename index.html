@@ -749,7 +749,7 @@ function create() {
   infoBackground = this.add.rectangle(448, 300, 420, 60, 0xffffff);
   infoBackground.setDepth(9999); // Juste en dessous du texte
   infoBackground.setStrokeStyle(2, 0xcccccc);
-  infoBackground.setVisible(false);
+  infoBackground.setVisible(false); // Caché par défaut
   // Démarrage avec preset mémorisé ?
   const wantsPreset = localStorage.getItem('vgb_start_with_preset') === '1';
   if (wantsPreset && loadPresetAndStart(this)) {
@@ -772,6 +772,14 @@ function showInfoMessage(message, duration = 3000) {
   
   // Ne pas afficher de nouveaux messages si c'est un message de fin de partie permanent
   if (isEndGameMessage && duration > 0) return;
+  
+  // Ne pas afficher le cadre si le message est vide
+  if (!message || message.trim() === '') {
+    infoText.setText('');
+    infoText.setVisible(false);
+    infoBackground.setVisible(false);
+    return;
+  }
   
   // Ajuster la taille du fond selon la longueur du message
   const textWidth = Math.min(500, Math.max(200, message.length * 8));
@@ -1395,6 +1403,9 @@ function startGame(scene) {
   
   gameStarted = true;
   currentPlayer = 0;
+  
+  // Afficher un message de début de partie centré
+  showInfoMessage("🎮 La partie commence ! Bonne chance à tous les joueurs !", 4000);
   // reset portails
   if (portalOrange && portalOrange.sprite) { portalOrange.sprite.destroy(); }
   if (portalBlue && portalBlue.sprite) { portalBlue.sprite.destroy(); }
@@ -2300,11 +2311,31 @@ function handleClick(scene, pos) {
     return;
   }
   
-  // Sélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
+  // Sélection/désélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
   if (clickedPiece && clickedPiece.player === currentPlayer) {
+    // Si c'est la même pièce déjà sélectionnée, la désélectionner
+    if (selectedPiece && selectedPiece === clickedPiece) {
+      selectedPiece = null;
+      clearHighlights();
+      return;
+    }
+    
+    // Sinon, sélectionner la nouvelle pièce
     selectedPiece = clickedPiece;
     const reachable = getReachablePositions(selectedPiece);
     highlightPositions(reachable);
+    return;
+  }
+  
+  // Afficher les mouvements d'une pièce adverse (en rouge) quand on clique dessus
+  if (clickedPiece && clickedPiece.player !== currentPlayer) {
+    // Désélectionner toute pièce du joueur courant
+    selectedPiece = null;
+    clearHighlights();
+    
+    // Afficher les mouvements de la pièce adverse en rouge
+    const enemyReachable = getReachablePositions(clickedPiece);
+    highlightPositions(enemyReachable, 0xff0000); // Rouge pour les mouvements adverses
     return;
   }
 
