@@ -842,7 +842,7 @@ function getKingCenterIndex(gridSize) {
 }
 
 function setupPlayerCountUI(scene) {
-  infoText.setText("Choisissez le nombre de joueurs (2 à 4)");
+  infoText.setText(""); // Pas de message au début
   const options = [2,3,4];
   let x = 10;
   let y = 40;
@@ -1385,6 +1385,14 @@ function startGame(scene) {
   // Initialiser les poids des objets
   initItemWeights();
   
+  // Couleurs des éditeurs pour les backgrounds des pièces (opacité 50%)
+  const factionColors = {
+    'Nintendo': 0xff0000, // Rouge Nintendo
+    'PlayStation': 0x003791, // Bleu PlayStation  
+    'SEGA': 0x0066cc, // Bleu SEGA
+    'Xbox': 0x107c10 // Vert Xbox
+  };
+  
   gameStarted = true;
   currentPlayer = 0;
   // reset portails
@@ -1591,11 +1599,18 @@ function startGame(scene) {
       }
     }
     
+    // Créer le background coloré pour le roi selon l'éditeur (opacité 50%)
+    const factionColor = factionColors[playerFactions[i]] || 0x808080; // Gris par défaut
+    const kingBackgroundSprite = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, factionColor, 0.5);
+    kingBackgroundSprite.setDepth(100); // En arrière-plan
+    
     const kingImageKey = `king-${playerFactions[i].toLowerCase()}`;
     const kingSprite = scene.add.image(0, 0, kingImageKey);
+    kingSprite.setDepth(200); // Au-dessus du background
     
     const kingPiece = {
       sprite: kingSprite,
+      backgroundSprite: kingBackgroundSprite, // Ajouter la référence au background
       type: 'king',
       x: kingX,
       y: kingY,
@@ -1681,12 +1696,19 @@ function startGame(scene) {
       const isOnKing = (pieceX === kingX && pieceY === kingY);
       
       if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE && !isOnKing) {
+        // Créer le background coloré selon l'éditeur (opacité 50%)
+        const factionColor = factionColors[playerFactions[i]] || 0x808080; // Gris par défaut
+        const backgroundSprite = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, factionColor, 0.5);
+        backgroundSprite.setDepth(100); // En arrière-plan
+        
         // Utiliser le type de la pièce comme clé d'image
         const imageKey = piece.type;
         const sprite = scene.add.image(0, 0, imageKey);
+        sprite.setDepth(200); // Au-dessus du background
         
         const gamePiece = {
           sprite: sprite,
+          backgroundSprite: backgroundSprite, // Ajouter la référence au background
           type: 'piece',
           x: pieceX,
           y: pieceY,
@@ -1815,6 +1837,13 @@ function updatePieces() {
   for (let p of pieces) {
     p.sprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
     p.sprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
+    
+    // Positionner le background coloré s'il existe
+    if (p.backgroundSprite) {
+      p.backgroundSprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
+      p.backgroundSprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
+    }
+    
     // ajuster la taille pour remplir la case moins une marge de bordure
     const targetSize = TILE_SIZE; // utiliser toute la case
     p.sprite.setDisplaySize(targetSize, targetSize);
@@ -2310,6 +2339,7 @@ function handleClick(scene, pos) {
           // Nettoyer l'ocarina si la pièce en avait un
           removeOcarinaFromPiece(target);
         target.sprite.destroy();
+        if (target.backgroundSprite) target.backgroundSprite.destroy();
         pieces = pieces.filter(p => p !== target);
         }
         // Vérifier si la pièce trébuche sur une banane
@@ -2348,6 +2378,7 @@ function handleClick(scene, pos) {
               removeHeartFromPiece(piece);
               removeOcarinaFromPiece(piece);
               if (piece.sprite) piece.sprite.destroy();
+              if (piece.backgroundSprite) piece.backgroundSprite.destroy();
             }
             
             // Retirer toutes les pièces du joueur éliminé du tableau pieces
@@ -3824,6 +3855,7 @@ function detonateBombAt(pos) {
       // Nettoyer l'ocarina si la pièce en avait un
       removeOcarinaFromPiece(victim);
       victim.sprite.destroy();
+      if (victim.backgroundSprite) victim.backgroundSprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
       if (wasKing) {
         if (!eliminationOrder.includes(victim.player)) eliminationOrder.push(victim.player);
@@ -4004,6 +4036,7 @@ function applyLightningKill() {
     // Nettoyer l'ocarina si la pièce en avait un
     removeOcarinaFromPiece(v);
     if (v && v.sprite) v.sprite.destroy();
+    if (v && v.backgroundSprite) v.backgroundSprite.destroy();
     if (v.type === 'king') {
       kingDied = true;
       if (!eliminationOrder.includes(v.player)) eliminationOrder.push(v.player);
@@ -4097,6 +4130,7 @@ function tickTimer(scene) {
         removeHeartFromPiece(piece);
         removeOcarinaFromPiece(piece);
         if (piece.sprite) piece.sprite.destroy();
+        if (piece.backgroundSprite) piece.backgroundSprite.destroy();
       }
       
       // Retirer toutes les pièces du joueur éliminé du tableau pieces
