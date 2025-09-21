@@ -409,6 +409,7 @@ let pieces = [];
 let currentPlayer = 0; // index joueur qui doit jouer
 let gameStarted = false;
 let selectedPiece = null;
+let selectedEnemyPiece = null; // Pièce adverse actuellement sélectionnée pour voir ses mouvements
 let highlightedTiles = [];
 let highlightOverlays = [];
 let turnText;
@@ -2313,6 +2314,9 @@ function handleClick(scene, pos) {
   
   // Sélection/désélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
   if (clickedPiece && clickedPiece.player === currentPlayer) {
+    // Désélectionner toute pièce adverse
+    selectedEnemyPiece = null;
+    
     // Si c'est la même pièce déjà sélectionnée, la désélectionner
     if (selectedPiece && selectedPiece === clickedPiece) {
       selectedPiece = null;
@@ -2322,20 +2326,31 @@ function handleClick(scene, pos) {
     
     // Sinon, sélectionner la nouvelle pièce
     selectedPiece = clickedPiece;
+    clearHighlights();
     const reachable = getReachablePositions(selectedPiece);
     highlightPositions(reachable);
     return;
   }
   
-  // Afficher les mouvements d'une pièce adverse (en rouge) quand on clique dessus
+  // Afficher/désélectionner les mouvements d'une pièce adverse (en rouge atténué) quand on clique dessus
   if (clickedPiece && clickedPiece.player !== currentPlayer) {
     // Désélectionner toute pièce du joueur courant
     selectedPiece = null;
+    
+    // Si c'est la même pièce adverse déjà sélectionnée, la désélectionner
+    if (selectedEnemyPiece && selectedEnemyPiece === clickedPiece) {
+      selectedEnemyPiece = null;
+      clearHighlights();
+      return;
+    }
+    
+    // Sinon, sélectionner la nouvelle pièce adverse
+    selectedEnemyPiece = clickedPiece;
     clearHighlights();
     
-    // Afficher les mouvements de la pièce adverse en rouge
+    // Afficher les mouvements de la pièce adverse en rouge atténué
     const enemyReachable = getReachablePositions(clickedPiece);
-    highlightPositions(enemyReachable, 0xff0000); // Rouge pour les mouvements adverses
+    highlightPositions(enemyReachable, 0xff6666); // Rouge atténué pour les mouvements adverses
     return;
   }
 
@@ -2377,9 +2392,10 @@ function handleClick(scene, pos) {
         if (checkBananaTrip(selectedPiece, pos)) {
           // La pièce trébuche, elle est déplacée sur la case de la banane
           updatePieces();
-          clearHighlights();
-          selectedPiece = null;
-          // Terminer le tour et passer au joueur suivant
+        clearHighlights();
+        selectedPiece = null;
+        selectedEnemyPiece = null;
+        // Terminer le tour et passer au joueur suivant
           moveCount++;
           if (moveCount % 5 === 0) rotateAds();
           currentPlayer = getNextActivePlayer(); // changer de joueur en sautant les éliminés
@@ -2394,6 +2410,7 @@ function handleClick(scene, pos) {
         updatePieces();
         clearHighlights();
         selectedPiece = null;
+        selectedEnemyPiece = null;
         // Gestion élimination et condition de fin
         if (capturedKing) {
           if (!eliminationOrder.includes(target.player)) {
@@ -2482,6 +2499,7 @@ function handleClick(scene, pos) {
         }
         
         selectedPiece = null;
+        selectedEnemyPiece = null;
         // Terminer le tour et passer au joueur suivant
         moveCount++;
         if (moveCount % 5 === 0) rotateAds();
@@ -2506,6 +2524,7 @@ function handleClick(scene, pos) {
       }
       
       selectedPiece = null;
+      selectedEnemyPiece = null;
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
       updateAdInfo();
@@ -2531,6 +2550,7 @@ function handleClick(scene, pos) {
       // Clic non valide: nettoyer la sélection pour éviter la confusion
       clearHighlights();
       selectedPiece = null;
+      selectedEnemyPiece = null;
     }
   }
 }
@@ -4002,6 +4022,7 @@ function updateTurnUI() {
   } else {
     // Désélectionner toute pièce si pas de contrainte
     selectedPiece = null;
+    selectedEnemyPiece = null;
     clearHighlights();
   }
   
