@@ -1405,8 +1405,13 @@ function startGame(scene) {
   gameStarted = true;
   currentPlayer = 0;
   
-  // Afficher un message de début de partie centré
-  showInfoMessage("🎮 La partie commence ! Bonne chance à tous les joueurs !", 4000);
+  // S'assurer que le cadre de message est caché au début de la partie
+  if (infoBackground) {
+    infoBackground.setVisible(false);
+  }
+  if (infoText) {
+    infoText.setVisible(false);
+  }
   // reset portails
   if (portalOrange && portalOrange.sprite) { portalOrange.sprite.destroy(); }
   if (portalBlue && portalBlue.sprite) { portalBlue.sprite.destroy(); }
@@ -5133,8 +5138,6 @@ function startGameFromSelection() {
       canvas.classList.add('game-started');
     }
   }, 100);
-  
-  showInfoMessage('La partie commence !', 3000);
   
   // Démarrer le jeu directement
   startGame(game.scene.scenes[0]);
