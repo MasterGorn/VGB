@@ -335,7 +335,7 @@ const piecesData = [
   {
     name: "Banjo & Kazooie",
     nameKey: "banjo-kazooie",
-    faction: "Nintendo",
+    faction: "Xbox",
     universe: "Banjo-Kazooie",
     cost: 6,
     tier: 3,
@@ -343,7 +343,7 @@ const piecesData = [
     moves: [[1,0], [-1,0], [0,1], [0,-1], [2,0], [-2,0], [0,2], [0,-2]],
     description: "Duo d'aventuriers. Se déplace en ligne droite sur 3 cases. Plateforme et collectibles.",
     descriptionKey: "banjo-kazooie-desc",
-    image: "public/images/nintendo/characters/banjo-et-kazooie.png",
+    image: "public/images/xbox/characters/banjo-et-kazooie.png",
     type: "banjo-kazooie"
   },
   {

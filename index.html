@@ -620,7 +620,6 @@ function preload() {
   this.load.image('waluigi', 'waluigi.png');
   this.load.image('captain-falcon', 'captain-falcon.png');
   this.load.image('bayonetta', 'bayonetta.png');
-  this.load.image('banjo-kazooie', 'banjo-et-kazooie.png');
   this.load.image('ayo-et-oli', 'ayo-et-oli.png');
 
   // Rois par faction (images à fournir) - chemins par dossier faction
@@ -657,6 +656,7 @@ function preload() {
   this.load.image('cortana', 'cortana.png');
   this.load.image('juno', 'juno.png');
   this.load.image('jd-fenix', 'jd-fenix.png');
+  this.load.image('banjo-kazooie', 'banjo-et-kazooie.png');
   this.load.image('general-raam', 'general-raam.png');
   this.load.image('cyclops-drone', 'cyclops-drone.png');
   this.load.image('ori', 'ori.png');
@@ -2599,6 +2599,13 @@ function getPieceAt(pos) {
 }
 
 function getReachablePositions(piece) {
+  // Vérifier si la pièce est transformée en cavalier par l'Ocarina
+  const isKnight = knightPieces.some(kp => kp.piece === piece);
+  
+  if (isKnight) {
+    return getKnightMoves(piece);
+  }
+  
   const positions = [];
   const rule = getRuleForPiece(piece);
   
