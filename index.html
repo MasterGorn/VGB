@@ -447,7 +447,7 @@ let playerCount = 4;
 let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4']; // Sera mis à jour par initTranslation
 let playerFactions = ['Nintendo', 'Nintendo', 'Nintendo', 'Nintendo'];
 let playerArmies = [[], [], [], []]; // Armées des joueurs
-let playerMoney = [100, 100, 100, 100]; // Argent de chaque joueur
+let playerMoney = [60, 60, 60, 60]; // Argent de chaque joueur (sera mis à jour selon la taille de grille)
 let availablePieces = [];
 // Étoile d'invincibilité
 let starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
@@ -4406,7 +4406,7 @@ function startCharacterSelection() {
   playerFactions = [];
   
   // Initialiser les joueurs avec les points selon la taille du plateau
-  const budget = (GRID_SIZE === 9) ? 30 : (GRID_SIZE === 11) ? 60 : 100;
+  const budget = (GRID_SIZE === 9) ? 20 : (GRID_SIZE === 11) ? 40 : 60;
   for (let i = 0; i < playerCount; i++) {
     playerArmies.push([]);
     playerMoney.push(budget);
