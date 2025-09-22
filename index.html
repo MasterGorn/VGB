@@ -2409,7 +2409,31 @@ function handleClick(scene, pos) {
           // La pièce a un cœur : elle reste en place mais perd son cœur
           removeHeartFromPiece(target);
           showInfoMessage(`La pièce a perdu son cœur !`, 2000);
-          // La pièce reste en place, pas de capture
+          // La pièce reste en place, pas de capture - mais cela compte comme un tour
+          clearHighlights();
+          selectedPiece = null;
+          selectedEnemyPiece = null;
+          
+          // Compter comme un tour et passer au joueur suivant (logique de jeu)
+          moveCount++;
+          if (moveCount % 5 === 0) rotateAds();
+          updateAdInfo();
+          let oldRound = roundCounter;
+          if (shouldIncrementRoundCounter()) { roundCounter++; }
+          currentPlayer = getNextActivePlayer();
+          if (roundCounter !== oldRound) {
+            decrementLightningCharges();
+          }
+          itemUsedThisTurn = false;
+          maybeRespawnCrate(scene);
+          updateTurnUI();
+          // repositionner tous les timers
+          if (timerTexts && playerNameTexts) {
+            for (let i=0;i<timerTexts.length;i++) {
+              if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+            }
+          }
+          return;
         } else {
           // Pas de cœur : capture normale
           // Enregistrer la pièce perdue pour la queue de phoenix
