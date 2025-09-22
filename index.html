@@ -412,6 +412,9 @@ let selectedPiece = null;
 let selectedEnemyPiece = null; // Pièce adverse actuellement sélectionnée pour voir ses mouvements
 let highlightedTiles = [];
 let highlightOverlays = [];
+let secondaryMode = false; // Mode fonctionnalité secondaire activé
+let secondaryModeUsed = false; // Fonctionnalité secondaire utilisée ce tour
+let secondaryModeSprite = null; // Sprite "S" pour indiquer le mode secondaire
 let turnText;
 let moveCount = 0;
 let infoBackground; // Fond blanc pour les messages d'information
@@ -731,6 +734,10 @@ function preload() {
   this.load.audio('bobomb', 'bobomb.mp3');
   this.load.audio('star', 'star.mp3');
   this.load.audio('ocarina', 'ocarina.wav');
+  
+  // Sons des personnages
+  this.load.setPath('public/sounds/characters/');
+  this.load.audio('wololo', 'wololo.mp3');
 }
 
 function create() {
@@ -766,6 +773,13 @@ function create() {
       startCharacterSelection();
     });
   }
+  
+  // Gestion de la touche S pour la fonctionnalité secondaire
+  this.input.keyboard.on('keydown-S', () => {
+    if (gameStarted && selectedPiece && selectedPiece.player === currentPlayer && !secondaryModeUsed && !itemUsedThisTurn) {
+      toggleSecondaryMode();
+    }
+  });
 }
 
 function showInfoMessage(message, duration = 3000) {
@@ -807,6 +821,208 @@ function hideInfoMessage() {
   
   if (infoText) infoText.setVisible(false);
   if (infoBackground) infoBackground.setVisible(false);
+}
+
+function toggleSecondaryMode() {
+  if (!selectedPiece) return;
+  
+  // Vérifier si le joueur peut encore utiliser la fonctionnalité secondaire
+  if (secondaryModeUsed || itemUsedThisTurn) {
+    showInfoMessage(`Fonctionnalité secondaire déjà utilisée ce tour !`, 2000);
+    return;
+  }
+  
+  secondaryMode = !secondaryMode;
+  
+  if (secondaryMode) {
+    // Activer le mode secondaire
+    showSecondaryModeIndicator();
+    showInfoMessage(`Mode secondaire activé pour ${selectedPiece.name}`, 2000);
+    clearHighlights();
+    // Afficher les cibles possibles pour la conversion
+    showConversionTargets();
+  } else {
+    // Désactiver le mode secondaire
+    hideSecondaryModeIndicator();
+    showInfoMessage(`Mode normal activé pour ${selectedPiece.name}`, 2000);
+    clearHighlights();
+    // Afficher les mouvements normaux
+    const reachable = getReachablePositions(selectedPiece);
+    highlightPositions(reachable);
+  }
+}
+
+function showSecondaryModeIndicator() {
+  if (!selectedPiece || !selectedPiece.sprite) return;
+  
+  // Créer l'indicateur "S" en bas à gauche de la pièce
+  const scene = selectedPiece.sprite.scene;
+  secondaryModeSprite = scene.add.text(0, 0, "S", {
+    font: "bold 16px Arial",
+    fill: "#ff0000",
+    stroke: "#ffffff",
+    strokeThickness: 2
+  });
+  secondaryModeSprite.setOrigin(0, 1);
+  secondaryModeSprite.setDepth(2000);
+  
+  // Positionner l'indicateur
+  updateSecondaryModeIndicator();
+}
+
+function hideSecondaryModeIndicator() {
+  if (secondaryModeSprite) {
+    secondaryModeSprite.destroy();
+    secondaryModeSprite = null;
+  }
+}
+
+function updateSecondaryModeIndicator() {
+  if (secondaryModeSprite && selectedPiece && selectedPiece.sprite) {
+    secondaryModeSprite.x = selectedPiece.sprite.x - TILE_SIZE/2 + 5;
+    secondaryModeSprite.y = selectedPiece.sprite.y + TILE_SIZE/2 - 5;
+  }
+}
+
+function showConversionTargets() {
+  if (!selectedPiece) return;
+  
+  const targets = getConversionTargets(selectedPiece);
+  highlightPositions(targets, 0x00ff00); // Vert pour les cibles de conversion
+}
+
+function getConversionTargets(piece) {
+  const targets = [];
+  const maxRange = 3;
+  
+  // Vérifier toutes les cases dans un rayon de 3
+  for (let dx = -maxRange; dx <= maxRange; dx++) {
+    for (let dy = -maxRange; dy <= maxRange; dy++) {
+      const distance = Math.abs(dx) + Math.abs(dy);
+      if (distance > maxRange) continue;
+      
+      const targetX = piece.x + dx;
+      const targetY = piece.y + dy;
+      
+      // Vérifier que la position est dans la grille
+      if (targetX < 0 || targetX >= GRID_SIZE || targetY < 0 || targetY >= GRID_SIZE) continue;
+      
+      // Vérifier s'il y a une pièce adverse à cette position
+      const targetPiece = getPieceAt({x: targetX, y: targetY});
+      if (targetPiece && targetPiece.player !== piece.player) {
+        targets.push({x: targetX, y: targetY});
+      }
+    }
+  }
+  
+  return targets;
+}
+
+function attemptConversion(targetPiece) {
+  if (!selectedPiece || !targetPiece) return false;
+  
+  // Calculer le taux d'échec basé sur la puissance de la pièce cible
+  const tier = targetPiece.tier || 1;
+  let failureRate = 0;
+  
+  switch(tier) {
+    case 1: failureRate = 0; break;    // Pièce faible : 0%
+    case 2: failureRate = 25; break;   // Pièce moyenne : 25%
+    case 3: failureRate = 50; break;   // Pièce forte : 50%
+    case 4: failureRate = 75; break;   // Pièce très forte : 75%
+    default: failureRate = 50; break;
+  }
+  
+  // Jouer le son wololo
+  const scene = selectedPiece.sprite.scene;
+  scene.sound.play('wololo');
+  
+  // Tenter la conversion
+  const success = Math.random() * 100 >= failureRate;
+  
+  if (success) {
+    // Conversion réussie
+    targetPiece.player = selectedPiece.player;
+    
+    // Changer le background de la pièce convertie
+    if (targetPiece.backgroundSprite) {
+      targetPiece.backgroundSprite.destroy();
+    }
+    
+    // Créer un nouveau background avec la couleur de la faction du convertisseur
+    const factionColors = {
+      'Nintendo': 0xff0000, // Rouge Nintendo
+      'PlayStation': 0x003791, // Bleu PlayStation  
+      'SEGA': 0x0066cc, // Bleu SEGA
+      'Xbox': 0x107c10 // Vert Xbox
+    };
+    
+    const scene = selectedPiece.sprite.scene;
+    const newFactionColor = factionColors[playerFactions[selectedPiece.player]] || 0x808080;
+    const newBackgroundSprite = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, newFactionColor, 0.5);
+    newBackgroundSprite.setDepth(100);
+    targetPiece.backgroundSprite = newBackgroundSprite;
+    
+    showInfoMessage(`${targetPiece.name} a été converti !`, 3000);
+    
+    // Mettre à jour l'affichage
+    updatePieces();
+    
+    // Marquer la fonctionnalité secondaire comme utilisée et terminer le tour
+    secondaryModeUsed = true;
+    secondaryMode = false;
+    hideSecondaryModeIndicator();
+    clearHighlights();
+    
+    // Terminer le tour après la conversion (réussie ou échouée)
+    endTurnAfterConversion();
+    
+    return true;
+  } else {
+    // Conversion échouée
+    showInfoMessage(`Échec de la conversion de ${targetPiece.name} !`, 2000);
+    
+    // Marquer la fonctionnalité secondaire comme utilisée et terminer le tour
+    secondaryModeUsed = true;
+    secondaryMode = false;
+    hideSecondaryModeIndicator();
+    clearHighlights();
+    
+    // Terminer le tour après la conversion (réussie ou échouée)
+    endTurnAfterConversion();
+    
+    return false;
+  }
+}
+
+function endTurnAfterConversion() {
+  // Terminer le tour après une tentative de conversion
+  const scene = selectedPiece ? selectedPiece.sprite.scene : infoText.scene;
+  
+  // Désélectionner la pièce
+  selectedPiece = null;
+  selectedEnemyPiece = null;
+  
+  // Logique de fin de tour
+  moveCount++;
+  if (moveCount % 5 === 0) rotateAds();
+  updateAdInfo();
+  let oldRound = roundCounter;
+  if (shouldIncrementRoundCounter()) { roundCounter++; }
+  currentPlayer = getNextActivePlayer();
+  if (roundCounter !== oldRound) {
+    decrementLightningCharges();
+  }
+  itemUsedThisTurn = false;
+  maybeRespawnCrate(scene);
+  updateTurnUI();
+  
+  // Repositionner tous les timers
+  if (timerTexts && playerNameTexts) {
+    for (let i=0;i<timerTexts.length;i++) {
+      if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+    }
+  }
 }
 
 function getNextActivePlayer() {
@@ -1969,6 +2185,8 @@ function updatePieces() {
   updateMaskPosition();
   // Mettre à jour les positions des ocarinas
   updateOcarinaPositions();
+  // Mettre à jour l'indicateur de mode secondaire
+  updateSecondaryModeIndicator();
   updateRulesSidebar();
 }
 
@@ -2103,6 +2321,18 @@ function handleClick(scene, pos) {
   }
   
   const clickedPiece = getPieceAt(pos);
+  
+  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion
+  if (secondaryMode && selectedPiece && clickedPiece && clickedPiece.player !== selectedPiece.player) {
+    const targets = getConversionTargets(selectedPiece);
+    const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
+    
+    if (isTarget) {
+      attemptConversion(clickedPiece);
+      return;
+    }
+  }
+  
   // Si un item est actif (ex: bombe), gérer l'effet et retourner
   if (currentItemAction && currentItemAction.active && currentItemAction.playerId === currentPlayer) {
     if (currentItemAction.type === 'bomb') {
@@ -2430,6 +2660,10 @@ function handleClick(scene, pos) {
             decrementLightningCharges();
           }
           itemUsedThisTurn = false;
+          // Réinitialiser le mode secondaire
+          secondaryMode = false;
+          secondaryModeUsed = false;
+          hideSecondaryModeIndicator();
           maybeRespawnCrate(scene);
           updateTurnUI();
           // repositionner tous les timers
@@ -2537,6 +2771,10 @@ function handleClick(scene, pos) {
           // L'effet étoile est maintenant géré dans updateTurnUI()
         }
         itemUsedThisTurn = false;
+        // Réinitialiser le mode secondaire
+        secondaryMode = false;
+        secondaryModeUsed = false;
+        hideSecondaryModeIndicator();
         maybeRespawnCrate(scene);
         updateTurnUI();
         // repositionner tous les timers
@@ -2601,6 +2839,10 @@ function handleClick(scene, pos) {
         // L'effet étoile est maintenant géré dans updateTurnUI()
       }
       itemUsedThisTurn = false;
+      // Réinitialiser le mode secondaire
+      secondaryMode = false;
+      secondaryModeUsed = false;
+      hideSecondaryModeIndicator();
       maybeRespawnCrate(scene);
       updateTurnUI();
       // repositionner tous les timers
@@ -2916,6 +3158,10 @@ function tryUseItem(playerId, clickedIconSprite) {
     if (shouldIncrementRoundCounter()) { roundCounter++; }
     currentPlayer = getNextActivePlayer();
     itemUsedThisTurn = false;
+    // Réinitialiser le mode secondaire
+    secondaryMode = false;
+    secondaryModeUsed = false;
+    hideSecondaryModeIndicator();
     decrementLightningCharges();
     // L'effet étoile est maintenant géré dans updateTurnUI()
     maybeRespawnCrate(infoText.scene);
@@ -2959,6 +3205,10 @@ function tryUseItem(playerId, clickedIconSprite) {
       // L'effet étoile est maintenant géré dans updateTurnUI()
     }
     itemUsedThisTurn = false;
+    // Réinitialiser le mode secondaire
+    secondaryMode = false;
+    secondaryModeUsed = false;
+    hideSecondaryModeIndicator();
     decrementLightningCharges();
     maybeRespawnCrate(infoText.scene);
     updateTurnUI();
