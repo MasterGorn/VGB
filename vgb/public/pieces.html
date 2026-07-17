@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Chesstendo - Les pièces</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+/* Styles spécifiques à la page des pièces */
+.pieces-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+.piece-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.piece-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-medium); }
+.piece-image { width: 100%; max-width: 140px; height: auto; border-radius: 8px; margin-bottom: 10px; }
+.piece-name { font-size: 15px; font-weight: bold; margin-bottom: 6px; color: var(--text-primary); }
+.piece-description { color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
+@media (max-width: 1100px) {
+  .pieces-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 860px) {
+  .pieces-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+@media (max-width: 560px) {
+  .pieces-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .piece-card { padding: 10px; }
+}
+
+/* Badges spécifiques */
+.badge.nintendo { background:var(--accent-red); }
+.badge.playstation { background:var(--accent-purple); }
+.badge.sega { background:var(--accent-blue); }
+.badge.xbox { background:var(--accent-green); }
+.badge.role {
+  background: #ffc107;
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+.badge.role .role-icon {
+  font-size: 1.15em;
+  line-height: 1;
+  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", "DejaVu Sans", serif;
+}
+.badge.range { background:#6f42c1; }
+
+/* Filtres actifs */
+.active-filters { margin:16px 0; display:flex; gap:8px; flex-wrap:wrap; }
+.filter-tag { background:var(--secondary-bg); color:var(--text-primary); padding:4px 8px; border-radius:16px; font-size:12px; display:flex; align-items:center; gap:4px; border:1px solid var(--border-color); }
+.filter-tag .remove { cursor:pointer; font-weight:bold; }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+
+<main class="site-main">
+  <h1 class="page-title">♟️ <span class="title-text" data-t="available-pieces">Pièces disponibles</span> ♟️</h1>
+  
+  <!-- Contrôles de tri et filtrage -->
+  <div class="controls">
+    <div class="control-group">
+      <label for="sortBy" data-t="sort-by">Trier par :</label>
+      <select id="sortBy" class="form-control">
+        <option value="name" data-t="name">Nom</option>
+        <option value="role" data-t="role">Rôle</option>
+        <option value="faction" data-t="editor">Éditeur</option>
+        <option value="universe" data-t="universe">Univers</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="factionFilter" data-t="editor">Éditeur :</label>
+      <select id="factionFilter" class="form-control">
+        <option value="" data-t="all">Tous</option>
+        <option value="Nintendo" data-t="nintendo">Nintendo</option>
+        <option value="PlayStation" data-t="playstation">PlayStation</option>
+        <option value="SEGA" data-t="sega">SEGA</option>
+        <option value="Xbox" data-t="xbox">Xbox</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="universeFilter" data-t="universe">Univers :</label>
+      <select id="universeFilter" class="form-control">
+        <option value="" data-t="all">Tous</option>
+        <option value="Super Mario" data-t="super-mario">Super Mario</option>
+        <option value="The Legend of Zelda" data-t="legend-of-zelda">The Legend of Zelda</option>
+        <option value="Metroid" data-t="metroid">Metroid</option>
+        <option value="Kid Icarus" data-t="kid-icarus">Kid Icarus</option>
+        <option value="Fire Emblem" data-t="fire-emblem">Fire Emblem</option>
+        <option value="Star Fox" data-t="star-fox">Star Fox</option>
+        <option value="Xenoblade Chronicles" data-t="xenoblade-chronicles">Xenoblade Chronicles</option>
+        <option value="Splatoon" data-t="splatoon">Splatoon</option>
+        <option value="ARMS" data-t="arms">ARMS</option>
+        <option value="Pokémon" data-t="pokemon">Pokémon</option>
+        <option value="Animal Crossing" data-t="animal-crossing">Animal Crossing</option>
+        <option value="Punch-Out!!" data-t="punch-out">Punch-Out!!</option>
+        <option value="Yoshi" data-t="yoshi">Yoshi</option>
+        <option value="EarthBound" data-t="earthbound">EarthBound</option>
+        <option value="Pikmin" data-t="pikmin">Pikmin</option>
+        <option value="Ice Climber" data-t="ice-climber">Ice Climber</option>
+        <option value="Game & Watch" data-t="game-watch">Game & Watch</option>
+        <option value="Ring Fit Adventure" data-t="ring-fit-adventure">Ring Fit Adventure</option>
+        <option value="Sonic" data-t="sonic">Sonic</option>
+        <option value="Golden Axe" data-t="golden-axe">Golden Axe</option>
+        <option value="Skies of Arcadia" data-t="skies-of-arcadia">Skies of Arcadia</option>
+        <option value="OutRun 2" data-t="outrun-2">OutRun 2</option>
+        <option value="Jet Set Radio" data-t="jet-set-radio">Jet Set Radio</option>
+        <option value="Crazy Taxi" data-t="crazy-taxi">Crazy Taxi</option>
+        <option value="Space Harrier" data-t="space-harrier">Space Harrier</option>
+        <option value="Super Monkey Ball" data-t="super-monkey-ball">Super Monkey Ball</option>
+        <option value="Puyo Puyo" data-t="puyo-puyo">Puyo Puyo</option>
+        <option value="Billy Hatcher" data-t="billy-hatcher">Billy Hatcher</option>
+        <option value="Streets of Rage" data-t="streets-of-rage">Streets of Rage</option>
+        <option value="Halo" data-t="halo">Halo</option>
+        <option value="Gears of War" data-t="gears-of-war">Gears of War</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="roleFilter" data-t="role">Rôle :</label>
+      <select id="roleFilter" class="form-control">
+        <option value="" data-t="all-roles">Tous</option>
+        <option value="pawn">♟ Pion</option>
+        <option value="knight">♞ Cavalier</option>
+        <option value="bishop">♝ Fou</option>
+        <option value="rook">♜ Tour</option>
+        <option value="queen">♛ Dame</option>
+        <option value="king">♚ Roi</option>
+        <option value="unique">★ Unique</option>
+      </select>
+    </div>
+  </div>
+  
+  <!-- Filtres actifs -->
+  <div id="activeFilters" class="active-filters"></div>
+  
+  <!-- Grille des pièces -->
+  <div id="piecesGrid" class="pieces-grid">  </div>
+</main>
+
+<script src="/js/translations.js?v=20260717g"></script>
+<script src="/js/header.js"></script>
+<script src="/data/pieces.js?v=20260717g"></script>
+<script src="/js/chess-roles.js?v=20260717g"></script>
+<script>
+// Les données des pièces sont maintenant importées depuis pieces.js
+
+// Variables globales
+let currentSort = 'name';
+let currentFilters = {
+  faction: '',
+  universe: '',
+  role: ''
+};
+
+const ROLE_SORT_ORDER = {
+  pawn: 1,
+  knight: 2,
+  bishop: 3,
+  rook: 4,
+  queen: 5,
+  king: 6,
+  unique: 7
+};
+
+function getRoleLabel(role) {
+  if (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel) {
+    return VGBChess.getRoleLabel(role);
+  }
+  const labels = {
+    pawn: 'Pion',
+    knight: 'Cavalier',
+    bishop: 'Fou',
+    rook: 'Tour',
+    queen: 'Dame',
+    king: 'Roi',
+    unique: 'Unique'
+  };
+  return labels[role] || role || t('unknown');
+}
+
+function getRoleIcon(role) {
+  const icons = {
+    pawn: '♟',
+    knight: '♞',
+    bishop: '♝',
+    rook: '♜',
+    queen: '♛',
+    king: '♚',
+    unique: '★'
+  };
+  return icons[role] || '◆';
+}
+
+// Fonction pour afficher les pièces
+function displayPieces(pieces) {
+  const grid = document.getElementById('piecesGrid');
+  grid.innerHTML = '';
+  
+  pieces.forEach(piece => {
+    const card = document.createElement('div');
+    card.className = 'piece-card';
+    
+    const nameKey = piece.nameKey || piece.name.toLowerCase().replace(/\s+/g, '-');
+    const descriptionKey = piece.descriptionKey || piece.name.toLowerCase().replace(/\s+/g, '-') + '-desc';
+    
+    const translatedName = piece.nameKey ? t(nameKey) : piece.name;
+    const translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
+    const roleLabel = getRoleLabel(piece.role);
+    const roleIcon = getRoleIcon(piece.role);
+    
+    card.innerHTML = `
+      <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
+      <div class="piece-name">${translatedName}</div>
+      <div class="piece-description">${translatedDescription}</div>
+      <div style="margin-top: 12px;">
+        <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
+        <span class="badge">${t(piece.universeKey || piece.universe)}</span>
+        <span class="badge role" title="${roleLabel}"><span class="role-icon" aria-hidden="true">${roleIcon}</span>${roleLabel}</span>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// Fonction pour appliquer les filtres et le tri
+function applyFiltersAndSort() {
+  let filteredPieces = [...piecesData];
+  
+  // Appliquer les filtres
+  if (currentFilters.faction) {
+    filteredPieces = filteredPieces.filter(piece => piece.faction === currentFilters.faction);
+  }
+  if (currentFilters.universe) {
+    filteredPieces = filteredPieces.filter(piece => piece.universe === currentFilters.universe);
+  }
+  if (currentFilters.role) {
+    filteredPieces = filteredPieces.filter(piece => piece.role === currentFilters.role);
+  }
+  
+  // Appliquer le tri
+  filteredPieces.sort((a, b) => {
+    switch(currentSort) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'role':
+        return (ROLE_SORT_ORDER[a.role] || 99) - (ROLE_SORT_ORDER[b.role] || 99) || a.name.localeCompare(b.name);
+      case 'faction':
+        return a.faction.localeCompare(b.faction);
+      case 'universe':
+        return a.universe.localeCompare(b.universe);
+      default:
+        return 0;
+    }
+  });
+  
+  displayPieces(filteredPieces);
+  updateActiveFilters();
+}
+
+// Fonction pour mettre à jour l'affichage des filtres actifs
+function updateActiveFilters() {
+  const container = document.getElementById('activeFilters');
+  container.innerHTML = '';
+  
+  Object.entries(currentFilters).forEach(([key, value]) => {
+    if (value) {
+      const tag = document.createElement('div');
+      tag.className = 'filter-tag';
+      
+      // Afficher les bons libellés
+      let displayKey = key;
+      let displayValue = value;
+      
+      if (key === 'faction') {
+        displayKey = t('editor');
+      } else if (key === 'role') {
+        displayKey = t('role');
+        displayValue = getRoleIcon(value) + ' ' + getRoleLabel(value);
+      }
+      
+      tag.innerHTML = `
+        ${displayKey}: ${displayValue} 
+        <span class="remove" onclick="removeFilter('${key}')">×</span>
+      `;
+      container.appendChild(tag);
+    }
+  });
+}
+
+// Fonction pour supprimer un filtre
+function removeFilter(filterType) {
+  currentFilters[filterType] = '';
+  const el = document.getElementById(filterType + 'Filter');
+  if (el) el.value = '';
+  applyFiltersAndSort();
+}
+
+// Fonction pour effacer tous les filtres
+function clearAllFilters() {
+  currentFilters = { faction: '', universe: '', role: '' };
+  document.getElementById('factionFilter').value = '';
+  document.getElementById('universeFilter').value = '';
+  document.getElementById('roleFilter').value = '';
+  applyFiltersAndSort();
+}
+
+// Événements
+document.getElementById('sortBy').addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  applyFiltersAndSort();
+});
+
+document.getElementById('factionFilter').addEventListener('change', (e) => {
+  currentFilters.faction = e.target.value;
+  applyFiltersAndSort();
+});
+
+document.getElementById('universeFilter').addEventListener('change', (e) => {
+  currentFilters.universe = e.target.value;
+  applyFiltersAndSort();
+});
+
+document.getElementById('roleFilter').addEventListener('change', (e) => {
+  currentFilters.role = e.target.value;
+  applyFiltersAndSort();
+});
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+  VGBHeader.injectHeader('pieces');
+  
+  // Attendre que les traductions soient chargées avant d'afficher les pièces
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      
+      // Attendre un peu pour que les traductions soient prêtes
+      setTimeout(() => {
+        if (typeof t === 'function' && window.currentLanguage) {
+          console.log('Traductions chargées, langue:', window.currentLanguage, 'affichage des pièces...');
+          applyFiltersAndSort();
+        } else {
+          console.error('Fonction t ou currentLanguage non disponible, t:', typeof t, 'currentLanguage:', window.currentLanguage);
+          setTimeout(initTranslations, 100);
+        }
+      }, 200);
+    } else {
+      console.error('initTranslation non disponible');
+      setTimeout(initTranslations, 100);
+    }
+  };
+  
+  initTranslations();
+  
+  // Écouter les changements de langue
+  window.addEventListener('languageChanged', () => {
+    console.log('Langue changée, mise à jour des pièces...');
+    applyFiltersAndSort();
+  });
+});
+</script>
+</body>
+</html>

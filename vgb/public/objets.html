@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Chesstendo - Objets disponibles</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+/* Styles spécifiques à la page des objets */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.item-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.item-card h2 {
+  margin: 0 0 var(--spacing-md);
+  font: var(--font-size-xl) Arial, sans-serif;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-card img {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: var(--border-radius);
+  margin: var(--spacing-md) auto;
+  display: block;
+}
+
+.item-card .description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-sm) 0;
+}
+
+.item-card .details {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.pill {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--accent-gold);
+  color: #000;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  margin-left: var(--spacing-sm);
+}
+
+.note {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  color: var(--text-secondary);
+}
+
+.note ul {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.note li {
+  margin: var(--spacing-xs) 0;
+  line-height: 1.4;
+}
+
+.note strong {
+  color: var(--text-primary);
+}
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+
+<main class="site-main">
+  <h1 class="page-title">🎁 <span class="title-text" data-t="available-items">Objets disponibles</span> 🎁</h1>
+  
+  <div class="note">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+      <img src="/images/items/box-item-mario-kart.png" alt="Caisse d'objet" style="width: 48px; height: 48px; object-fit: contain;" />
+      <strong style="font-size: 18px;" data-t="common-rules">Règles communes :</strong>
+    </div>
+    <ul>
+      <li data-t="common-rules-1">Chaque joueur peut conserver jusqu'à <strong>3 objets</strong> en réserve.</li>
+      <li data-t="common-rules-2">On ne peut utiliser <strong>qu'un objet par tour</strong>.</li>
+      <li data-t="common-rules-3">Les objets apparaissent aléatoirement dans des caisses sur le plateau.</li>
+      <li data-t="common-rules-4">Le poids d'un objet détermine sa rareté (plus le poids est élevé, plus l'objet est rare).</li>
+    </ul>
+  </div>
+
+  <div class="items-grid">
+    <!-- Les objets sont générés dynamiquement par JavaScript -->
+  </div>
+</main>
+
+<script src="/js/translations.js"></script>
+<script src="/js/header.js"></script>
+<script src="/data/items.js"></script>
+<script>
+// Les données des objets sont maintenant importées depuis items.js
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+  VGBHeader.injectHeader('objets');
+  
+  // Attendre que les traductions soient chargées
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      
+      // Attendre un peu pour que les traductions soient chargées
+      setTimeout(() => {
+        console.log('Langue actuelle:', window.currentLanguage);
+        console.log('Fonction t disponible:', typeof t);
+        
+        // Générer le HTML des objets
+        generateItemsHTML();
+      }, 100);
+    } else {
+      console.error('initTranslation non disponible');
+      setTimeout(initTranslations, 100);
+    }
+  };
+  
+  initTranslations();
+});
+
+// Fonction pour générer le HTML des objets dynamiquement
+function generateItemsHTML() {
+  const itemsGrid = document.querySelector('.items-grid');
+  if (!itemsGrid) return;
+  
+  // Vérifier que la fonction t est disponible
+  if (typeof t !== 'function') {
+    console.error('Fonction t() non disponible');
+    return;
+  }
+  
+  itemsGrid.innerHTML = '';
+  
+  itemsData.forEach(item => {
+    const itemCard = document.createElement('div');
+    itemCard.className = 'item-card';
+    
+    const nameKey = item.nameKey || item.key + '-name';
+    const translatedName = t(nameKey);
+    console.log('Item:', item.name, 'nameKey:', nameKey, 'translatedName:', translatedName);
+    
+    itemCard.innerHTML = `
+      <h2>${translatedName} <span class="pill" data-t="weight">${t('weight')}: ${item.weight}</span></h2>
+      <img src="${item.image}" alt="${translatedName}" />
+      <div class="description" data-t="${item.description}">${t(item.description)}</div>
+      <div class="details" data-t="${item.details}">${t(item.details)}</div>
+    `;
+    
+    itemsGrid.appendChild(itemCard);
+  });
+  
+  // Mettre à jour seulement les éléments statiques (pas les objets générés dynamiquement)
+  setTimeout(() => {
+    if (typeof updateAllTexts === 'function') {
+      console.log('Mise à jour des traductions statiques...');
+      // Mettre à jour seulement les éléments qui ne sont pas dans .items-grid
+      document.querySelectorAll('[data-t]:not(.items-grid [data-t])').forEach(element => {
+        const key = element.getAttribute('data-t');
+        const text = t(key);
+        
+        if (element.tagName === 'INPUT' && element.type === 'text') {
+          element.placeholder = text;
+        } else if (element.tagName === 'SELECT') {
+          // Pour les selects, mettre à jour les options
+          const options = element.querySelectorAll('option');
+          options.forEach(option => {
+            const optionKey = option.getAttribute('data-t');
+            if (optionKey) {
+              const optionText = t(optionKey);
+              if (optionText.includes('<') && optionText.includes('>')) {
+                option.innerHTML = optionText;
+              } else {
+                option.textContent = optionText;
+              }
+            }
+          });
+        } else if (element.tagName !== 'TITLE') {
+          if (text.includes('<') && text.includes('>')) {
+            element.innerHTML = text;
+          } else {
+            element.textContent = text;
+          }
+        }
+      });
+    } else {
+      console.error('updateAllTexts non disponible dans generateItemsHTML');
+    }
+  }, 100);
+}
+</script>
+</body>
+</html>

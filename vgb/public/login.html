@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Se connecter — Video Games Battle</title>
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+  .container { max-width: 420px; margin: 0 auto; padding: 120px 16px 40px; }
+  h1 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 16px; color: #ffd700; }
+  .card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 20px;
+    background: rgba(255,255,255,0.04);
+  }
+  .row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  label { font-size: 13px; color: rgba(255,255,255,0.75); }
+  input {
+    font-size: 16px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    min-height: 48px;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    flex: 1;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    min-height: 48px;
+    color: #fff;
+  }
+  #btn-login { background: #111; border: 1px solid #fff; }
+  #btn-register { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+  .hint { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 12px; }
+  .elo { margin-top: 12px; color: #ffd700; font-weight: bold; }
+  .msg { margin-top: 10px; font-size: 13px; color: #ff8a80; }
+  a { color: #ffd700; }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<main class="container">
+  <h1>Compte en ligne</h1>
+  <div class="card" id="auth-card">
+    <div class="row">
+      <label for="username">Pseudo</label>
+      <input id="username" type="text" maxlength="24" autocomplete="username" />
+    </div>
+    <div class="row">
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" maxlength="64" autocomplete="current-password" />
+    </div>
+    <div class="actions">
+      <button type="button" id="btn-login">Connexion</button>
+      <button type="button" id="btn-register">Créer un compte</button>
+    </div>
+<p class="hint">Le même compte sert pour le mode en ligne classé (Elo) sur la page Jouer.</p>
+    <p class="hint">Compte / API : ouvrez ce site via <strong>MAMP</strong> (Apache + PHP), pas via http-server. Ex.&nbsp;: <code style="color:#ffd700">http://localhost:8888/videogamesbattle/VGB/login.html</code></p>
+    <p class="msg" id="msg"></p>
+  </div>
+  <div class="card" id="profile-card" style="display:none;">
+    <p id="profile-name"></p>
+    <p class="elo" id="profile-elo"></p>
+    <div class="actions" style="margin-top:16px;">
+      <button type="button" id="btn-play" style="background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;">Jouer</button>
+      <button type="button" id="btn-decks" style="background:#9b59b6;">Mes decks</button>
+      <button type="button" id="btn-logout" style="background:#c0392b;">Déconnexion</button>
+    </div>
+  </div>
+</main>
+<script src="/js/translations.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/online.js?v=20260717h"></script>
+<script>
+// Si une base Mongo inexistante était forcée, on la retire pour utiliser l'API PHP MAMP
+try {
+  const base = localStorage.getItem('vgb_api_base');
+  if (base && /localhost:3000/.test(base)) {
+    // Ne pas bloquer si l'utilisateur a vraiment lancé Mongo ; on laisse tel quel.
+    // En cas d'échec récurrent, décommenter : localStorage.removeItem('vgb_api_base');
+  }
+} catch (e) {}
+
+VGBHeader.injectHeader('login');
+if (typeof initTranslation === 'function') initTranslation();
+
+const msg = document.getElementById('msg');
+const authCard = document.getElementById('auth-card');
+const profileCard = document.getElementById('profile-card');
+
+function showProfile() {
+  authCard.style.display = 'none';
+  profileCard.style.display = 'block';
+  document.getElementById('profile-name').textContent = 'Connecté : ' + VGBOnline.user.username;
+  document.getElementById('profile-elo').textContent = 'Elo ' + VGBOnline.user.elo +
+    ` — ${VGBOnline.user.wins}V / ${VGBOnline.user.losses}D / ${VGBOnline.user.draws}N`;
+}
+
+function showAuth() {
+  authCard.style.display = 'block';
+  profileCard.style.display = 'none';
+}
+
+async function doAuth(register) {
+  msg.textContent = '';
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  try {
+    if (register) await VGBOnline.register(username, password);
+    else await VGBOnline.login(username, password);
+    showProfile();
+  } catch (e) {
+    msg.textContent = e.message || 'Erreur';
+  }
+}
+
+document.getElementById('btn-login').onclick = () => doAuth(false);
+document.getElementById('btn-register').onclick = () => doAuth(true);
+document.getElementById('btn-logout').onclick = async () => {
+  await VGBOnline.logout();
+  showAuth();
+};
+document.getElementById('btn-play').onclick = () => { location.href = 'index.html'; };
+document.getElementById('btn-decks').onclick = () => { location.href = 'deck.html'; };
+
+(async function init() {
+  if (VGBOnline.token) {
+    try {
+      await VGBOnline.refreshMe();
+      showProfile();
+    } catch (e) {
+      VGBOnline.clearSession();
+    }
+  }
+})();
+</script>
+</body>
+</html>

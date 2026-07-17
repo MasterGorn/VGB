@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Video Games Battle - Règles du jeu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+.rules-section {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+}
+.rules-section h2 {
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rules-section h2 .section-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--accent-blue);
+}
+.rules-section h3 {
+  color: var(--text-secondary);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+}
+.rules-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-sm) 0;
+}
+.rules-section ul, .rules-section ol {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+.rules-section li {
+  margin: var(--spacing-xs) 0;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.highlight-box {
+  background: var(--secondary-bg);
+  border-left: 4px solid var(--accent-blue);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.highlight-box img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.highlight-box strong { color: var(--text-primary); }
+.role-grid,
+.item-grid,
+.tip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.role-card,
+.item-card,
+.tip-card {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.role-card img,
+.item-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+}
+.role-card strong,
+.item-card strong,
+.tip-card strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.95em;
+}
+.role-card span,
+.item-card span,
+.tip-card span {
+  font-size: 0.88em;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+.tip-card .tip-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--accent-blue);
+}
+.board-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.board-feature {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.board-feature img,
+.board-feature .feature-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.board-feature .feature-icon { color: var(--accent-blue); }
+.board-feature p {
+  margin: 0;
+  font-size: 0.92em;
+}
+.formation {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  color: var(--text-primary);
+  margin: 10px 0;
+}
+.rules-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  justify-content: center;
+}
+.rules-nav a {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.rules-nav a svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
+}
+.rules-nav a:hover { background: rgba(255,255,255,0.12); }
+.rules-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--text-primary);
+  text-decoration: none;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.92em;
+}
+.rules-link:hover { background: rgba(255,255,255,0.12); }
+.rules-link img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+@media (max-width: 600px) {
+  .rules-section { padding: var(--spacing-md); }
+  .role-grid,
+  .item-grid,
+  .tip-grid { grid-template-columns: 1fr 1fr; }
+  .board-features { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+
+<main class="site-main">
+  <h1 class="page-title"><span class="title-text" data-t="game-rules">Règles du jeu</span></h1>
+
+  <nav class="rules-nav" aria-label="Sommaire des règles">
+    <a href="#objectif">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+      <span data-t="game-objective">Objectif</span>
+    </a>
+    <a href="#plateau">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+      <span data-t="board-section">Plateau</span>
+    </a>
+    <a href="#roles">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.8 7.1 18.2l.9-5.5-4-3.9L9.5 8z"/></svg>
+      <span data-t="piece-types">Pièces</span>
+    </a>
+    <a href="#draft">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+      <span data-t="draft-phase">Draft</span>
+    </a>
+    <a href="#objets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8l8-4 8 4v9l-8 4-8-4V8z"/><path d="M4 8l8 4 8-4M12 12v9"/></svg>
+      <span data-t="object-system">Objets</span>
+    </a>
+    <a href="#temps">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
+      <span data-t="time-system">Temps</span>
+    </a>
+    <a href="#online">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 14 0M2 12a10 10 0 0 1 20 0"/></svg>
+      <span data-t="online-section">En ligne</span>
+    </a>
+    <a href="#faq">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.8-1.1 1.8M12 17h.01"/></svg>
+      <span data-t="faq">FAQ</span>
+    </a>
+  </nav>
+
+  <div class="rules-section" id="objectif">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+      <span data-t="game-objective">Objectif du jeu</span>
+    </h2>
+    <p data-t="game-objective-desc">Video Games Battle est un duel de stratégie type échecs : deux joueurs s’affrontent avec des skins de personnages de jeux vidéo. L’objectif est de capturer le roi adverse.</p>
+    <div class="highlight-box">
+      <img src="/images/nintendo/characters/king.png" alt="" width="48" height="48" loading="lazy">
+      <div>
+        <strong data-t="victory">Victoire :</strong>
+        <span data-t="victory-desc"> Capturer le roi adverse, ou l’éliminer par timeout si le chronomètre est activé.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section" id="plateau">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+      <span data-t="board-section">Le plateau</span>
+    </h2>
+    <p data-t="board-section-desc">La partie se joue exclusivement sur un plateau <strong>9×9</strong>, en duel (2 joueurs).</p>
+    <div class="board-features">
+      <div class="board-feature">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+        <p data-t="board-rule-1">Les cases alternent clair / foncé (style échiquier).</p>
+      </div>
+      <div class="board-feature">
+        <img src="/images/items/box-item-mario-kart.png" alt="" width="52" height="52" loading="lazy">
+        <p data-t="board-rule-2">Des <strong>caisses d’objets</strong> apparaissent sur les cases claires de la <strong>ligne 5</strong> (rangée centrale).</p>
+      </div>
+      <div class="board-feature">
+        <img src="/images/nintendo/characters/toad.png" alt="" width="52" height="52" loading="lazy">
+        <p data-t="board-rule-3">Chaque camp place ses pièces sur <strong>2 rangées</strong> : rangée arrière + ligne de pions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section" id="roles">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.8 7.1 18.2l.9-5.5-4-3.9L9.5 8z"/></svg>
+      <span data-t="piece-types">Rôles</span>
+    </h2>
+    <p data-t="piece-types-intro">Chaque pièce a un <strong>rôle d’échecs</strong> (pion, cavalier, fou, etc.). Les personnages sont des skins : vous choisissez qui représente chaque rôle.</p>
+
+    <div class="role-grid">
+      <div class="role-card">
+        <img src="/images/nintendo/characters/toad.png" alt="Pion" width="72" height="72" loading="lazy">
+        <strong data-t="role-pawn-title">Pion (×9)</strong>
+        <span data-t="role-pawn-desc">Avance d’une case ; capture en diagonale. Direction selon le camp.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/link.png" alt="Cavalier" width="72" height="72" loading="lazy">
+        <strong data-t="role-knight-title">Cavalier (×2)</strong>
+        <span data-t="role-knight-desc">Saut en L. Peut passer par-dessus les pièces.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/kirby.png" alt="Fou" width="72" height="72" loading="lazy">
+        <strong data-t="role-bishop-title">Fou (×2)</strong>
+        <span data-t="role-bishop-desc">Diagonales, portée libre jusqu’à obstacle.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/bowser.png" alt="Tour" width="72" height="72" loading="lazy">
+        <strong data-t="role-rook-title">Tour (×2)</strong>
+        <span data-t="role-rook-desc">Lignes et colonnes, portée libre jusqu’à obstacle.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/zelda.png" alt="Dame" width="72" height="72" loading="lazy">
+        <strong data-t="role-queen-title">Dame (×1)</strong>
+        <span data-t="role-queen-desc">Toutes directions, portée libre jusqu’à obstacle.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/king.png" alt="Roi" width="72" height="72" loading="lazy">
+        <strong data-t="role-king-title">Roi (×1)</strong>
+        <span data-t="role-king-desc">Une case dans toutes les directions. Sa capture termine la partie.</span>
+      </div>
+      <div class="role-card">
+        <img src="/images/nintendo/characters/bayonetta.png" alt="Unique" width="72" height="72" loading="lazy">
+        <strong data-t="role-unique-title">Unique (×1)</strong>
+        <span data-t="role-unique-desc">Mouvement spécial du personnage (hors règles d’échecs classiques).</span>
+      </div>
+    </div>
+
+    <h3 data-t="formation-title">Formation de départ</h3>
+    <p data-t="formation-desc">Rangée arrière (de gauche à droite), puis 9 pions devant :</p>
+    <div class="formation" data-t="formation-line">T · C · F · D · R · U · F · C · T<br>P · P · P · P · P · P · P · P · P</div>
+    <p data-t="formation-note">Le Roi est au centre ; l’Unique est en face de la Dame. Une lettre (P, C, F, T, D, R, U) s’affiche sur chaque pièce pour repérer son rôle.</p>
+  </div>
+
+  <div class="rules-section" id="draft">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+      <span data-t="draft-phase">Phase de draft</span>
+    </h2>
+    <p data-t="draft-description">Avant la partie, chaque joueur compose son armée par rôle : choisir l’éditeur, puis les skins pour remplir les quotas. Le bouton <strong>Aléatoire</strong> remplit automatiquement l’armée.</p>
+    <ul>
+      <li data-t="draft-rule-1">Armée complète = 17 pièces + le roi de faction (placé automatiquement).</li>
+      <li data-t="draft-rule-2">Pas de budget / coût : seuls les quotas de rôles comptent.</li>
+      <li data-t="draft-rule-3">Le même skin peut être choisi plusieurs fois pour un même rôle.</li>
+    </ul>
+  </div>
+
+  <div class="rules-section" id="deroulement">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <span data-t="game-flow">Déroulement d’une partie</span>
+    </h2>
+    <h3 data-t="game-phase">Phase de jeu</h3>
+    <p data-t="game-phase-description">Les joueurs jouent à tour de rôle. À chaque tour vous pouvez :</p>
+    <ol>
+      <li data-t="select-piece">Sélectionner une pièce et la déplacer sur une case valide</li>
+      <li data-t="use-object">Ou utiliser un objet (un seul par tour)</li>
+    </ol>
+    <h3 data-t="end-game">Fin de partie</h3>
+    <p data-t="end-game-description">La partie se termine dès qu’un roi est capturé (ou qu’un joueur est éliminé par timeout).</p>
+  </div>
+
+  <div class="rules-section" id="objets">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8l8-4 8 4v9l-8 4-8-4V8z"/><path d="M4 8l8 4 8-4M12 12v9"/></svg>
+      <span data-t="object-system">Système d’objets</span>
+    </h2>
+    <h3 data-t="acquisition">Acquisition</h3>
+    <div class="highlight-box">
+      <img src="/images/items/box-item-mario-kart.png" alt="" width="48" height="48" loading="lazy">
+      <p data-t="acquisition-desc" style="margin:0">En passant sur une caisse, vous récupérez un objet aléatoire. Réserve max : <strong>3 objets</strong>.</p>
+    </div>
+    <h3 data-t="usage">Utilisation</h3>
+    <p data-t="usage-desc">Un seul objet par tour. Effets variés :</p>
+
+    <div class="item-grid">
+      <div class="item-card">
+        <img src="/images/items/hourglass.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="sandglass-name">Sablière du Temps</strong>
+        <span data-t="time-sand-desc">réduit le chrono adverse</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/mask-majora.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="mask-name">Masque de Majora</strong>
+        <span data-t="majora-mask-desc">force une pièce adverse au prochain tour</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/oracina.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="ocarina-name">Ocarina du Temps</strong>
+        <span data-t="time-ocarina-desc">transforme une pièce en cavalier</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/sims-cursor.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="cursor-name">Curseur Sims</strong>
+        <span data-t="cursor-rule-desc">contrôle un pion ou cavalier adverse pendant 1 tour</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/bobomb.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="bobomb-name">Bob-omb</strong>
+        <span>Place une bombe explosive</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/Lightning.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="lightning-name">Foudre</strong>
+        <span>Élimine une pièce</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/star.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="star-name">Étoile</strong>
+        <span data-t="star-desc">Révèle les pièces cachées</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/portals.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="portals-name">Portails</strong>
+        <span>Téléporte entre deux cases</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/banana.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="banana-name">Banane</strong>
+        <span>Piège glissant</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/phoenix-down.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="phoenix-name">Phénix</strong>
+        <span>Ressuscite une pièce</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/heart.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="heart-name">Cœur</strong>
+        <span>Protège une pièce</span>
+      </div>
+      <div class="item-card">
+        <img src="/images/items/tetrimino.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="tetrimino-name">Tétromino</strong>
+        <span>Place un mur</span>
+      </div>
+    </div>
+
+    <p data-t="weight-desc">Chaque objet a un poids : plus le poids est élevé, plus l’objet est fréquent à l’apparition.</p>
+    <a class="rules-link" href="objets.html">
+      <img src="/images/items/box-item-mario-kart.png" alt="" width="28" height="28" loading="lazy">
+      <span data-t="items">Voir tous les objets →</span>
+    </a>
+  </div>
+
+  <div class="rules-section" id="temps">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
+      <span data-t="time-system">Système de temps</span>
+    </h2>
+    <div class="highlight-box">
+      <img src="/images/items/hourglass.png" alt="" width="48" height="48" loading="lazy">
+      <div>
+        <h3 data-t="optional-timer" style="margin-top:0">Timer optionnel</h3>
+        <p data-t="timer-description" style="margin:0">Chaque joueur dispose de <strong>5 minutes</strong> de temps total (plateau 9×9). Le chrono ne descend que pendant votre tour.</p>
+      </div>
+    </div>
+    <h3 data-t="timeout-elimination">Élimination par timeout</h3>
+    <p data-t="timeout-description">Si votre temps tombe à zéro, vous êtes éliminé et toutes vos pièces quittent le plateau.</p>
+  </div>
+
+  <div class="rules-section" id="online">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 14 0M2 12a10 10 0 0 1 20 0"/></svg>
+      <span data-t="online-section">Mode en ligne</span>
+    </h2>
+    <p data-t="online-section-desc">En mode en ligne, vous jouez en 1v1 avec matchmaking. Le résultat met à jour votre classement Elo. Consultez le <a href="classement.html">classement</a> et connectez-vous via la page de login.</p>
+  </div>
+
+  <div class="rules-section" id="conseils">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 4 10c-.8.7-1.2 1.5-1.4 2.5H9.4C9.2 14.5 8.8 13.7 8 13a6 6 0 0 1 4-10z"/></svg>
+      <span data-t="strategic-tips">Conseils stratégiques</span>
+    </h2>
+    <div class="tip-grid">
+      <div class="tip-card">
+        <img src="/images/nintendo/characters/king.png" alt="" width="56" height="56" loading="lazy">
+        <strong data-t="king-protection">Protection du roi</strong>
+        <span data-t="king-protection-desc">Protégez le centre et les cases autour du roi ; l’Unique et la Dame sont de puissants défenseurs ou attaquants.</span>
+      </div>
+      <div class="tip-card">
+        <img src="/images/items/box-item-mario-kart.png" alt="" width="56" height="56" loading="lazy">
+        <strong data-t="object-management">Gestion des objets</strong>
+        <span data-t="object-management-desc">Les caisses centrales sont un enjeu : contrôlez la ligne 5 pour récupérer des objets avant l’adversaire.</span>
+      </div>
+      <div class="tip-card">
+        <img src="/images/nintendo/characters/link.png" alt="" width="56" height="56" loading="lazy">
+        <strong data-t="positioning">Positionnement</strong>
+        <span data-t="positioning-desc">Ouvrez les diagonales pour les fous, les colonnes pour les tours, et utilisez les cavaliers pour sauter les lignes bloquées.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section" id="faq">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.8-1.1 1.8M12 17h.01"/></svg>
+      <span data-t="faq">FAQ</span>
+    </h2>
+    <h3 data-t="can-capture-own">Puis-je capturer mes propres pièces ?</h3>
+    <p data-t="can-capture-own-desc">Non. Seules les pièces adverses peuvent être capturées ; vos pièces bloquent vos trajectoires (sauf le cavalier).</p>
+    <h3 data-t="faq-same-skin">Puis-je mettre plusieurs fois le même personnage ?</h3>
+    <p data-t="faq-same-skin-desc">Oui. Un même skin peut remplir plusieurs slots du même rôle (ex. 9 fois le même pion).</p>
+    <h3 data-t="can-steal-objects">Les objets peuvent-ils être volés ?</h3>
+    <p data-t="can-steal-objects-desc">Non, la réserve d’objets est personnelle.</p>
+    <h3 data-t="can-change-piece">Puis-je changer de pièce après l’avoir sélectionnée ?</h3>
+    <p data-t="can-change-piece-desc">Oui : recliquez une autre de vos pièces pour changer de sélection avant de jouer le coup.</p>
+  </div>
+</main>
+
+<script src="/js/translations.js?v=20260717f"></script>
+<script src="/js/header.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  VGBHeader.injectHeader('regles');
+  const initTranslations = () => {
+    if (typeof initTranslation === 'function') {
+      initTranslation();
+      setTimeout(() => {
+        if (typeof updateAllTexts === 'function') updateAllTexts();
+      }, 150);
+    } else {
+      setTimeout(initTranslations, 100);
+    }
+  };
+  initTranslations();
+});
+</script>
+</body>
+</html>
