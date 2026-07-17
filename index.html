@@ -433,12 +433,81 @@
 }
 
 .rules-list {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   font: var(--font-size-sm) Arial, sans-serif;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.4;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+}
+
+.rules-cols-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 2px 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rules-role-block {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.rules-role-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.rules-role-title .role-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.rules-role-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.rules-role-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 36px;
+  align-content: flex-start;
+}
+
+.rules-role-side img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.rules-role-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  padding: 6px 2px;
 }
 
 .tagline {
@@ -2066,75 +2135,102 @@ function getMovementDemoImage(piece) {
 function updateRulesSidebar() {
   const el = document.getElementById('rules-list');
   if (!el) return;
-  
-  console.log('updateRulesSidebar - pieces:', pieces);
-  console.log('updateRulesSidebar - players:', players);
-  
-  const rulesMap = buildRulesCatalog();
-  // Helper pour trouver la source d'image selon faction et type
-  const getImgSrc = (faction, type, isKing) => {
-    const file = isKing ? 'king' : type;
-    return `public/images/${faction}/characters/${file}.png`;
+
+  const ROLE_ORDER = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'unique', 'king'];
+  const ROLE_ICONS = {
+    pawn: '♟',
+    knight: '♞',
+    bishop: '♝',
+    rook: '♜',
+    queen: '♛',
+    unique: '★',
+    king: '♚'
   };
-  // Dédupliquer par (faction::keyAfficher)
-  const presentByKey = new Map();
-  for (const p of pieces) {
-    const faction = players[p.player] && players[p.player].faction ? players[p.player].faction.toLowerCase() : 'nintendo';
-    const isKing = p.type === 'king';
-    
-    let ruleKey, img, name, pieceData;
-    
-    if (isKing) {
-      ruleKey = kings[faction] && kings[faction].key;
-      img = getImgSrc(faction, 'king', true);
-      name = translateKingName(p.name);
-      pieceData = {
-        name: name,
-        moves: p.moves || [],
-        range: p.range || 0,
-        faction: faction,
-        image: img
-      };
-    } else {
-      // Pour les pièces normales, utiliser les données stockées dans la pièce
-      ruleKey = p.name || 'piece';
-      img = p.image || getImgSrc(faction, 'piece', false);
-      name = p.name || 'Pièce';
-      pieceData = {
-        name: name,
-        moves: p.moves || [],
-        range: p.range || 0,
-        faction: faction,
-        image: img
-      };
+
+  const getRole = (p) => {
+    if (p.role) return p.role;
+    if (p.type === 'king') return 'king';
+    return 'unique';
+  };
+
+  const getRoleLabel = (role) => {
+    if (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel) {
+      return VGBChess.getRoleLabel(role);
     }
-    
-    const uniq = `${faction}::${ruleKey}`;
-    if (!presentByKey.has(uniq)) {
-      const text = isKing ? 
-        `Roi: Peut se déplacer dans toutes les directions (8 cases adjacentes)` :
-        `${name}: ${p.moves ? p.moves.length : 0} directions de mouvement, portée ${p.range || 0}`;
-      
-      console.log('Ajout à la sidebar:', { uniq, name, text, pieceData });
-      presentByKey.set(uniq, { img, text, name, pieceData });
+    const labels = {
+      pawn: 'Pion', knight: 'Cavalier', bishop: 'Fou', rook: 'Tour',
+      queen: 'Dame', unique: 'Unique', king: 'Roi'
+    };
+    return labels[role] || role;
+  };
+
+  const getImgSrc = (p) => {
+    if (p.image) return p.image;
+    const faction = players[p.player] && players[p.player].faction
+      ? players[p.player].faction.toLowerCase()
+      : 'nintendo';
+    if (p.type === 'king') return `/images/${faction}/characters/king.png`;
+    return '';
+  };
+
+  const byRole = {};
+  ROLE_ORDER.forEach((r) => { byRole[r] = { 0: [], 1: [] }; });
+
+  (pieces || []).forEach((p) => {
+    if (!p || p.player == null) return;
+    const role = getRole(p);
+    if (!byRole[role]) byRole[role] = { 0: [], 1: [] };
+    const side = p.player === 0 || p.player === 1 ? p.player : 0;
+    byRole[role][side].push(p);
+  });
+
+  const name0 = (players[0] && players[0].name) || playerNames[0] || 'Joueur 1';
+  const name1 = (players[1] && players[1].name) || playerNames[1] || 'Joueur 2';
+
+  const renderSide = (list) => {
+    if (!list.length) {
+      return '<span class="rules-role-empty">—</span>';
     }
-  }
-  if (presentByKey.size === 0) {
+    return list.map((p) => {
+      const src = getImgSrc(p);
+      const title = (p.name || '').replace(/"/g, '&quot;');
+      if (!src) return '';
+      return `<img src="${src}" alt="${title}" title="${title}" />`;
+    }).join('');
+  };
+
+  const blocks = ROLE_ORDER.map((role) => {
+    const left = byRole[role][0] || [];
+    const right = byRole[role][1] || [];
+    if (!left.length && !right.length) return '';
+    const plural = {
+      pawn: 'Pions',
+      knight: 'Cavaliers',
+      bishop: 'Fous',
+      rook: 'Tours',
+      queen: 'Dames',
+      unique: 'Uniques',
+      king: 'Rois'
+    };
+    const label = plural[role] || getRoleLabel(role);
+    const icon = ROLE_ICONS[role] || '';
+    return `<div class="rules-role-block">
+      <div class="rules-role-title"><span class="role-icon" aria-hidden="true">${icon}</span>${label}</div>
+      <div class="rules-role-row">
+        <div class="rules-role-side">${renderSide(left)}</div>
+        <div class="rules-role-side">${renderSide(right)}</div>
+      </div>
+    </div>`;
+  }).filter(Boolean);
+
+  if (!blocks.length) {
     el.innerHTML = '<div style="color:#666;">Aucune pièce en jeu</div>';
     return;
   }
-  const rows = [];
-  presentByKey.forEach((v) => {
-    // Obtenir le chemin de l'image de démonstration
-    const demoImagePath = getMovementDemoImage(v.pieceData);
-    
-    rows.push(`<div style="display:flex; align-items:center; flex-direction: column; gap:8px; padding:8px; background:var(--secondary-bg); border-radius:6px;">
-      <img src="${v.img}" alt="" style="width:48px; height:48px; object-fit:contain; display:block;" />
-      <div style="font-weight:bold; margin-bottom:4px;">${v.name}</div>
-      <img src="${demoImagePath}" alt="Démonstration de mouvement" style="width:80px; height:80px; border:1px solid var(--border-color); border-radius:4px;" onerror="this.style.display='none'" />
-    </div>`);
-  });
-  el.innerHTML = rows.join('');
+
+  el.innerHTML =
+    `<div class="rules-cols-header"><span>${name0}</span><span style="text-align:right">${name1}</span></div>` +
+    blocks.join('');
 }
 
 // Positions de départ : uniquement les 2 rangées du haut / du bas (ou 2 colonnes G/D)

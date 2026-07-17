@@ -9,22 +9,20 @@
             '<span class="nav-toggle-bar" aria-hidden="true"></span>' +
           '</button>' +
           '<nav class="site-nav" id="site-nav-panel">' +
-            '<a href="/jouer" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
-            '<a href="/classement" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
-            '<a href="/decks" class="nav-link'+(active==='deck'?' active':'')+'">Mes decks</a>' +
+            '<a href="/play.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
+            '<a href="/classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
-            '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
+            '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             '<a href="/movement-demo.html" class="nav-link nav-link-mobile-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
-            '<a href="/credits.html" class="nav-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
-            '<a href="/auth/login" class="nav-link nav-link-mobile-only" data-t="login">Se connecter</a>' +
+            '<a href="/login.html" class="nav-link nav-link-mobile-only" data-t="login">Se connecter</a>' +
           '</nav>' +
-          '<a href="/jouer" aria-label="Accueil" class="logo-link">' +
+          '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
             '<a href="/movement-demo.html" class="nav-link nav-link-desktop-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
-            '<a href="/auth/login" class="nav-link nav-link-desktop-only" data-t="login">Se connecter</a>' +
+            '<a href="/login.html" class="nav-link nav-link-desktop-only" data-t="login">Se connecter</a>' +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
                 '<span class="flag-icon" id="current-flag">🇫🇷</span>' +
@@ -78,11 +76,35 @@
     });
   }
 
+  function renderFooter(active) {
+    var year = new Date().getFullYear();
+    return (
+      '<footer class="site-footer">' +
+        '<div class="footer-inner">' +
+          '<a href="/credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
+          '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
+        '</div>' +
+      '</footer>'
+    );
+  }
+
+  function injectFooter(active) {
+    if (document.querySelector('.site-footer')) return;
+    var placeholder = document.getElementById('footer-root');
+    if (placeholder) {
+      placeholder.outerHTML = renderFooter(active);
+    } else {
+      document.body.insertAdjacentHTML('beforeend', renderFooter(active));
+    }
+  }
+
   function injectHeader(active) {
     var placeholder = document.getElementById('header-root');
     if (!placeholder) return;
     placeholder.outerHTML = renderHeader(active);
     bindMobileNav();
+    injectFooter(active);
 
     if (typeof initHeaderLanguageSelector === 'function') {
       setTimeout(function() {
@@ -91,5 +113,5 @@
     }
   }
 
-  window.VGBHeader = { injectHeader: injectHeader };
+  window.VGBHeader = { injectHeader: injectHeader, injectFooter: injectFooter };
 })();

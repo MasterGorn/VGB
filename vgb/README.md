@@ -36,13 +36,13 @@ npm install
 npm run dev
 ```
 
-3. Ouvrir http://localhost:3000  
-   - Compte : `/auth/login`  
-   - Jeu : `/jouer`  
-   - Decks : `/decks`  
-   - Classement : `/classement`
+3. Ouvrir http://localhost:3000 → **même site qu’avant** (pages HTML historiques)  
+   - Jeu : `/` ou `/play.html`  
+   - Compte : `/login.html`  
+   - Classement : `/classement.html`  
+   - Pièces / règles / objets : inchangés  
 
-Générer un secret : `openssl rand -base64 32`
+L’API Next (auth Atlas, Elo) tourne en arrière-plan ; le design reste celui de `public/css/`.
 
 ## Vercel
 

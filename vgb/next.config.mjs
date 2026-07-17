@@ -57,6 +57,14 @@ const nextConfig = {
   async rewrites() {
     return [
       { source: "/jouer", destination: "/play.html" },
+      { source: "/index.html", destination: "/play.html" },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: "/auth/login", destination: "/login.html", permanent: false },
+      { source: "/classement", destination: "/classement.html", permanent: false },
+      { source: "/decks", destination: "/login.html", permanent: false },
     ];
   },
 };

@@ -2,443 +2,442 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Chesstendo - Crédits</title>
+<title>Video Games Battle - Crédits</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="/css/header.css" />
 <link rel="stylesheet" href="/css/common.css" />
 <link rel="stylesheet" href="/css/global.css" />
-  <style>
-  /* Styles spécifiques à la page crédits */
-  
-  /* Styles spécifiques aux crédits */
-  .indie { border-left-color:#ff6b6b; color:#ff6b6b; }
-  
-  .company-header {
-    display:flex;
-    align-items:center;
-    margin-bottom:20px;
-  }
-  
-  .company-logo {
-    width:60px;
-    height:60px;
-    margin-right:20px;
-    border-radius:10px;
-    background:rgba(255,255,255,0.1);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font:24px Arial;
-    font-weight:bold;
-  }
-  
-  .company-name {
-    font:28px Arial;
-    font-weight:bold;
-    margin:0;
-    text-shadow:0 2px 4px rgba(0,0,0,0.5);
-  }
-  
-  .characters-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-    gap:15px;
-    margin:20px 0;
-  }
-  
-  .character-card {
-    background:rgba(255,255,255,0.08);
-    border-radius:10px;
-    padding:15px;
-    text-align:center;
-    transition:transform 0.3s ease, background 0.3s ease;
-    border:1px solid rgba(255,255,255,0.1);
-  }
-  
-  .character-card:hover {
-    transform:translateY(-5px);
-    background:rgba(255,255,255,0.12);
-  }
-  
-  .character-name {
-    font:16px Arial;
-    font-weight:bold;
-    margin:8px 0 4px;
-    color:#fff;
-  }
-  
-  .character-game {
-    font:12px Arial;
-    color:#ccc;
-    margin:0;
-  }
-  
-  .legal-notice {
-    background:rgba(255,255,255,0.1);
-    border-radius:15px;
-    padding:30px;
-    margin:40px 0;
-    text-align:center;
-    border:2px solid rgba(255,255,255,0.2);
-  }
-  
-  .legal-notice h2 {
-    font:24px Arial;
-    margin:0 0 20px;
-    color:#ffd700;
-  }
-  
-  .legal-notice p {
-    font:16px Arial;
-    line-height:1.6;
-    margin:10px 0;
-    color:#e0e0e0;
-  }
-  
-  .disclaimer {
-    background:rgba(255,0,0,0.1);
-    border:2px solid rgba(255,0,0,0.3);
-    border-radius:10px;
-    padding:20px;
-    margin:30px 0;
-    text-align:center;
-  }
-  
-  .disclaimer h3 {
-    color:#ff6b6b;
-    font:20px Arial;
-    margin:0 0 15px;
-  }
-  
-  .disclaimer p {
-    font:14px Arial;
-    line-height:1.5;
-    margin:8px 0;
-    color:#ffcccc;
-  }
-  
-  .footer-credits {
-    text-align:center;
-    margin:60px 0 30px;
-    padding:30px;
-    background:rgba(0,0,0,0.3);
-    border-radius:15px;
-  }
-  
-  .footer-credits h2 {
-    font:28px Arial;
-    margin:0 0 20px;
-    color:#ffd700;
-  }
-  
-  .footer-credits p {
-    font:16px Arial;
-    line-height:1.6;
-    margin:10px 0;
-    color:#ccc;
-  }
-  
-  .stars {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:-1;
-  }
-  
-  .star {
-    position:absolute;
-    background:#fff;
-    border-radius:50%;
-    animation:twinkle 3s infinite;
-  }
-  
-  @keyframes twinkle {
-    0%, 100% { opacity:0.3; transform:scale(1); }
-    50% { opacity:1; transform:scale(1.2); }
-  }
-  
-  .scroll-indicator {
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:rgba(255,255,255,0.2);
-    color:#fff;
-    padding:10px 15px;
-    border-radius:20px;
-    font:12px Arial;
-    backdrop-filter:blur(10px);
-    animation:bounce 2s infinite;
-  }
-  
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform:translateY(0); }
-    40% { transform:translateY(-10px); }
-    60% { transform:translateY(-5px); }
-  }
+<style>
+.rules-section {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+}
+.rules-section.faction-nintendo { border-left: 4px solid var(--accent-red); }
+.rules-section.faction-playstation { border-left: 4px solid var(--accent-purple); }
+.rules-section.faction-sega { border-left: 4px solid var(--accent-blue); }
+.rules-section.faction-xbox { border-left: 4px solid var(--accent-green); }
+.rules-section.faction-other { border-left: 4px solid #ff6b6b; }
+.rules-section h2 {
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rules-section h2 .section-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--accent-blue);
+}
+.rules-section h3 {
+  color: var(--text-secondary);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+}
+.rules-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-sm) 0;
+}
+.rules-section a {
+  color: var(--text-primary);
+}
+.highlight-box {
+  background: var(--secondary-bg);
+  border-left: 4px solid var(--accent-blue);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.highlight-box.warn {
+  border-left-color: #ff6b6b;
+}
+.highlight-box .feature-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  color: var(--accent-blue);
+}
+.highlight-box.warn .feature-icon { color: #ff6b6b; }
+.highlight-box strong { color: var(--text-primary); }
+.highlight-box p { margin: 4px 0; }
+.credit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.credit-card {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.credit-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+}
+.credit-card strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.95em;
+}
+.credit-card span {
+  font-size: 0.88em;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+.legal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.legal-item {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+}
+.legal-item strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.legal-item span {
+  color: var(--text-secondary);
+  font-size: 0.92em;
+  line-height: 1.4;
+}
+.copyright-note {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 12px !important;
+}
+.rules-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  justify-content: center;
+}
+.rules-nav a {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.rules-nav a svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
+}
+.rules-nav a:hover { background: rgba(255,255,255,0.12); }
+@media (max-width: 600px) {
+  .rules-section { padding: var(--spacing-md); }
+  .credit-grid { grid-template-columns: 1fr 1fr; }
+  .legal-list { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 <div id="header-root"></div>
 
-<!-- Effet d'étoiles en arrière-plan -->
-<div class="stars" id="stars"></div>
-
 <main class="site-main">
-  <h1 class="page-title">⭐ <span class="title-text" data-t="credits-title">CRÉDITS</span> ⭐</h1>
-  
-  <div class="card-container">
-    <div class="disclaimer">
-      <h3>⚠️ <span data-t="legal-warning">AVERTISSEMENT LÉGAL</span> ⚠️</h3>
-      <p><strong data-t="fan-project">Ce jeu est un projet FAN non lucratif</strong></p>
-      <p data-t="fan-project-desc">Tous les personnages, franchises et propriétés intellectuelles appartiennent à leurs propriétaires respectifs.</p>
-      <p><strong data-t="no-content-sale">Aucun contenu n'est à vendre</strong> - <span data-t="completely-free">L'intégralité du jeu est 100% GRATUITE</span></p>
-      <p data-t="fan-created">Ce projet est créé par des fans, pour les fans, sans but commercial.</p>
-    </div>
-    
-    <!-- Nintendo -->
-    <div class="card-section nintendo">
-      <div class="company-header">
-        <div class="company-logo">N</div>
-        <h2 class="company-name">Nintendo Co., Ltd.</h2>
+  <h1 class="page-title"><span class="title-text" data-t="credits-title">Crédits</span></h1>
+
+  <nav class="rules-nav" aria-label="Sommaire des crédits">
+    <a href="#avertissement">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3L2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>
+      <span data-t="legal-warning">Avertissement</span>
+    </a>
+    <a href="#nintendo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 12h2M14 10v4"/></svg>
+      Nintendo
+    </a>
+    <a href="#playstation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 14l4-8 4 8"/></svg>
+      PlayStation
+    </a>
+    <a href="#sega">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12c2-4 6-6 8-6s6 2 8 6c-2 4-6 6-8 6s-6-2-8-6z"/></svg>
+      SEGA
+    </a>
+    <a href="#xbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 8l8 8M16 8l-8 8"/></svg>
+      Xbox
+    </a>
+    <a href="#autres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8l8-4 8 4v9l-8 4-8-4V8z"/><path d="M4 8l8 4 8-4M12 12v9"/></svg>
+      <span data-t="other-properties">Autres</span>
+    </a>
+    <a href="#mentions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h11M8 12h11M8 18h11M5 6h.01M5 12h.01M5 18h.01"/></svg>
+      <span data-t="legal-mentions">Mentions</span>
+    </a>
+    <a href="#technique">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l1.8-1.8a6 6 0 0 1-7.8 7.8l-5.2 5.2a2 2 0 0 1-2.8-2.8l5.2-5.2a6 6 0 0 1 7.8-7.8l-1.8 1.8z"/></svg>
+      <span data-t="technical-credits">Technique</span>
+    </a>
+  </nav>
+
+  <div class="rules-section" id="avertissement">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3L2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>
+      <span data-t="legal-warning">Avertissement légal</span>
+    </h2>
+    <div class="highlight-box warn">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3L2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>
+      <div>
+        <p><strong data-t="fan-project">Ce jeu est un projet FAN non lucratif</strong></p>
+        <p data-t="fan-project-desc">Tous les personnages, franchises et propriétés intellectuelles appartiennent à leurs propriétaires respectifs.</p>
+        <p><strong data-t="no-content-sale">Aucun contenu n'est à vendre</strong> — <span data-t="completely-free">L'intégralité du jeu est 100% GRATUITE</span></p>
+        <p data-t="fan-created">Ce projet est créé par des fans, pour les fans, sans but commercial.</p>
       </div>
-      <p style="margin:0 0 20px; font:16px Arial; color:#e0e0e0;">
-        <strong data-t="owner-of">Propriétaire de :</strong> <span data-t="nintendo-owner">The Legend of Zelda, Super Mario, et toutes leurs franchises associées</span>
-      </p>
-      <div class="characters-grid">
-        <div class="character-card">
-          <div class="character-name">Mario</div>
-          <div class="character-game">Super Mario Bros.</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Link</div>
-          <div class="character-game">The Legend of Zelda</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Zelda</div>
-          <div class="character-game">The Legend of Zelda</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name" data-t="nintendo-king">Roi Nintendo</div>
-          <div class="character-game" data-t="nintendo-representative">Représentant Nintendo</div>
-        </div>
-      </div>
-      <p style="font:12px Arial; color:#aaa; margin:15px 0 0;" data-t="nintendo-copyright">
-        © Nintendo. Tous droits réservés. Nintendo est une marque déposée de Nintendo Co., Ltd.
-      </p>
-    </div>
-    
-    <!-- PlayStation -->
-    <div class="card-section playstation">
-      <div class="company-header">
-        <div class="company-logo">PS</div>
-        <h2 class="company-name">Sony Interactive Entertainment</h2>
-      </div>
-      <p style="margin:0 0 20px; font:16px Arial; color:#e0e0e0;">
-        <strong data-t="owner-of">Propriétaire de :</strong> <span data-t="playstation-owner">PlayStation, Uncharted, God of War, Astro Bot et leurs franchises</span>
-      </p>
-      <div class="characters-grid">
-        <div class="character-card">
-          <div class="character-name">Nathan Drake</div>
-          <div class="character-game">Uncharted</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Kratos</div>
-          <div class="character-game">God of War</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Astro Bot</div>
-          <div class="character-game">Astro Bot</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name" data-t="playstation-king">Roi PlayStation</div>
-          <div class="character-game" data-t="playstation-representative">Représentant PlayStation</div>
-        </div>
-      </div>
-      <p style="font:12px Arial; color:#aaa; margin:15px 0 0;" data-t="playstation-copyright">
-        © Sony Interactive Entertainment. Tous droits réservés. PlayStation est une marque déposée de Sony Interactive Entertainment LLC.
-      </p>
-    </div>
-    
-    <!-- SEGA -->
-    <div class="card-section sega">
-      <div class="company-header">
-        <div class="company-logo">S</div>
-        <h2 class="company-name">SEGA Corporation</h2>
-      </div>
-      <p style="margin:0 0 20px; font:16px Arial; color:#e0e0e0;">
-        <strong data-t="owner-of">Propriétaire de :</strong> <span data-t="sega-owner">Sonic, Yakuza, Shinobi et leurs franchises associées</span>
-      </p>
-      <div class="characters-grid">
-        <div class="character-card">
-          <div class="character-name">Sonic</div>
-          <div class="character-game">Sonic the Hedgehog</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Ryo Hazuki</div>
-          <div class="character-game">Shenmue</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Joe Musashi</div>
-          <div class="character-game">Shinobi</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name" data-t="sega-king">Roi SEGA</div>
-          <div class="character-game" data-t="sega-representative">Représentant SEGA</div>
-        </div>
-      </div>
-      <p style="font:12px Arial; color:#aaa; margin:15px 0 0;" data-t="sega-copyright">
-        © SEGA Corporation. Tous droits réservés. SEGA est une marque déposée de SEGA Corporation.
-      </p>
-    </div>
-    
-    <!-- Xbox -->
-    <div class="card-section xbox">
-      <div class="company-header">
-        <div class="company-logo">X</div>
-        <h2 class="company-name">Microsoft Corporation</h2>
-      </div>
-      <p style="margin:0 0 20px; font:16px Arial; color:#e0e0e0;">
-        <strong data-t="owner-of">Propriétaire de :</strong> <span data-t="xbox-owner">Xbox, Halo, Gears of War, Perfect Dark et leurs franchises</span>
-      </p>
-      <div class="characters-grid">
-        <div class="character-card">
-          <div class="character-name">Master Chief</div>
-          <div class="character-game">Halo</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Marcus Fenix</div>
-          <div class="character-game">Gears of War</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Joanna Dark</div>
-          <div class="character-game">Perfect Dark</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name" data-t="xbox-king">Roi Xbox</div>
-          <div class="character-game" data-t="xbox-representative">Représentant Xbox</div>
-        </div>
-      </div>
-      <p style="font:12px Arial; color:#aaa; margin:15px 0 0;" data-t="xbox-copyright">
-        © Microsoft Corporation. Tous droits réservés. Xbox est une marque déposée de Microsoft Corporation.
-      </p>
-    </div>
-    
-    <!-- Autres propriétés -->
-    <div class="card-section indie">
-      <div class="company-header">
-        <div class="company-logo">🎮</div>
-        <h2 class="company-name" data-t="other-properties">Autres Propriétés</h2>
-      </div>
-      <p style="margin:0 0 20px; font:16px Arial; color:#e0e0e0;">
-        <strong data-t="inspired-by">Objets et éléments inspirés de :</strong>
-      </p>
-      <div class="characters-grid">
-        <div class="character-card">
-          <div class="character-name">Bob-omb</div>
-          <div class="character-game">Super Mario Bros.</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Étoile</div>
-          <div class="character-game">Super Mario Bros.</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Ocarina</div>
-          <div class="character-game">The Legend of Zelda</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Masque de Majora</div>
-          <div class="character-game">Majora's Mask</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Tetrimino</div>
-          <div class="character-game">Tetris</div>
-        </div>
-        <div class="character-card">
-          <div class="character-name">Curseur Sims</div>
-          <div class="character-game">The Sims</div>
-        </div>
-      </div>
-      <p style="font:12px Arial; color:#aaa; margin:15px 0 0;" data-t="all-elements-inspired">
-        Tous les éléments de gameplay sont inspirés de jeux existants et appartiennent à leurs propriétaires respectifs.
-      </p>
-    </div>
-    
-    <!-- Mentions légales -->
-    <div class="legal-notice">
-      <h2>📋 <span data-t="legal-mentions">MENTIONS LÉGALES</span></h2>
-      <p><strong data-t="fan-project-legal">Video Games Battle est un projet FAN non commercial</strong></p>
-      <p data-t="educational-purpose">Ce jeu a été créé par des passionnés de jeux vidéo dans un but éducatif et de divertissement uniquement.</p>
-      <p><strong>❌ <span data-t="no-paid-content">Aucun contenu payant</span></strong> - <span data-t="completely-accessible">L'intégralité du jeu est accessible gratuitement</span></p>
-      <p><strong>❌ <span data-t="no-sales">Aucune vente</span></strong> - <span data-t="nothing-for-sale">Rien n'est à vendre sur ce site</span></p>
-      <p><strong>✅ <span data-t="completely-free">100% Gratuit</span></strong> - <span data-t="all-features-available">Toutes les fonctionnalités sont disponibles sans frais</span></p>
-      <p><strong>✅ <span data-t="community-project">Projet communautaire</span></strong> - <span data-t="created-by-community">Créé par et pour la communauté gaming</span></p>
-    </div>
-    
-    <!-- Crédits techniques -->
-    <div class="footer-credits">
-      <h2>🛠️ <span data-t="technical-credits">CRÉDITS TECHNIQUES</span></h2>
-      <p><strong data-t="development">Développement :</strong> Pierre Gorn Brunet - <a href="https://github.com/mastergorn">https://github.com/mastergorn</a> - jeu développé en Javascript avec l'IDE Cursor</p>
-      <p><strong data-t="game-engine">Moteur de jeu :</strong> Phaser 3 (Open Source) - <a href="https://phaser.io/">https://phaser.io/</a></p>
-      <p><strong data-t="inspiration">Inspiration :</strong> Super Smash Bros. Ultimate, Mario Kart, Chess.com, et la communauté gaming</p>
-      <p><strong data-t="thanks">Remerciements :</strong> <span data-t="community-support">À tous les fans qui nous soutiennent et à la communauté des jeux de stratégie</span></p>
-      <p style="margin-top:30px; font:14px Arial; color:#888;">
-        <em data-t="copyright-respect">Ce projet respecte les droits d'auteur et les marques déposées. Tous les personnages et franchises appartiennent à leurs propriétaires légitimes.</em>
-      </p>
     </div>
   </div>
-</main>
 
-<div class="scroll-indicator">
-  ⬇️ <span data-t="scroll-indicator">Faites défiler pour voir tous les crédits</span> ⬇️
-</div>
+  <div class="rules-section faction-nintendo" id="nintendo">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 12h2M14 10v4"/></svg>
+      Nintendo Co., Ltd.
+    </h2>
+    <p><strong data-t="owner-of">Propriétaire de :</strong> <span data-t="nintendo-owner">The Legend of Zelda, Super Mario, et toutes leurs franchises associées</span></p>
+    <div class="credit-grid">
+      <div class="credit-card">
+        <img src="/images/nintendo/characters/mario.png" alt="Mario" width="72" height="72" loading="lazy">
+        <strong>Mario</strong>
+        <span>Super Mario Bros.</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/nintendo/characters/link.png" alt="Link" width="72" height="72" loading="lazy">
+        <strong>Link</strong>
+        <span>The Legend of Zelda</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/nintendo/characters/zelda.png" alt="Zelda" width="72" height="72" loading="lazy">
+        <strong>Zelda</strong>
+        <span>The Legend of Zelda</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/nintendo/characters/king.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="nintendo-king">Roi Nintendo</strong>
+        <span data-t="nintendo-representative">Représentant Nintendo</span>
+      </div>
+    </div>
+    <p class="copyright-note" data-t="nintendo-copyright">© Nintendo. Tous droits réservés. Nintendo est une marque déposée de Nintendo Co., Ltd.</p>
+  </div>
+
+  <div class="rules-section faction-playstation" id="playstation">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 14l4-8 4 8"/></svg>
+      Sony Interactive Entertainment
+    </h2>
+    <p><strong data-t="owner-of">Propriétaire de :</strong> <span data-t="playstation-owner">PlayStation, Uncharted, God of War, Astro Bot et leurs franchises</span></p>
+    <div class="credit-grid">
+      <div class="credit-card">
+        <img src="/images/playstation/characters/nathan-drake.png" alt="Nathan Drake" width="72" height="72" loading="lazy">
+        <strong>Nathan Drake</strong>
+        <span>Uncharted</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/playstation/characters/kratos.png" alt="Kratos" width="72" height="72" loading="lazy">
+        <strong>Kratos</strong>
+        <span>God of War</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/playstation/characters/astro-bot.png" alt="Astro Bot" width="72" height="72" loading="lazy">
+        <strong>Astro Bot</strong>
+        <span>Astro Bot</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/playstation/characters/king.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="playstation-king">Roi PlayStation</strong>
+        <span data-t="playstation-representative">Représentant PlayStation</span>
+      </div>
+    </div>
+    <p class="copyright-note" data-t="playstation-copyright">© Sony Interactive Entertainment. Tous droits réservés. PlayStation est une marque déposée de Sony Interactive Entertainment LLC.</p>
+  </div>
+
+  <div class="rules-section faction-sega" id="sega">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12c2-4 6-6 8-6s6 2 8 6c-2 4-6 6-8 6s-6-2-8-6z"/></svg>
+      SEGA Corporation
+    </h2>
+    <p><strong data-t="owner-of">Propriétaire de :</strong> <span data-t="sega-owner">Sonic, Yakuza, Shinobi et leurs franchises associées</span></p>
+    <div class="credit-grid">
+      <div class="credit-card">
+        <img src="/images/sega/characters/sonic.png" alt="Sonic" width="72" height="72" loading="lazy">
+        <strong>Sonic</strong>
+        <span>Sonic the Hedgehog</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/sega/characters/ryo.png" alt="Ryo Hazuki" width="72" height="72" loading="lazy">
+        <strong>Ryo Hazuki</strong>
+        <span>Shenmue</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/sega/characters/joe-musashi.png" alt="Joe Musashi" width="72" height="72" loading="lazy">
+        <strong>Joe Musashi</strong>
+        <span>Shinobi</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/sega/characters/king.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="sega-king">Roi SEGA</strong>
+        <span data-t="sega-representative">Représentant SEGA</span>
+      </div>
+    </div>
+    <p class="copyright-note" data-t="sega-copyright">© SEGA Corporation. Tous droits réservés. SEGA est une marque déposée de SEGA Corporation.</p>
+  </div>
+
+  <div class="rules-section faction-xbox" id="xbox">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 8l8 8M16 8l-8 8"/></svg>
+      Microsoft Corporation
+    </h2>
+    <p><strong data-t="owner-of">Propriétaire de :</strong> <span data-t="xbox-owner">Xbox, Halo, Gears of War, Perfect Dark et leurs franchises</span></p>
+    <div class="credit-grid">
+      <div class="credit-card">
+        <img src="/images/xbox/characters/masterchief.png" alt="Master Chief" width="72" height="72" loading="lazy">
+        <strong>Master Chief</strong>
+        <span>Halo</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/xbox/characters/marcus-fenix.png" alt="Marcus Fenix" width="72" height="72" loading="lazy">
+        <strong>Marcus Fenix</strong>
+        <span>Gears of War</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/xbox/characters/joanna-dark.png" alt="Joanna Dark" width="72" height="72" loading="lazy">
+        <strong>Joanna Dark</strong>
+        <span>Perfect Dark</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/xbox/characters/king.png" alt="" width="72" height="72" loading="lazy">
+        <strong data-t="xbox-king">Roi Xbox</strong>
+        <span data-t="xbox-representative">Représentant Xbox</span>
+      </div>
+    </div>
+    <p class="copyright-note" data-t="xbox-copyright">© Microsoft Corporation. Tous droits réservés. Xbox est une marque déposée de Microsoft Corporation.</p>
+  </div>
+
+  <div class="rules-section faction-other" id="autres">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8l8-4 8 4v9l-8 4-8-4V8z"/><path d="M4 8l8 4 8-4M12 12v9"/></svg>
+      <span data-t="other-properties">Autres propriétés</span>
+    </h2>
+    <p><strong data-t="inspired-by">Objets et éléments inspirés de :</strong></p>
+    <div class="credit-grid">
+      <div class="credit-card">
+        <img src="/images/items/bobomb.png" alt="Bob-omb" width="72" height="72" loading="lazy">
+        <strong>Bob-omb</strong>
+        <span>Super Mario Bros.</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/items/star.png" alt="Étoile" width="72" height="72" loading="lazy">
+        <strong>Étoile</strong>
+        <span>Super Mario Bros.</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/items/oracina.png" alt="Ocarina" width="72" height="72" loading="lazy">
+        <strong>Ocarina</strong>
+        <span>The Legend of Zelda</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/items/mask-majora.png" alt="Masque de Majora" width="72" height="72" loading="lazy">
+        <strong>Masque de Majora</strong>
+        <span>Majora's Mask</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/items/tetrimino.png" alt="Tetrimino" width="72" height="72" loading="lazy">
+        <strong>Tetrimino</strong>
+        <span>Tetris</span>
+      </div>
+      <div class="credit-card">
+        <img src="/images/items/sims-cursor.png" alt="Curseur Sims" width="72" height="72" loading="lazy">
+        <strong>Curseur Sims</strong>
+        <span>The Sims</span>
+      </div>
+    </div>
+    <p class="copyright-note" data-t="all-elements-inspired">Tous les éléments de gameplay sont inspirés de jeux existants et appartiennent à leurs propriétaires respectifs.</p>
+  </div>
+
+  <div class="rules-section" id="mentions">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h11M8 12h11M8 18h11M5 6h.01M5 12h.01M5 18h.01"/></svg>
+      <span data-t="legal-mentions">Mentions légales</span>
+    </h2>
+    <p><strong data-t="fan-project-legal">Video Games Battle est un projet FAN non commercial</strong></p>
+    <p data-t="educational-purpose">Ce jeu a été créé par des passionnés de jeux vidéo dans un but éducatif et de divertissement uniquement.</p>
+    <div class="legal-list">
+      <div class="legal-item">
+        <strong>❌ <span data-t="no-paid-content">Aucun contenu payant</span></strong>
+        <span data-t="completely-accessible">L'intégralité du jeu est accessible gratuitement</span>
+      </div>
+      <div class="legal-item">
+        <strong>❌ <span data-t="no-sales">Aucune vente</span></strong>
+        <span data-t="nothing-for-sale">Rien n'est à vendre sur ce site</span>
+      </div>
+      <div class="legal-item">
+        <strong>✅ <span data-t="completely-free">100% Gratuit</span></strong>
+        <span data-t="all-features-available">Toutes les fonctionnalités sont disponibles sans frais</span>
+      </div>
+      <div class="legal-item">
+        <strong>✅ <span data-t="community-project">Projet communautaire</span></strong>
+        <span data-t="created-by-community">Créé par et pour la communauté gaming</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section" id="technique">
+    <h2>
+      <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l1.8-1.8a6 6 0 0 1-7.8 7.8l-5.2 5.2a2 2 0 0 1-2.8-2.8l5.2-5.2a6 6 0 0 1 7.8-7.8l-1.8 1.8z"/></svg>
+      <span data-t="technical-credits">Crédits techniques</span>
+    </h2>
+    <div class="highlight-box">
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z"/></svg>
+      <div>
+        <p><strong data-t="development">Développement :</strong> Pierre Gorn Brunet — <a href="https://github.com/mastergorn" target="_blank" rel="noopener noreferrer">github.com/mastergorn</a> — jeu développé en Javascript avec l'IDE Cursor</p>
+        <p><strong data-t="game-engine">Moteur de jeu :</strong> Phaser 3 (Open Source) — <a href="https://phaser.io/" target="_blank" rel="noopener noreferrer">phaser.io</a></p>
+        <p><strong data-t="inspiration">Inspiration :</strong> Super Smash Bros. Ultimate, Mario Kart, Chess.com, et la communauté gaming</p>
+        <p><strong data-t="thanks">Remerciements :</strong> <span data-t="community-support">À tous les fans qui nous soutiennent et à la communauté des jeux de stratégie</span></p>
+      </div>
+    </div>
+    <p class="copyright-note"><em data-t="copyright-respect">Ce projet respecte les droits d'auteur et les marques déposées. Tous les personnages et franchises appartiennent à leurs propriétaires légitimes.</em></p>
+  </div>
+</main>
 
 <script src="/js/translations.js"></script>
 <script src="/js/header.js"></script>
 <script>
-// Injecter le header
-VGBHeader.injectHeader('credits');
-initTranslation(); // Initialiser les traductions
-
-// Créer l'effet d'étoiles
-function createStars() {
-  const starsContainer = document.getElementById('stars');
-  const numStars = 100;
-  
-  for (let i = 0; i < numStars; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    
-    // Position aléatoire
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    
-    // Taille aléatoire
-    const size = Math.random() * 3 + 1;
-    star.style.width = size + 'px';
-    star.style.height = size + 'px';
-    
-    // Délai d'animation aléatoire
-    star.style.animationDelay = Math.random() * 3 + 's';
-    star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-    
-    starsContainer.appendChild(star);
-  }
-}
-
-// Initialiser les étoiles
-document.addEventListener('DOMContentLoaded', createStars);
-
-// Masquer l'indicateur de scroll après 5 secondes
-setTimeout(() => {
-  const indicator = document.querySelector('.scroll-indicator');
-  if (indicator) {
-    indicator.style.opacity = '0';
-    indicator.style.transition = 'opacity 1s ease';
-  }
-}, 5000);
+document.addEventListener('DOMContentLoaded', () => {
+  VGBHeader.injectHeader('credits');
+  if (typeof initTranslation === 'function') initTranslation();
+});
 </script>
 </body>
 </html>

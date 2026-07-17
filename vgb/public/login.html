@@ -64,8 +64,7 @@
       <button type="button" id="btn-login">Connexion</button>
       <button type="button" id="btn-register">Créer un compte</button>
     </div>
-<p class="hint">Le même compte sert pour le mode en ligne classé (Elo) sur la page Jouer.</p>
-    <p class="hint">Compte / API : ouvrez ce site via <strong>MAMP</strong> (Apache + PHP), pas via http-server. Ex.&nbsp;: <code style="color:#ffd700">http://localhost:8888/videogamesbattle/VGB/login.html</code></p>
+    <p class="hint">Le même compte sert pour le mode en ligne classé (Elo) sur la page Jouer.</p>
     <p class="msg" id="msg"></p>
   </div>
   <div class="card" id="profile-card" style="display:none;">
@@ -73,24 +72,14 @@
     <p class="elo" id="profile-elo"></p>
     <div class="actions" style="margin-top:16px;">
       <button type="button" id="btn-play" style="background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;">Jouer</button>
-      <button type="button" id="btn-decks" style="background:#9b59b6;">Mes decks</button>
       <button type="button" id="btn-logout" style="background:#c0392b;">Déconnexion</button>
     </div>
   </div>
 </main>
 <script src="/js/translations.js"></script>
 <script src="/js/header.js"></script>
-<script src="/js/online.js?v=20260717h"></script>
+<script src="/js/online.js?v=20260717i"></script>
 <script>
-// Si une base Mongo inexistante était forcée, on la retire pour utiliser l'API PHP MAMP
-try {
-  const base = localStorage.getItem('vgb_api_base');
-  if (base && /localhost:3000/.test(base)) {
-    // Ne pas bloquer si l'utilisateur a vraiment lancé Mongo ; on laisse tel quel.
-    // En cas d'échec récurrent, décommenter : localStorage.removeItem('vgb_api_base');
-  }
-} catch (e) {}
-
 VGBHeader.injectHeader('login');
 if (typeof initTranslation === 'function') initTranslation();
 
@@ -130,17 +119,14 @@ document.getElementById('btn-logout').onclick = async () => {
   await VGBOnline.logout();
   showAuth();
 };
-document.getElementById('btn-play').onclick = () => { location.href = 'index.html'; };
-document.getElementById('btn-decks').onclick = () => { location.href = 'deck.html'; };
+document.getElementById('btn-play').onclick = () => { location.href = '/play.html'; };
 
 (async function init() {
-  if (VGBOnline.token) {
-    try {
-      await VGBOnline.refreshMe();
-      showProfile();
-    } catch (e) {
-      VGBOnline.clearSession();
-    }
+  try {
+    const user = await VGBOnline.refreshMe();
+    if (user) showProfile();
+  } catch (e) {
+    VGBOnline.clearSession();
   }
 })();
 </script>

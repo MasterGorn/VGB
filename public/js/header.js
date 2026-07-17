@@ -13,10 +13,9 @@
             '<a href="classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
             '<a href="deck.html" class="nav-link'+(active==='deck'?' active':'')+'">Mes decks</a>' +
             '<a href="pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
-            '<a href="regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             '<a href="objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
+            '<a href="regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             '<a href="movement-demo.html" class="nav-link nav-link-mobile-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
-            '<a href="credits.html" class="nav-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
             '<a href="login.html" class="nav-link nav-link-mobile-only" data-t="login">Se connecter</a>' +
           '</nav>' +
           '<a href="index.html" aria-label="Accueil" class="logo-link">' +
@@ -78,11 +77,35 @@
     });
   }
 
+  function renderFooter(active) {
+    var year = new Date().getFullYear();
+    return (
+      '<footer class="site-footer">' +
+        '<div class="footer-inner">' +
+          '<a href="credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
+          '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
+        '</div>' +
+      '</footer>'
+    );
+  }
+
+  function injectFooter(active) {
+    if (document.querySelector('.site-footer')) return;
+    var placeholder = document.getElementById('footer-root');
+    if (placeholder) {
+      placeholder.outerHTML = renderFooter(active);
+    } else {
+      document.body.insertAdjacentHTML('beforeend', renderFooter(active));
+    }
+  }
+
   function injectHeader(active) {
     var placeholder = document.getElementById('header-root');
     if (!placeholder) return;
     placeholder.outerHTML = renderHeader(active);
     bindMobileNav();
+    injectFooter(active);
 
     if (typeof initHeaderLanguageSelector === 'function') {
       setTimeout(function() {
@@ -91,5 +114,5 @@
     }
   }
 
-  window.VGBHeader = { injectHeader: injectHeader };
+  window.VGBHeader = { injectHeader: injectHeader, injectFooter: injectFooter };
 })();
