@@ -7,7 +7,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
   http_response_code(204);
   exit;
 }
@@ -67,6 +67,18 @@ function vgb_db(): PDO {
       FOREIGN KEY(player1_id) REFERENCES users(id),
       FOREIGN KEY(player2_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS decks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL DEFAULT 'Mon deck',
+      faction TEXT NOT NULL,
+      slots_json TEXT NOT NULL,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_decks_user ON decks(user_id);
   ");
 
   return $pdo;

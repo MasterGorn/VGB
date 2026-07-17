@@ -1,0 +1,23 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - vgb_mongo_data:/data/db
+
+  api:
+    build: ./server
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/vgb
+      ELO_DEFAULT: 1000
+      ELO_K: 32
+      CORS_ORIGIN: "*"
+    depends_on:
+      - mongo
+
+volumes:
+  vgb_mongo_data:

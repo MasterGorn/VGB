@@ -1,0 +1,43 @@
+{
+  "name": "video-games-battle",
+  "version": "1.0.0",
+  "description": "Un jeu de stratégie multijoueur inspiré des univers vidéoludiques",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "serve": "python -m http.server 8000",
+    "serve:php": "php -S localhost:8000",
+    "add-character": "node scripts/add-character.js",
+    "add-item": "node scripts/add-item.js",
+    "validate": "node scripts/validate-contribution.js",
+    "test": "node scripts/validate-contribution.js"
+  },
+  "keywords": [
+    "game",
+    "strategy",
+    "multiplayer",
+    "video-games",
+    "nintendo",
+    "playstation",
+    "sega",
+    "xbox"
+  ],
+  "author": "Pierre Brunet",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/video-games-battle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/video-games-battle/issues"
+  },
+  "homepage": "https://github.com/your-username/video-games-battle#readme",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
+
+
+
