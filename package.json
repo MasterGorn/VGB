@@ -2,10 +2,13 @@
   "name": "video-games-battle",
   "version": "1.0.0",
   "description": "Un jeu de stratégie multijoueur inspiré des univers vidéoludiques",
-  "main": "index.html",
+  "private": true,
   "scripts": {
-    "dev": "python -m http.server 8000",
-    "serve": "python -m http.server 8000",
+    "dev": "npm run dev --prefix vgb",
+    "build": "npm run build --prefix vgb",
+    "start": "npm run start --prefix vgb",
+    "serve": "npm run dev --prefix vgb",
+    "serve:legacy": "python3 -m http.server 8000",
     "serve:php": "php -S localhost:8000",
     "add-character": "node scripts/add-character.js",
     "add-item": "node scripts/add-item.js",
@@ -24,20 +27,7 @@
   ],
   "author": "Pierre Brunet",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/video-games-battle.git"
-  },
-  "bugs": {
-    "url": "https://github.com/your-username/video-games-battle/issues"
-  },
-  "homepage": "https://github.com/your-username/video-games-battle#readme",
-  "devDependencies": {},
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.9.0"
   }
 }
-
-
-
-

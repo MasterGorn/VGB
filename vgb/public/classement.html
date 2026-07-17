@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Classement Elo — Video Games Battle</title>
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+  .page { max-width: 720px; margin: 0 auto; padding: 120px 16px 40px; }
+  h1 { color: #ffd700; font-size: clamp(24px, 5vw, 36px); margin: 0 0 8px; }
+  .sub { color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+  .table-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  th { background: rgba(0,0,0,0.25); color: #ffd700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: none; }
+  .rank { font-weight: bold; color: #ffd700; width: 48px; }
+  .elo { font-weight: bold; }
+  .muted { color: rgba(255,255,255,0.55); font-size: 13px; }
+  .cta { margin-top: 20px; }
+  .cta a {
+    display: inline-block;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #e67e22, #f1c40f);
+    color: #111;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 8px;
+    min-height: 48px;
+    line-height: 24px;
+  }
+  @media (max-width: 480px) {
+    th:nth-child(4), td:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<main class="page">
+  <h1>Classement Elo</h1>
+  <p class="sub">Classement des parties en ligne 1v1. Elo de départ : 1000.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Joueur</th>
+          <th>Elo</th>
+          <th>V / D / N</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body">
+        <tr><td colspan="4" class="muted">Chargement…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="cta">
+    <a href="index.html">Jouer en ligne</a>
+  </div>
+</main>
+<script src="/js/translations.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/online.js"></script>
+<script>
+VGBHeader.injectHeader('classement');
+if (typeof initTranslation === 'function') initTranslation();
+
+(async function () {
+  const body = document.getElementById('lb-body');
+  try {
+    const rows = await VGBOnline.fetchLeaderboard(50);
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="4" class="muted">Aucun joueur classé pour l’instant.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(r =>
+      `<tr>
+        <td class="rank">${r.rank}</td>
+        <td>${r.username}</td>
+        <td class="elo">${r.elo}</td>
+        <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
+      </tr>`
+    ).join('');
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="4" class="muted">Impossible de charger le classement. Vérifiez que PHP/MAMP est actif.</td></tr>';
+  }
+})();
+</script>
+</body>
+</html>

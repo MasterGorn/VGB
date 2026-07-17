@@ -1,0 +1,107 @@
+/* Styles globaux pour Video Games Battle */
+
+/* Styles pour le sélecteur de langue dans le header */
+.language-selector {
+  position: relative;
+  display: inline-block;
+  margin-left: 15px;
+}
+
+.language-btn {
+  background: none;
+  border: 2px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 50px;
+  justify-content: center;
+}
+
+.language-btn:hover {
+  border-color: var(--accent-gold, #ffd700);
+  background: var(--secondary-bg, rgba(255,255,255,0.05));
+}
+
+.flag-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 2px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  box-shadow: var(--shadow-medium, 0 4px 16px rgba(0,0,0,0.12));
+  z-index: 1000;
+  min-width: 150px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.lang-option {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-option:last-child {
+  border-bottom: none;
+}
+
+.lang-option:hover {
+  background: var(--secondary-bg, rgba(255,255,255,0.05));
+}
+
+.lang-option.active {
+  background: var(--accent-gold, #ffd700);
+  color: white;
+}
+
+.lang-option.active:hover {
+  background: var(--accent-gold, #ffd700);
+}
+
+/* Responsive design pour le sélecteur de langue */
+@media (max-width: 768px) {
+  .language-selector {
+    margin-left: 10px;
+  }
+  
+  .language-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 40px;
+  }
+  
+  .flag-icon {
+    font-size: 16px;
+  }
+  
+  .language-dropdown {
+    min-width: 120px;
+  }
+  
+  .lang-option {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

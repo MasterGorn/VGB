@@ -61,11 +61,19 @@ server.js
 package-lock.json
 yarn.lock
 .env
+.env.local
+.env*.local
 server/.env
+vgb/.env.local
+vgb/.next/
+.next/
 
 # Garder le package.json du backend Mongo
 !server/package.json
 !server/package-lock.json
+!vgb/package.json
+!vgb/package-lock.json
+
 
 
 # Fichiers de test temporaires

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstrations de Mouvements - VGB</title>
+    <link rel="stylesheet" href="/css/header.css" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/global.css" />
+</head>
+<body>
+    <div id="header-root"></div>
+
+    <main class="site-main">
+        <h1 class="page-title">♟️ <span class="title-text" data-t="movement-demos">Démonstrations de Mouvements</span> ♟️</h1>
+        
+        <div class="card">
+            <h2>Générateur de Démonstrations de Mouvements</h2>
+            <p>Cette page vous permet de générer des images illustrant les capacités de mouvement de chaque pièce sur un damier.</p>
+            
+            <div class="demo-controls">
+                <button id="generateAll" class="btn btn-primary">🎯 Générer Toutes les Démonstrations</button>
+                <button id="exportAll" class="btn btn-secondary">📦 Télécharger Archive ZIP</button>
+            </div>
+            
+            <div id="progressContainer" style="display: none; margin-top: 20px;">
+                <div class="progress-bar">
+                    <div id="progressBar" class="progress-fill"></div>
+                </div>
+                <p id="progressText">Génération en cours...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Instructions</h2>
+            <ol>
+                <li><strong>Cliquez sur "Générer Toutes les Démonstrations"</strong> pour créer les visualisations</li>
+                <li><strong>Cliquez sur "Exporter Toutes les Images"</strong> pour télécharger l'archive ZIP</li>
+                <li><strong>L'archive contient toutes les images PNG</strong> des démonstrations de mouvement</li>
+                <li><strong>Extrayez l'archive</strong> pour accéder aux images individuelles</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>Légende</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f0d9b5;"></div>
+                    <span>Cases claires du damier</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #b58863;"></div>
+                    <span>Cases sombres du damier</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(0, 255, 0, 0.6);"></div>
+                    <span>Mouvements possibles</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff0000;"></div>
+                    <span>Position de la pièce</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Pièces Disponibles</h2>
+            <div id="piecesList" class="pieces-grid">
+                <p>Chargement des pièces...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Zone de démonstration -->
+    <div id="demo-container" style="display: none; text-align: center; margin: 20px 0;">
+        <h3>Aperçu de la démonstration :</h3>
+        <p>La première démonstration s'affiche ci-dessous. Cliquez sur "Télécharger Archive ZIP" pour obtenir toutes les images.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="/js/header.js"></script>
+    <script src="/data/pieces.js"></script>
+    <script src="/js/chess-roles.js"></script>
+    <script src="/js/movement-demo.js"></script>
+    
+    <script>
+        // Fonction pour générer la liste des pièces disponibles
+        function generatePiecesList() {
+            const container = document.getElementById('piecesList');
+            if (typeof piecesData === 'undefined') {
+                container.innerHTML = '<p>Erreur: Données des pièces non disponibles</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            piecesData.forEach(piece => {
+                const card = document.createElement('div');
+                card.className = 'piece-card';
+                const roleLabel = (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel)
+                  ? VGBChess.getRoleLabel(piece.role)
+                  : (piece.role || '—');
+                card.innerHTML = `
+                    <h3>${piece.name}</h3>
+                    <p><strong>Force:</strong> ${roleLabel}</p>
+                    <p><strong>Éditeur:</strong> ${piece.faction}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Injecter le header
+            VGBHeader.injectHeader('movement-demo');
+            
+            // Vérifier que JSZip est chargé
+            if (typeof JSZip === 'undefined') {
+                console.error('JSZip n\'est pas chargé !');
+                alert('Erreur: JSZip n\'est pas chargé. Vérifiez votre connexion internet.');
+                return;
+            }
+            
+            // Vérifier que piecesData est chargé
+            if (typeof piecesData === 'undefined') {
+                console.error('piecesData n\'est pas chargé !');
+                alert('Erreur: Données des pièces non disponibles.');
+                return;
+            }
+            
+            console.log('JSZip chargé:', typeof JSZip);
+            console.log('piecesData chargé:', typeof piecesData, piecesData ? piecesData.length : 'undefined');
+            
+            // Générer la liste des pièces
+            generatePiecesList();
+            
+            let movementDemo = null;
+            
+            // Bouton pour générer toutes les démonstrations
+            document.getElementById('generateAll').addEventListener('click', function() {
+                if (!movementDemo) {
+                    movementDemo = generateMovementDemos();
+                    window.movementDemo = movementDemo;
+                    this.textContent = '✅ Démonstrations Générées';
+                    this.disabled = true;
+                }
+            });
+            
+            // Bouton pour exporter toutes les images
+            document.getElementById('exportAll').addEventListener('click', async function() {
+                if (movementDemo) {
+                    // Afficher la barre de progression
+                    const progressContainer = document.getElementById('progressContainer');
+                    const progressBar = document.getElementById('progressBar');
+                    const progressText = document.getElementById('progressText');
+                    
+                    progressContainer.style.display = 'block';
+                    this.disabled = true;
+                    this.textContent = '⏳ Génération en cours...';
+                    
+                    try {
+                        await movementDemo.exportAllImages();
+                        this.textContent = '✅ Archive Téléchargée';
+                        progressText.textContent = 'Archive téléchargée avec succès !';
+                        progressBar.style.width = '100%';
+                    } catch (error) {
+                        console.error('Erreur:', error);
+                        this.textContent = '❌ Erreur';
+                        progressText.textContent = 'Erreur lors de la génération: ' + error.message;
+                        this.disabled = false;
+                    }
+                } else {
+                    alert('Veuillez d\'abord générer les démonstrations !');
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .demo-controls {
+            display: flex;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--accent-gold);
+            color: var(--primary-bg);
+        }
+        
+        .btn-primary:hover {
+            background: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4a90e2;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+        
+        .pieces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .piece-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .piece-card h3 {
+            margin: 0 0 8px 0;
+            color: var(--accent-gold);
+        }
+        
+        .piece-card p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-gold));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        #progressText {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+    </style>
+    
+    <script src="/js/translations.js"></script>
+    <script src="/js/header.js"></script>
+    <script src="/data/pieces.js"></script>
+    <script src="/js/movement-demo.js"></script>
+    <script>
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+        VGBHeader.injectHeader('movement-demo');
+        initTranslation(); // Initialiser les traductions
+    });
+    </script>
+</body>
+</html>

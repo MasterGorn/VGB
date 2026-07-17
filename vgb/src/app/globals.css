@@ -1,0 +1,5 @@
+/* Pas de chrome Tailwind : le design vient des CSS historiques (public/css/). */
+html,
+body {
+  margin: 0;
+}
