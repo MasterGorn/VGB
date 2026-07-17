@@ -571,6 +571,260 @@
     min-height: 44px;
   }
 }
+
+/* —— Fin de partie —— */
+#end-game-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(0, 4, 40, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: end-game-fade-in 0.35s ease;
+}
+
+#end-game-overlay[hidden] {
+  display: none !important;
+}
+
+@keyframes end-game-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes end-game-slide-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.end-game-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  animation: end-game-slide-up 0.4s ease;
+}
+
+.end-game-header {
+  padding: 28px 24px 20px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.12) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.end-game-icon {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.end-game-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: bold;
+  background: var(--accent-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.end-game-subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.end-game-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.end-game-winner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.14), rgba(255, 215, 0, 0.04));
+  border: 1px solid rgba(255, 215, 0, 0.35);
+}
+
+.end-game-winner-medal {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: linear-gradient(135deg, #ffd700, #f39c12);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.35);
+}
+
+.end-game-winner-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.end-game-winner-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  word-break: break-word;
+}
+
+.end-game-winner-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.end-game-winner-meta .faction-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 6px;
+}
+
+.faction-tag.nintendo { background: var(--accent-red); color: #fff; }
+.faction-tag.playstation { background: var(--accent-purple); color: #fff; }
+.faction-tag.sega { background: var(--accent-blue); color: #fff; }
+.faction-tag.xbox { background: var(--accent-green); color: #fff; }
+
+.end-game-ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.end-game-ranking li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.end-game-ranking .rank-pos {
+  flex-shrink: 0;
+  min-width: 2.25rem;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.end-game-loser {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  opacity: 0.92;
+}
+
+.end-game-loser-medal {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.end-game-loser-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.end-game-loser-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.end-game-ranking .rank-name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.end-game-elo {
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 137, 207, 0.12);
+  border: 1px solid rgba(0, 137, 207, 0.25);
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.end-game-elo strong {
+  color: #ffd700;
+  font-variant-numeric: tabular-nums;
+}
+
+.end-game-elo-delta {
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+.end-game-elo-delta.up { color: #2ecc71; }
+.end-game-elo-delta.down { color: #e74c3c; }
+
+.end-game-footer {
+  padding: 0 24px 24px;
+}
+
+.end-game-footer .setup-btn {
+  max-width: none;
+  width: 100%;
+}
+
+.end-game-footer .setup-btn:active {
+  transform: translateY(0);
+}
+
+body.end-game-open {
+  overflow: hidden;
+}
 </style>
 </head>
 <body>
@@ -732,6 +986,7 @@ let turnText;
 let moveCount = 0;
 let infoBackground; // Fond blanc pour les messages d'information
 let isEndGameMessage = false; // Flag pour empêcher le masquage du message de fin
+let endGameOverlayEl = null;
 // plus de garde: décrément à chaque fin de tour
 let adRotationIndex = 0;
 let playerNameTexts = [];
@@ -946,6 +1201,50 @@ function preload() {
   this.load.image('captain-falcon', 'captain-falcon.png');
   this.load.image('bayonetta', 'bayonetta.png');
   this.load.image('ayo-et-oli', 'ayo-et-oli.png');
+
+  // Nouveaux personnages Nintendo (catalogue élargi)
+  this.load.image('daisy', 'daisy.png');
+  this.load.image('lucina', 'lucina.png');
+  this.load.image('lyn', 'lyn.png');
+  this.load.image('pyra-mythra', 'pyra-mythra.png');
+  this.load.image('marie', 'marie.png');
+  this.load.image('min-min', 'min-min.png');
+  this.load.image('samus-sans-armure', 'samus-sans-armure.png');
+  this.load.image('perle-et-coralie', 'perle-et-coralie.png');
+  this.load.image('krystal', 'krystal.png');
+  this.load.image('fox-mccloud', 'fox-mccloud.png');
+  this.load.image('falco-lombardi', 'falco-lombardi.png');
+  this.load.image('wolf-o-donnell', 'wolf-o-donnell.png');
+  this.load.image('marth', 'marth.png');
+  this.load.image('roy', 'roy.png');
+  this.load.image('yoshi', 'yoshi.png');
+  this.load.image('little-mac', 'little-mac.png');
+  this.load.image('dixie-kong', 'dixie-kong.png');
+  this.load.image('ribbon-girl', 'ribbon-girl.png');
+  this.load.image('springman', 'springman.png');
+  this.load.image('rex', 'rex.png');
+  this.load.image('james-mccloud', 'james-mccloud.png');
+  this.load.image('ice-climbers', 'ice-climbers.png');
+  this.load.image('ike', 'ike.png');
+  this.load.image('roi-dadidou', 'roi-dadidou.png');
+  this.load.image('ridley', 'ridley.png');
+  this.load.image('general-pepper', 'general-pepper.png');
+  this.load.image('ness', 'ness.png');
+  this.load.image('lucas', 'lucas.png');
+  this.load.image('captain-olimar', 'captain-olimar.png');
+  this.load.image('tom-nook', 'tom-nook.png');
+  this.load.image('mewtwo', 'mewtwo.png');
+  this.load.image('mr-game-and-watch', 'mr-game-&-watch.png');
+  this.load.image('toad', 'toad.png');
+  this.load.image('bowser-junior', 'bowser-junior.png');
+  this.load.image('villageois', 'villageois.png');
+  this.load.image('rondoudou', 'rondoudou.png');
+  this.load.image('peppy-hare', 'peppy-hare.png');
+  this.load.image('slippy-toad', 'slippy-toad.png');
+  this.load.image('helix', 'helix.png');
+  this.load.image('hero-ring-fit-adventure', 'hero-ring-fit-adventure.png');
+  this.load.image('fille-inkling', 'fille-inkling.png');
+  this.load.image('vlad', 'Vlad.png');
 
   // Rois par faction (images à fournir) - chemins par dossier faction
   this.load.setPath('public/images/nintendo/characters/');
@@ -4749,97 +5048,260 @@ function tickTimer(scene) {
 function endGameWithRanking(ranking) {
   gameStarted = false;
   clearHighlights();
+  hideInfoMessage();
+  isEndGameMessage = true;
 
-  // Créer le message de fin de partie avec le classement
-  let message = "FIN DE PARTIE\n\n";
-  
-  for (let i = 0; i < ranking.length; i++) {
-    const playerId = ranking[i];
-    const player = players[playerId];
-    const position = i + 1;
-    const label = position === 1 ? "1er" : position === 2 ? "2e" : position === 3 ? "3e" : (position + "e");
-    const name = player ? player.name : (`Joueur ${playerId + 1}`);
-    message += `${label} : ${name}\n`;
-  }
+  const overlayOpts = { ranking: ranking || [] };
 
-  // Elo en ligne
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
     const winnerSeat = ranking && ranking.length ? ranking[0] : null;
-    VGBOnline.finish(winnerSeat).then((data) => {
-      if (data && data.elo) {
-        const myId = VGBOnline.user && VGBOnline.user.id;
-        const p1 = data.elo.player1;
-        const p2 = data.elo.player2;
-        const mine = (p1 && p1.id === myId) ? p1.elo : (p2 && p2.elo);
-        if (mine != null) {
-          message += `\nNouveau Elo : ${mine}`;
-          showEndGameMessage(message);
-        }
-      }
-    }).catch(() => {});
+    const finishPromise = VGBOnline.finish(winnerSeat).catch(() => null);
     VGBOnline.stopPolling();
     VGBOnline.enabled = false;
+
+    showEndGameOverlay(overlayOpts);
+
+    finishPromise.then((data) => {
+      if (data && data.elo) {
+        updateEndGameElo(data.elo);
+      }
+    });
+  } else {
+    showEndGameOverlay(overlayOpts);
   }
-  
-  // Afficher le message de manière permanente avec le bouton intégré
-  showEndGameMessage(message);
+
   savePreset();
 }
 
-function showEndGameMessage(message) {
-  if (!infoText || !infoBackground) return;
-  
-  // Marquer que c'est un message de fin de partie permanent
-  isEndGameMessage = true;
-  
-  const scene = infoText.scene;
-  
-  // Calculer la taille nécessaire pour le message + bouton
-  const textWidth = Math.min(500, Math.max(300, message.length * 8));
-  const textHeight = 140; // Hauteur fixe pour message + bouton plus bas
-  
-  // Ajuster la taille du fond pour inclure le bouton
-  infoBackground.setSize(textWidth + 32, textHeight); // +32 pour le padding
-  infoBackground.setVisible(true);
-  
-  // Afficher le message (PERMANENT - pas de timeout)
-  infoText.setText(message);
-  infoText.setVisible(true);
-  
-  // Créer le bouton "Nouvelle Partie" intégré dans le message
-  const buttonY = 380; // Position du bouton plus bas sous le message
-  
-  // Créer le fond du bouton
-  const buttonBackground = scene.add.rectangle(448, buttonY, 180, 40, 0x4CAF50);
-  buttonBackground.setDepth(10001);
-  buttonBackground.setStrokeStyle(2, 0x2E7D32);
-  buttonBackground.setInteractive();
-  
-  // Créer le texte du bouton
-  const button = scene.add.text(448, buttonY, "🎮 Nouvelle Partie", {
-    font: "18px Arial",
-    fill: "#ffffff"
-  });
-  button.setOrigin(0.5, 0.5);
-  button.setDepth(10002);
-  button.setInteractive();
-  
-  // Style du bouton au survol
-  buttonBackground.on('pointerover', () => {
-    buttonBackground.setFillStyle(0x45a049);
-  });
-  
-  buttonBackground.on('pointerout', () => {
-    buttonBackground.setFillStyle(0x4CAF50);
-  });
-  
-  // Action du bouton : recharger la page
-  const reloadGame = () => {
-    location.reload();
+function getPlayerDisplayInfo(playerId) {
+  const player = players[playerId];
+  const name = (player && player.name) || playerNames[playerId] || (`Joueur ${playerId + 1}`);
+  let faction = (player && player.faction) || playerFactions[playerId] || 'nintendo';
+  if (typeof faction === 'string') {
+    faction = faction.charAt(0).toUpperCase() + faction.slice(1).toLowerCase();
+    if (faction === 'Playstation') faction = 'PlayStation';
+  }
+  return { name, faction, factionClass: String(faction).toLowerCase() };
+}
+
+function getRankLabel(position) {
+  const labels = {
+    1: endGameT('end-game-rank-1'),
+    2: endGameT('end-game-rank-2'),
+    3: endGameT('end-game-rank-3')
   };
-  
-  buttonBackground.on('pointerdown', reloadGame);
-  button.on('pointerdown', reloadGame);
+  return labels[position] || (position + 'e');
+}
+
+const END_GAME_I18N = {
+  fr: {
+    'end-game-title': 'Fin de partie',
+    'end-game-subtitle-duel': 'Le roi adverse a été capturé.',
+    'end-game-subtitle-multi': 'Classement final de la partie.',
+    'end-game-winner': 'Victoire',
+    'end-game-defeated': 'Défaite',
+    'end-game-new-game': 'Nouvelle partie',
+    'end-game-elo': 'Elo',
+    'end-game-no-result': 'Partie terminée.',
+    'end-game-rank-1': '1er',
+    'end-game-rank-2': '2e',
+    'end-game-rank-3': '3e'
+  },
+  en: {
+    'end-game-title': 'Game over',
+    'end-game-subtitle-duel': 'The opposing king was captured.',
+    'end-game-subtitle-multi': 'Final standings.',
+    'end-game-winner': 'Victory',
+    'end-game-defeated': 'Defeated',
+    'end-game-new-game': 'New game',
+    'end-game-elo': 'Elo',
+    'end-game-no-result': 'Game finished.',
+    'end-game-rank-1': '1st',
+    'end-game-rank-2': '2nd',
+    'end-game-rank-3': '3rd'
+  }
+};
+
+function endGameT(key) {
+  if (typeof t === 'function') {
+    const translated = t(key);
+    if (translated && translated !== key) return translated;
+  }
+  const lang = window.currentLanguage || 'fr';
+  return (END_GAME_I18N[lang] && END_GAME_I18N[lang][key])
+    || END_GAME_I18N.fr[key]
+    || key;
+}
+
+function ensureEndGameOverlay() {
+  if (endGameOverlayEl) return endGameOverlayEl;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'end-game-overlay';
+  overlay.hidden = true;
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'end-game-title');
+  overlay.innerHTML =
+    '<div class="end-game-card">' +
+      '<div class="end-game-header">' +
+        '<div class="end-game-icon" aria-hidden="true">🏆</div>' +
+        '<h2 class="end-game-title" id="end-game-title"></h2>' +
+        '<p class="end-game-subtitle" id="end-game-subtitle"></p>' +
+      '</div>' +
+      '<div class="end-game-body" id="end-game-body"></div>' +
+      '<div class="end-game-footer">' +
+        '<button type="button" class="setup-btn" id="end-game-replay-btn"></button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) return; // pas de fermeture au clic extérieur
+  });
+
+  const replayBtn = overlay.querySelector('#end-game-replay-btn');
+  if (replayBtn) {
+    replayBtn.addEventListener('click', () => location.reload());
+  }
+
+  endGameOverlayEl = overlay;
+  return overlay;
+}
+
+function showEndGameOverlay(opts) {
+  const ranking = (opts && opts.ranking) || [];
+  const overlay = ensureEndGameOverlay();
+  const body = overlay.querySelector('#end-game-body');
+  const subtitle = overlay.querySelector('#end-game-subtitle');
+  const title = overlay.querySelector('#end-game-title');
+  const replayBtn = overlay.querySelector('#end-game-replay-btn');
+
+  if (title) title.textContent = endGameT('end-game-title');
+  if (replayBtn) replayBtn.textContent = endGameT('end-game-new-game');
+  if (subtitle) {
+    subtitle.textContent = ranking.length <= 2
+      ? endGameT('end-game-subtitle-duel')
+      : endGameT('end-game-subtitle-multi');
+  }
+
+  if (!body) return;
+  body.innerHTML = '';
+
+  if (!ranking.length) {
+    body.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin:0;">' +
+      endGameT('end-game-no-result') + '</p>';
+  } else if (ranking.length === 1) {
+    body.appendChild(buildEndGameWinnerBlock(getPlayerDisplayInfo(ranking[0])));
+  } else if (ranking.length === 2) {
+    body.appendChild(buildEndGameWinnerBlock(getPlayerDisplayInfo(ranking[0])));
+    body.appendChild(buildEndGameLoserBlock(getPlayerDisplayInfo(ranking[1])));
+  } else {
+    body.appendChild(buildEndGameWinnerBlock(getPlayerDisplayInfo(ranking[0])));
+    const others = document.createElement('ul');
+    others.className = 'end-game-ranking';
+    for (let i = 1; i < ranking.length; i++) {
+      const info = getPlayerDisplayInfo(ranking[i]);
+      const li = document.createElement('li');
+      li.innerHTML =
+        '<span class="rank-pos">' + escapeHtml(getRankLabel(i + 1)) + '</span>' +
+        '<span class="rank-name">' + escapeHtml(info.name) + '</span>' +
+        '<span class="faction-tag ' + escapeHtml(info.factionClass) + '">' + escapeHtml(info.faction) + '</span>';
+      others.appendChild(li);
+    }
+    body.appendChild(others);
+  }
+
+  const eloSlot = document.createElement('div');
+  eloSlot.id = 'end-game-elo-slot';
+  eloSlot.hidden = true;
+  body.appendChild(eloSlot);
+
+  overlay.hidden = false;
+  document.body.classList.add('end-game-open');
+
+  const btn = overlay.querySelector('#end-game-replay-btn');
+  if (btn) btn.focus();
+}
+
+function buildEndGameWinnerBlock(info) {
+  const block = document.createElement('div');
+  block.className = 'end-game-winner';
+  block.innerHTML =
+    '<div class="end-game-winner-medal" aria-hidden="true">👑</div>' +
+    '<div class="end-game-winner-info">' +
+      '<p class="end-game-winner-name">' + escapeHtml(info.name) + '</p>' +
+      '<p class="end-game-winner-meta">' +
+        '<span class="faction-tag ' + escapeHtml(info.factionClass) + '">' + escapeHtml(info.faction) + '</span>' +
+        '<span>' + endGameT('end-game-winner') + '</span>' +
+      '</p>' +
+    '</div>';
+  return block;
+}
+
+function buildEndGameLoserBlock(info) {
+  const block = document.createElement('div');
+  block.className = 'end-game-loser';
+  block.innerHTML =
+    '<div class="end-game-loser-medal" aria-hidden="true">✕</div>' +
+    '<div class="end-game-winner-info">' +
+      '<p class="end-game-loser-name">' + escapeHtml(info.name) + '</p>' +
+      '<p class="end-game-loser-meta">' +
+        '<span class="faction-tag ' + escapeHtml(info.factionClass) + '">' + escapeHtml(info.faction) + '</span>' +
+        '<span>' + endGameT('end-game-defeated') + '</span>' +
+      '</p>' +
+    '</div>';
+  return block;
+}
+
+function updateEndGameElo(eloData) {
+  const slot = document.getElementById('end-game-elo-slot');
+  if (!slot || !eloData) return;
+
+  const myId = (typeof VGBOnline !== 'undefined' && VGBOnline.user) ? VGBOnline.user.id : null;
+  const p1 = eloData.player1;
+  const p2 = eloData.player2;
+  let mine = null;
+  let prevElo = null;
+
+  if (myId && p1 && p1.id === myId) {
+    mine = p1.elo;
+    prevElo = VGBOnline.user && VGBOnline.user.elo;
+  } else if (myId && p2 && p2.id === myId) {
+    mine = p2.elo;
+    prevElo = VGBOnline.user && VGBOnline.user.elo;
+  }
+
+  if (mine == null) return;
+
+  const eloLabel = endGameT('end-game-elo');
+  let deltaHtml = '';
+  if (prevElo != null && !isNaN(prevElo)) {
+    const delta = mine - prevElo;
+    if (delta !== 0) {
+      const sign = delta > 0 ? '+' : '';
+      const cls = delta > 0 ? 'up' : 'down';
+      deltaHtml = '<span class="end-game-elo-delta ' + cls + '">(' + sign + delta + ')</span>';
+    }
+  }
+
+  slot.className = 'end-game-elo';
+  slot.innerHTML = eloLabel + ' : <strong>' + mine + '</strong>' + deltaHtml;
+  slot.hidden = false;
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** @deprecated Utiliser showEndGameOverlay */
+function showEndGameMessage(message) {
+  showEndGameOverlay({ ranking: [] });
 }
 
 const game = new Phaser.Game(config);
