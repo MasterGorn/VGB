@@ -80,6 +80,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="public/js/header.js"></script>
     <script src="public/data/pieces.js"></script>
+    <script src="public/js/chess-roles.js"></script>
     <script src="public/js/movement-demo.js"></script>
     
     <script>
@@ -95,26 +96,16 @@
             piecesData.forEach(piece => {
                 const card = document.createElement('div');
                 card.className = 'piece-card';
+                const roleLabel = (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel)
+                  ? VGBChess.getRoleLabel(piece.role)
+                  : (piece.role || '—');
                 card.innerHTML = `
                     <h3>${piece.name}</h3>
-                    <p><strong>Force:</strong> ${getTierLabel(piece.tier)}</p>
-                    <p><strong>Range:</strong> ${piece.range} cases</p>
-                    <p><strong>Mouvements:</strong> ${piece.moves.length} directions</p>
+                    <p><strong>Force:</strong> ${roleLabel}</p>
                     <p><strong>Éditeur:</strong> ${piece.faction}</p>
                 `;
                 container.appendChild(card);
             });
-        }
-        
-        // Fonction pour obtenir le libellé du tier
-        function getTierLabel(tier) {
-            const labels = {
-                1: "Faible",
-                2: "Moyen", 
-                3: "Fort",
-                4: "Unique"
-            };
-            return labels[tier] || "Inconnu";
         }
         
         document.addEventListener('DOMContentLoaded', function() {

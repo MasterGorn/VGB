@@ -1,0 +1,77 @@
+name: Validate Contributions
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: |
+          # Aucune dépendance requise pour ce projet
+          echo "No dependencies to install"
+
+      - name: Validate contributions
+        run: |
+          node scripts/validate-contribution.js
+
+      - name: Check file structure
+        run: |
+          echo "Checking required files..."
+          test -f index.html || exit 1
+          test -f public/data/pieces.js || exit 1
+          test -f public/data/items.js || exit 1
+          test -f public/js/translations.js || exit 1
+          echo "✅ All required files present"
+
+      - name: Check directories
+        run: |
+          echo "Checking required directories..."
+          test -d public/images/nintendo/characters || exit 1
+          test -d public/images/playstation/characters || exit 1
+          test -d public/images/sega/characters || exit 1
+          test -d public/images/xbox/characters || exit 1
+          test -d public/images/items || exit 1
+          echo "✅ All required directories present"
+
+      - name: Validate JSON syntax
+        run: |
+          echo "Validating JSON syntax..."
+          # Vérifier que les fichiers JavaScript sont syntaxiquement corrects
+          node -c public/data/pieces.js || exit 1
+          node -c public/data/items.js || exit 1
+          node -c public/js/translations.js || exit 1
+          echo "✅ All JavaScript files are syntactically correct"
+
+      - name: Check for common issues
+        run: |
+          echo "Checking for common issues..."
+
+          # Vérifier qu'il n'y a pas de console.log en production
+          if grep -r "console\.log" public/ --include="*.js"; then
+            echo "⚠️ Warning: Found console.log statements in production files"
+          fi
+
+          # Vérifier qu'il n'y a pas de TODO dans le code
+          if grep -r "TODO\|FIXME\|HACK" public/ --include="*.js"; then
+            echo "⚠️ Warning: Found TODO/FIXME/HACK comments in production files"
+          fi
+
+          echo "✅ Common issues check completed"
+
+
+
+

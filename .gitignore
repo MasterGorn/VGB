@@ -1,0 +1,84 @@
+# Fichiers système
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Fichiers de développement
+*.log
+*.tmp
+*.temp
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers d'éditeur
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fichiers de build
+dist/
+build/
+*.min.js
+*.min.css
+
+# Fichiers de test
+test-*.html
+test-*.js
+coverage/
+
+# Fichiers de déploiement
+*.zip
+*.tar.gz
+*.rar
+
+api/data/*.sqlite
+api/data/*.sqlite-journal
+
+
+# Fichiers de cache
+.cache/
+.parcel-cache/
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+*.orig
+
+# Fichiers de documentation générée
+docs/_build/
+site/
+
+# Fichiers de serveur local
+server.js
+package.json
+package-lock.json
+yarn.lock
+
+# Fichiers de test temporaires
+test-multiplayer.html
+test-simple.html
+test-final.html
+test-game.html
+test-socketio.html
+test-zip.html
+test-exact.html
+test-movement-demo.html
+
+# Fichiers de nettoyage
+clean-*.js
+prepare-package*.js
+README-MULTIPLAYER.md
+README-FINAL.md
+simple-server.js
+
+
+
+

@@ -21,8 +21,7 @@
 .badge.playstation { background:var(--accent-purple); }
 .badge.sega { background:var(--accent-blue); }
 .badge.xbox { background:var(--accent-green); }
-.badge.cost { background:#28a745; }
-.badge.tier { background:#ffc107; color:#000; }
+.badge.role { background:#ffc107; color:#000; }
 .badge.range { background:#6f42c1; }
 
 /* Filtres actifs */
@@ -43,8 +42,7 @@
       <label for="sortBy" data-t="sort-by">Trier par :</label>
       <select id="sortBy" class="form-control">
         <option value="name" data-t="name">Nom</option>
-        <option value="cost" data-t="cost">Coût</option>
-        <option value="tier" data-t="strength">Force</option>
+        <option value="role" data-t="strength">Force (rôle)</option>
         <option value="faction" data-t="editor">Éditeur</option>
         <option value="universe" data-t="universe">Univers</option>
       </select>
@@ -77,13 +75,16 @@
     </div>
     
     <div class="control-group">
-      <label for="tierFilter" data-t="strength">Force :</label>
-      <select id="tierFilter" class="form-control">
+      <label for="roleFilter" data-t="strength">Force :</label>
+      <select id="roleFilter" class="form-control">
         <option value="" data-t="all-strengths">Toutes</option>
-        <option value="1" data-t="weak">Faible</option>
-        <option value="2" data-t="medium">Moyen</option>
-        <option value="3" data-t="strong">Fort</option>
-        <option value="4" data-t="unique">Unique</option>
+        <option value="pawn">Pion</option>
+        <option value="knight">Cavalier</option>
+        <option value="bishop">Fou</option>
+        <option value="rook">Tour</option>
+        <option value="queen">Dame</option>
+        <option value="king">Roi</option>
+        <option value="unique">Unique</option>
       </select>
     </div>
   </div>
@@ -98,6 +99,7 @@
 <script src="public/js/translations.js"></script>
 <script src="public/js/header.js"></script>
 <script src="public/data/pieces.js"></script>
+<script src="public/js/chess-roles.js"></script>
 <script>
 // Les données des pièces sont maintenant importées depuis pieces.js
 
@@ -106,8 +108,34 @@ let currentSort = 'name';
 let currentFilters = {
   faction: '',
   universe: '',
-  tier: ''
+  role: ''
 };
+
+const ROLE_SORT_ORDER = {
+  pawn: 1,
+  knight: 2,
+  bishop: 3,
+  rook: 4,
+  queen: 5,
+  king: 6,
+  unique: 7
+};
+
+function getRoleLabel(role) {
+  if (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel) {
+    return VGBChess.getRoleLabel(role);
+  }
+  const labels = {
+    pawn: 'Pion',
+    knight: 'Cavalier',
+    bishop: 'Fou',
+    rook: 'Tour',
+    queen: 'Dame',
+    king: 'Roi',
+    unique: 'Unique'
+  };
+  return labels[role] || role || t('unknown');
+}
 
 // Fonction pour afficher les pièces
 function displayPieces(pieces) {
@@ -128,18 +156,7 @@ function displayPieces(pieces) {
     // Traduire avec fallback sur la valeur originale
     const translatedName = piece.nameKey ? t(nameKey) : piece.name;
     const translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
-    
-    console.log('Piece:', piece.name, 'nameKey:', nameKey, 'translatedName:', translatedName);
-    console.log('Description key:', descriptionKey, 'translatedDescription:', translatedDescription);
-    console.log('Function t available:', typeof t);
-    console.log('Current language:', window.currentLanguage);
-    console.log('Test translation for luigi:', t('luigi-desc'));
-    console.log('Test translation for link:', t('link-desc'));
-    console.log('Translations object keys:', Object.keys(translations));
-    console.log('Current language translations available:', translations[window.currentLanguage] ? 'YES' : 'NO');
-    if (translations[window.currentLanguage]) {
-      console.log('Available keys in current language:', Object.keys(translations[window.currentLanguage]).filter(k => k.includes('desc')));
-    }
+    const roleLabel = getRoleLabel(piece.role);
     
     card.innerHTML = `
       <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
@@ -148,12 +165,11 @@ function displayPieces(pieces) {
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
         <span class="badge">${t(piece.universeKey || piece.universe)}</span>
-        <span class="badge tier" data-t="tier-${piece.tier}">${getTierLabel(piece.tier)}</span>
-        <span class="badge cost">${t('cost')}: ${piece.cost} ${t('points')}</span>
-        <span class="badge range">${t('range')}: ${piece.range}</span>
+        <span class="badge role">${roleLabel}</span>
+        ${piece.role === 'unique' ? `<span class="badge range">${t('range')}: ${piece.range}</span>` : ''}
       </div>
       <div class="moves" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-        <strong data-t="movements">${t('movements')}:</strong> ${getMovesDescription(piece.moves)}
+        <strong data-t="movements">${t('movements')}:</strong> ${getMovesDescription(piece.moves, piece.role)}
       </div>
       <div class="movement-demo" style="margin-top: 8px; text-align: center;">
         <img src="${demoImagePath}" alt="Démonstration de mouvement" style="width: 120px; height: 120px; border: 1px solid var(--border-color); border-radius: 4px;" onerror="this.style.display='none'">
@@ -163,31 +179,24 @@ function displayPieces(pieces) {
     
     grid.appendChild(card);
   });
-  
-  // Mettre à jour seulement les éléments statiques, pas les valeurs dynamiques
-  if (typeof updateAllTexts === 'function') {
-    // Ne pas appeler updateAllTexts() car cela écrase les valeurs dynamiques
-    // Les traductions sont déjà appliquées dans le HTML généré
-  }
 }
 
 // Fonction pour obtenir la description des mouvements
-function getMovesDescription(moves) {
-  if (moves.length === 8) {
+function getMovesDescription(moves, role) {
+  if (role && typeof VGBChess !== 'undefined') {
+    const chess = VGBChess.getChessMovement({ role: role, moves: moves, range: 8 });
+    if (chess.special === 'pawn') return 'Avance + capture en diagonale (règles d\'échecs)';
+    if (role === 'knight') return 'Saut en L (cavalier)';
+    if (role === 'bishop') return 'Diagonales';
+    if (role === 'rook') return 'Lignes et colonnes';
+    if (role === 'queen') return 'Toutes directions';
+    if (role === 'king') return '1 case dans toutes les directions';
+    if (role === 'unique') return 'Mouvement spécial Unique';
+  }
+  if (moves && moves.length === 8) {
     return t('all-directions');
   }
-  return `${moves.length} ${t('directions-possible')}`;
-}
-
-// Fonction pour obtenir le libellé du tier
-function getTierLabel(tier) {
-  const labels = {
-    1: t('weak'),
-    2: t('medium'), 
-    3: t('strong'),
-    4: t('unique')
-  };
-  return labels[tier] || t('unknown');
+  return `${(moves || []).length} ${t('directions-possible')}`;
 }
 
 // Fonction pour obtenir le chemin de l'image de démonstration
@@ -210,43 +219,6 @@ function getMovementDemoImage(piece) {
   return `public/images/${faction}/demo/${fileName}-movement-demo.png`;
 }
 
-// Fonction pour obtenir la description du tier
-function getTierDescription(tier) {
-  const descriptions = {
-    1: "Faible - Facile à utiliser",
-    2: "Moyen - Équilibré", 
-    3: "Fort - Puissant mais coûteux",
-    4: "Unique - Légendaire"
-  };
-  return descriptions[tier] || "Force inconnue";
-}
-
-// Fonction pour obtenir la couleur de faction
-function getFactionColor(faction) {
-  const colors = {
-    'Nintendo': '#e60012',
-    'PlayStation': '#003087', 
-    'SEGA': '#0089cf',
-    'Xbox': '#107c10'
-  };
-  return colors[faction] || '#666';
-}
-
-// Fonction pour obtenir la couleur d'univers
-function getUniverseColor(universe) {
-  const colors = {
-    'Super Mario': '#e60012',
-    'The Legend of Zelda': '#0066cc',
-    'Metroid': '#8b4513',
-    'Kid Icarus': '#ffd700',
-    'Sonic': '#0089cf',
-    'Streets of Rage': '#ff4500',
-    'Halo': '#107c10',
-    'Gears of War': '#8b4513'
-  };
-  return colors[universe] || '#666';
-}
-
 // Fonction pour appliquer les filtres et le tri
 function applyFiltersAndSort() {
   let filteredPieces = [...piecesData];
@@ -258,8 +230,8 @@ function applyFiltersAndSort() {
   if (currentFilters.universe) {
     filteredPieces = filteredPieces.filter(piece => piece.universe === currentFilters.universe);
   }
-  if (currentFilters.tier) {
-    filteredPieces = filteredPieces.filter(piece => piece.tier.toString() === currentFilters.tier);
+  if (currentFilters.role) {
+    filteredPieces = filteredPieces.filter(piece => piece.role === currentFilters.role);
   }
   
   // Appliquer le tri
@@ -267,10 +239,8 @@ function applyFiltersAndSort() {
     switch(currentSort) {
       case 'name':
         return a.name.localeCompare(b.name);
-      case 'cost':
-        return a.cost - b.cost;
-      case 'tier':
-        return a.tier - b.tier;
+      case 'role':
+        return (ROLE_SORT_ORDER[a.role] || 99) - (ROLE_SORT_ORDER[b.role] || 99) || a.name.localeCompare(b.name);
       case 'faction':
         return a.faction.localeCompare(b.faction);
       case 'universe':
@@ -300,9 +270,9 @@ function updateActiveFilters() {
       
       if (key === 'faction') {
         displayKey = t('editor');
-      } else if (key === 'tier') {
+      } else if (key === 'role') {
         displayKey = t('strength');
-        displayValue = getTierLabel(parseInt(value));
+        displayValue = getRoleLabel(value);
       }
       
       tag.innerHTML = `
@@ -317,16 +287,17 @@ function updateActiveFilters() {
 // Fonction pour supprimer un filtre
 function removeFilter(filterType) {
   currentFilters[filterType] = '';
-  document.getElementById(filterType + 'Filter').value = '';
+  const el = document.getElementById(filterType + 'Filter');
+  if (el) el.value = '';
   applyFiltersAndSort();
 }
 
 // Fonction pour effacer tous les filtres
 function clearAllFilters() {
-  currentFilters = { faction: '', universe: '', tier: '' };
+  currentFilters = { faction: '', universe: '', role: '' };
   document.getElementById('factionFilter').value = '';
   document.getElementById('universeFilter').value = '';
-  document.getElementById('tierFilter').value = '';
+  document.getElementById('roleFilter').value = '';
   applyFiltersAndSort();
 }
 
@@ -346,8 +317,8 @@ document.getElementById('universeFilter').addEventListener('change', (e) => {
   applyFiltersAndSort();
 });
 
-document.getElementById('tierFilter').addEventListener('change', (e) => {
-  currentFilters.tier = e.target.value;
+document.getElementById('roleFilter').addEventListener('change', (e) => {
+  currentFilters.role = e.target.value;
   applyFiltersAndSort();
 });
 

@@ -2,84 +2,202 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title data-t="page-title">Chesstendo - Draft + Plateau</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title data-t="page-title">Video Games Battle</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
 <link rel="stylesheet" href="public/css/header.css" />
 <link rel="stylesheet" href="public/css/common.css" />
 <link rel="stylesheet" href="public/css/global.css" />
 <style>
-/* Styles spécifiques à la page d'accueil */
+/* Styles spécifiques à la page d'accueil — mobile first */
 .game-container {
   display: flex;
+  flex-direction: column;
   gap: var(--spacing-md);
-  align-items: flex-start;
-  padding-top: var(--spacing-xl);
-  max-width: 1200px;
+  align-items: stretch;
+  padding: 0;
+  max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
-@media (min-width: 1280px) {
-  .game-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    gap: var(--spacing-md);
-    align-items: flex-start;
-    padding-top: var(--spacing-xl);
-  }
-  
-  .game-root {
-    flex: 1;
-    max-width: 100%;
-  }
-  
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-    width: 280px;
-  }
-  
-  .rules-panel {
-    order: 2;
-  }
-  
-  .ads-panel {
-    order: 1;
-  }
+.game-container.game-active {
+  padding: 0;
+  gap: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .game-root {
   flex: 1;
+  width: 100%;
   max-width: 100%;
-  margin-left: 24px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  background: #302e2b;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  aspect-ratio: 1 / 1;
+  max-height: none;
+  height: auto;
+  align-self: stretch;
+}
+
+.board-column {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.game-container.game-active .sidebar {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .game-container.game-active .sidebar {
+    display: flex;
+  }
+}
+
+.player-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--secondary-bg);
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.player-hud.hud-bottom {
+  border-bottom: none;
+  border-top: 1px solid var(--border-color);
+}
+
+.player-hud[hidden] {
+  display: none !important;
+}
+
+.player-hud.active-turn {
+  background: rgba(39, 174, 96, 0.18);
+  box-shadow: inset 0 0 0 2px #27ae60;
+}
+
+.hud-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.hud-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.hud-faction {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.hud-timer {
+  font-size: 15px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  color: #ffd700;
+  min-width: 3.5em;
+}
+
+.hud-timer.urgent {
+  color: #ff5252;
+  animation: hud-blink 0.6s step-end infinite;
+}
+
+@keyframes hud-blink {
+  50% { opacity: 0.35; }
+}
+
+.hud-items {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+}
+
+.hud-item-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-item-btn img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.hud-item-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hud-item-btn .hud-charge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #fff;
+  color: #111;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
 }
 
 .game-root canvas {
-  max-width: 100%;
-  height: auto;
-  display: none; /* Caché par défaut */
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: 100% !important;
+  height: auto !important;
+  display: none;
+  touch-action: none;
 }
 
 .game-root canvas.game-started {
-  display: block; /* Affiché quand la partie commence */
+  display: block;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  width: 436px;
-  margin-right: 24px;
+  width: 100%;
+  margin: 0;
 }
 
 .ads-panel {
-  width: 100%;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-light);
+  display: none; /* Masqué sur mobile */
 }
 
 .ads-title {
@@ -90,7 +208,7 @@
 }
 
 .ad-slot {
-  height: 130px;
+  height: 100px;
   background: var(--secondary-bg);
   margin-bottom: var(--spacing-sm);
   display: flex;
@@ -107,51 +225,51 @@
   margin-bottom: var(--spacing-md);
 }
 
-/* Contrôles de sélection des personnages */
 .draft-controls {
   margin-top: var(--spacing-md);
   text-align: center;
 }
 
-.draft-btn {
-  background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+.draft-btn, .setup-btn {
+  background: linear-gradient(135deg, var(--accent-color, #e67e22), var(--accent-gold));
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border-radius: var(--border-radius);
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: var(--shadow-medium);
+  width: 100%;
+  max-width: 360px;
+  min-height: 48px;
 }
 
-.draft-btn:hover {
+.draft-btn:hover, .setup-btn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-large);
-  background: linear-gradient(135deg, var(--accent-gold), var(--accent-color));
 }
 
-/* Configuration de la partie */
 .game-setup {
   background: var(--primary-bg);
-  padding: 40px;
+  padding: 24px 12px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
+  min-height: 60vh;
   box-shadow: var(--shadow-light);
-  width: calc(100% - 40px);
-  margin: 0 20px 20px;
+  width: 100%;
+  margin: 0 0 16px;
 }
 
 .setup-card {
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
-  padding: 40px;
+  padding: 24px 16px;
   box-shadow: var(--shadow-medium);
   text-align: center;
   max-width: 600px;
@@ -160,17 +278,17 @@
 
 .setup-title {
   color: var(--accent-gold);
-  margin: 0 0 30px 0;
-  font-size: 32px;
+  margin: 0 0 24px 0;
+  font-size: clamp(22px, 5vw, 32px);
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .setup-options {
   display: flex;
-  gap: 40px;
+  gap: 20px;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
@@ -178,28 +296,30 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  min-width: 150px;
+  gap: 10px;
+  min-width: 140px;
+  flex: 1 1 140px;
 }
 
 .option-group label {
   color: var(--text-primary);
   font-weight: bold;
-  font-size: 16px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .setup-select {
-  padding: 8px 12px;
+  padding: 12px;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
   background: var(--primary-bg);
   color: var(--text-primary);
-  font-size: 14px;
-  min-width: 150px;
+  font-size: 16px;
+  min-width: 140px;
+  width: 100%;
   cursor: pointer;
-  transition: border-color 0.3s ease;
+  min-height: 48px;
 }
 
 .setup-select:focus {
@@ -207,29 +327,97 @@
   border-color: var(--accent-gold);
 }
 
-.setup-btn {
-  background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
-  color: white;
-  border: none;
-  padding: 15px 35px;
-  border-radius: var(--border-radius);
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-medium);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.setup-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-large);
-  background: linear-gradient(135deg, var(--accent-gold), var(--accent-color));
+.mode-btn {
+  flex: 1 1 140px;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  min-height: 48px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.mode-btn.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+}
+
+.online-panel {
+  display: none;
+  text-align: left;
+  margin-top: 8px;
+}
+
+.online-panel.visible {
+  display: block;
+}
+
+.online-panel .row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.online-panel input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  font-size: 16px;
+  min-height: 48px;
+}
+
+.elo-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,215,0,0.15);
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.leaderboard-mini {
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.leaderboard-mini h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #ffd700;
+}
+
+.leaderboard-mini ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.leaderboard-mini li {
+  margin-bottom: 4px;
 }
 
 .rules-panel {
-  margin-top: var(--spacing-md);
+  margin-top: 0;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -247,51 +435,19 @@
 .rules-list {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   font: var(--font-size-sm) Arial, sans-serif;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
-@media (max-width: 1279px) {
-  .game-container {
-    flex-direction: column;
-    align-items: stretch;
-    padding-top: var(--spacing-lg);
-  }
-  
-  .game-root {
-    order: 1;
-    margin: 0 24px;
-  }
-  
-  .sidebar {
-    order: 2;
-    width: calc(100% - 48px);
-    flex-direction: column;
-    margin: 0 24px;
-  }
-  
-  .rules-panel {
-    order: 1;
-    margin-top: var(--spacing-lg);
-    margin-bottom: 0;
-  }
-  
-  .ads-panel {
-    order: 2;
-    width: 100%;
-    margin-top: var(--spacing-lg);
-  }
-}
-
 .tagline {
   text-align: center;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-md);
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
-  margin: var(--spacing-lg) 0;
+  margin: 0 0 var(--spacing-md);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-medium);
   position: relative;
@@ -310,7 +466,7 @@
 
 .tagline h1 {
   margin: 0;
-  font: 32px Arial, sans-serif;
+  font: clamp(18px, 4.5vw, 28px) Arial, sans-serif;
   font-weight: bold;
   text-shadow: var(--shadow-text);
   background: var(--accent-gold);
@@ -321,6 +477,100 @@
   z-index: 1;
 }
 
+/* Tablette+ */
+@media (min-width: 768px) {
+  .game-container {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .game-container.game-active {
+    padding: var(--spacing-md);
+  }
+
+  .game-setup {
+    padding: 40px;
+    min-height: 70vh;
+  }
+
+  .setup-card {
+    padding: 40px;
+  }
+
+  .setup-btn, .draft-btn {
+    width: auto;
+  }
+
+  .ads-panel {
+    display: block;
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-light);
+  }
+
+  .game-root {
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    max-width: min(900px, 100%);
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .player-hud {
+    max-width: min(900px, 100%);
+    margin: 0 auto;
+    border-radius: 8px;
+  }
+}
+
+/* Desktop large : plateau + sidebar côte à côte */
+@media (min-width: 1100px) {
+  .game-container {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .board-column {
+    flex: 1;
+    max-width: min(900px, calc(100% - 320px));
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .game-root {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+
+  .player-hud {
+    max-width: 100%;
+  }
+
+  .sidebar {
+    width: 280px;
+    flex-shrink: 0;
+  }
+
+  .rules-panel {
+    order: 2;
+  }
+
+  .ads-panel {
+    order: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  #character-selection-container .character-card {
+    min-height: 44px;
+  }
+}
 </style>
 </head>
 <body>
@@ -336,32 +586,73 @@
   <div id="game-setup" class="game-setup">
     <div class="setup-card">
       <h2 class="setup-title" data-t="game-title">Configuration de la partie</h2>
-      
-      <div class="setup-options">
-        <div class="option-group">
-          <label for="grid-size-select" data-t="select-board-size">Taille du plateau :</label>
-          <select id="grid-size-select" class="setup-select">
-            <option value="9" data-t="board-small">9x9 (Petit)</option>
-            <option value="11" data-t="board-medium">11x11 (Moyen)</option>
-            <option value="15" selected data-t="board-large">15x15 (Grand)</option>
-          </select>
-        </div>
-        
-        <div class="option-group">
-          <label for="player-count-select" data-t="select-players">Nombre de joueurs :</label>
-          <select id="player-count-select" class="setup-select">
-            <option value="2">2 <span data-t="players">joueurs</span></option>
-            <option value="3">3 <span data-t="players">joueurs</span></option>
-            <option value="4" selected>4 <span data-t="players">joueurs</span></option>
-          </select>
-        </div>
+
+      <div class="mode-toggle" role="tablist">
+        <button type="button" class="mode-btn active" id="mode-local" data-mode="local">Local</button>
+        <button type="button" class="mode-btn" id="mode-online" data-mode="online">En ligne (Elo)</button>
       </div>
       
-      <button id="start-character-selection" class="setup-btn" data-t="start-game">🎮 Sélection des personnages</button>
+      <div id="local-setup">
+        <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px;">
+          Duel 1v1 — plateau 9×9 façon échecs. Composez votre armée : 9 pions, 2 cavaliers, 2 fous, 2 tours, 1 dame, 1 unique (+ le roi).
+        </p>
+        <button id="start-character-selection" class="setup-btn" data-t="start-game">Composer les armées</button>
+      </div>
+
+      <div id="online-setup" class="online-panel">
+        <p style="color:var(--text-secondary);font-size:14px;margin:0 0 12px;">
+          Affrontez un adversaire en 1v1 classé. Votre Elo évolue après chaque partie.
+        </p>
+        <div id="online-auth-box">
+          <div class="row">
+            <label for="online-username">Pseudo</label>
+            <input id="online-username" type="text" maxlength="24" placeholder="Pseudo" autocomplete="username" />
+          </div>
+          <div class="row">
+            <label for="online-password">Mot de passe</label>
+            <input id="online-password" type="password" maxlength="64" placeholder="Mot de passe" autocomplete="current-password" />
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="setup-btn" id="btn-online-login" style="flex:1;">Connexion</button>
+            <button type="button" class="setup-btn" id="btn-online-register" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);">Créer un compte</button>
+          </div>
+        </div>
+        <div id="online-play-box" style="display:none;">
+          <div class="elo-badge" id="online-elo-badge">Elo —</div>
+          <p id="online-user-label" style="margin:8px 0;color:#fff;"></p>
+          <button type="button" class="setup-btn" id="btn-find-match">Trouver une partie classée (9×9)</button>
+          <button type="button" class="setup-btn" id="btn-cancel-match" style="display:none;background:#c0392b;margin-top:8px;">Annuler la recherche</button>
+          <p id="match-status" style="margin-top:12px;color:var(--text-secondary);font-size:13px;"></p>
+          <button type="button" class="mode-btn" id="btn-logout" style="margin-top:8px;">Se déconnecter</button>
+        </div>
+        <div class="leaderboard-mini">
+          <h3>Classement Elo</h3>
+          <ol id="elo-leaderboard"><li>Chargement…</li></ol>
+          <p style="margin:8px 0 0;"><a href="classement.html" style="color:#ffd700;">Voir le classement complet →</a></p>
+        </div>
+      </div>
     </div>
   </div>
   
+  <div class="board-column">
+  <div id="hud-player-0" class="player-hud hud-top" hidden>
+    <div class="hud-main">
+      <span class="hud-name" id="hud-name-0">Joueur 1</span>
+      <span class="hud-faction" id="hud-faction-0"></span>
+      <span class="hud-timer" id="hud-timer-0">05:00</span>
+    </div>
+    <div class="hud-items" id="hud-items-0"></div>
+  </div>
   <div id="game-root" class="game-root"></div>
+  <div id="hud-player-1" class="player-hud hud-bottom" hidden>
+    <div class="hud-main">
+      <span class="hud-name" id="hud-name-1">Joueur 2</span>
+      <span class="hud-faction" id="hud-faction-1"></span>
+      <span class="hud-timer" id="hud-timer-1">05:00</span>
+    </div>
+    <div class="hud-items" id="hud-items-1"></div>
+  </div>
+  </div>
   <div class="sidebar">
     <div id="rules-panel" class="rules-panel">
       <div class="rules-title" data-t="pieces-in-play">Pièces en jeu</div>
@@ -380,6 +671,8 @@
 <script src="public/data/pieces.js"></script>
 <script src="public/data/items.js"></script>
 <script src="public/js/translations.js"></script>
+<script src="public/js/chess-roles.js"></script>
+<script src="public/js/online.js"></script>
 <script>
 VGBHeader.injectHeader('index');
 
@@ -388,9 +681,15 @@ const config = {
   width: 900,
   height: 900,
   resolution: (window.devicePixelRatio || 1),
-  backgroundColor: '#ececec',
+  backgroundColor: '#302e2b',
   parent: 'game-root',
   scene: { preload, create, update },
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 900,
+    height: 900
+  },
   render: {
     antialias: true,
     pixelArt: false,
@@ -399,10 +698,24 @@ const config = {
   }
 };
 
-const GRID_OFFSET_X = 60; // marge gauche
-const GRID_OFFSET_Y = 60; // marge haut
-let TILE_SIZE = 52;       // recalculé selon GRID_SIZE
-let GRID_SIZE = 15;       // configurable (9, 12, 15)
+const BOARD_CANVAS = 900;
+const MAX_ARMY_SIZE = 17; // 17 pièces + roi = 18 cases (2 rangées × 9)
+let GRID_OFFSET_X = 48;
+let GRID_OFFSET_Y = 48;
+let TILE_SIZE = 89;
+let GRID_SIZE = 9;
+
+function computeBoardLayout() {
+  GRID_SIZE = 9;
+  // HUD HTML hors canvas → marges minimales pour maximiser le plateau
+  const margin = 12;
+  TILE_SIZE = Math.floor((BOARD_CANVAS - 2 * margin) / GRID_SIZE);
+  const boardPx = GRID_SIZE * TILE_SIZE;
+  GRID_OFFSET_X = Math.floor((BOARD_CANVAS - boardPx) / 2);
+  GRID_OFFSET_Y = Math.floor((BOARD_CANVAS - boardPx) / 2);
+}
+
+computeBoardLayout();
 
 let grid = [];
 let pieces = [];
@@ -446,11 +759,11 @@ let portalBlue = null;   // { x, y, sprite }
 // Variables pour la sélection des personnages
 let characterSelectionMode = false;
 let currentPlayerIndex = 0;
-let playerCount = 4;
+let playerCount = 2;
 let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4']; // Sera mis à jour par initTranslation
 let playerFactions = ['Nintendo', 'Nintendo', 'Nintendo', 'Nintendo'];
 let playerArmies = [[], [], [], []]; // Armées des joueurs
-let playerMoney = [60, 60, 60, 60]; // Argent de chaque joueur (sera mis à jour selon la taille de grille)
+let playerMoney = [50, 50, 50, 50]; // Budget 9×9 (assez pour remplir jusqu'à 17 pièces)
 let availablePieces = [];
 // Étoile d'invincibilité
 let starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
@@ -527,16 +840,25 @@ function parseFactionInput(input) {
   return 'nintendo';
 }
 
+function normalizeFaction(faction) {
+  const f = String(faction || 'nintendo').toLowerCase();
+  if (f === 'sega') return 'sega';
+  if (f === 'playstation' || f === 'ps' || f === 'sony') return 'playstation';
+  if (f === 'xbox' || f === 'xb') return 'xbox';
+  return 'nintendo';
+}
+
 function getFactionDisplayName(faction) {
-  if (faction === 'sega') return 'SEGA';
-  if (faction === 'playstation') return 'PlayStation';
-  if (faction === 'xbox') return 'Xbox';
+  const f = normalizeFaction(faction);
+  if (f === 'sega') return 'SEGA';
+  if (f === 'playstation') return 'PlayStation';
+  if (f === 'xbox') return 'Xbox';
   return 'Nintendo';
 }
 
 function applyFactionTintByPlayerId(playerId, sprite) {
   const player = players.find(p => p.id === playerId);
-  const tint = brandTints[player && player.faction ? player.faction : 'nintendo'];
+  const tint = brandTints[normalizeFaction(player && player.faction)];
   if (sprite && typeof sprite.setTint === 'function') sprite.setTint(tint);
 }
 
@@ -585,7 +907,7 @@ const factionCatalogs = {
 };
 
 function getCatalogForFaction(faction) { 
-  return factionCatalogs[faction] || factionCatalogs.nintendo;
+  return factionCatalogs[normalizeFaction(faction)] || factionCatalogs.nintendo;
 }
 
 // Game UI
@@ -921,17 +1243,18 @@ function getConversionTargets(piece) {
 function attemptConversion(targetPiece) {
   if (!selectedPiece || !targetPiece) return false;
   
-  // Calculer le taux d'échec basé sur la puissance de la pièce cible
-  const tier = targetPiece.tier || 1;
-  let failureRate = 0;
-  
-  switch(tier) {
-    case 1: failureRate = 0; break;    // Pièce faible : 0%
-    case 2: failureRate = 25; break;   // Pièce moyenne : 25%
-    case 3: failureRate = 50; break;   // Pièce forte : 50%
-    case 4: failureRate = 75; break;   // Pièce très forte : 75%
-    default: failureRate = 50; break;
-  }
+  // Taux d'échec selon le rôle d'échecs de la cible
+  const role = targetPiece.role || 'pawn';
+  const failureByRole = {
+    pawn: 0,
+    knight: 25,
+    bishop: 50,
+    rook: 50,
+    queen: 75,
+    unique: 75,
+    king: 100
+  };
+  const failureRate = failureByRole[role] != null ? failureByRole[role] : 50;
   
   // Jouer le son wololo
   const scene = selectedPiece.sprite.scene;
@@ -951,10 +1274,10 @@ function attemptConversion(targetPiece) {
     
     // Créer un nouveau background avec la couleur de la faction du convertisseur
     const factionColors = {
-      'Nintendo': 0xff0000, // Rouge Nintendo
-      'PlayStation': 0x003791, // Bleu PlayStation  
-      'SEGA': 0x0066cc, // Bleu SEGA
-      'Xbox': 0x107c10 // Vert Xbox
+      'Nintendo': 0xff0000, 'nintendo': 0xff0000,
+      'PlayStation': 0x003791, 'playstation': 0x003791,
+      'SEGA': 0x0066cc, 'sega': 0x0066cc,
+      'Xbox': 0x107c10, 'xbox': 0x107c10
     };
     
     const scene = selectedPiece.sprite.scene;
@@ -1088,7 +1411,7 @@ function setupPlayerCountUI(scene) {
 }
 
 function selectPlayerCount(scene, n) {
-  const budget = (GRID_SIZE === 9) ? 20 : (GRID_SIZE === 11) ? 30 : 50;
+  const budget = 50;
   players = Array.from({ length: n }, (_, i) => ({ id: i, points: budget, army: [], name: '', faction: 'nintendo' }));
   currentPlayer = 0;
   // nettoyer UI de sélection
@@ -1214,7 +1537,8 @@ function rebuildChoiceList(scene) {
     for (let entry of choiceThumbs) {
       entry.image.destroy();
       entry.nameText.destroy();
-      entry.costText.destroy();
+      if (entry.roleText) entry.roleText.destroy();
+      if (entry.costText) entry.costText.destroy();
     }
     choiceThumbs = [];
   }
@@ -1231,6 +1555,10 @@ function rebuildChoiceList(scene) {
   for (let key of catalogKeys) {
     const displayName = getDisplayNameForKey(key);
     const texKey = hasTexture(scene, key) ? key : 'nintendo';
+    const entryData = draftCatalog[key] || {};
+    const roleLabel = (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel)
+      ? VGBChess.getRoleLabel(entryData.role || 'pawn')
+      : (entryData.role || '');
     
     // Position X : 35, 130, 225, 320 pour les 4 colonnes
     const x = column === 0 ? 35 : (column === 1 ? 130 : (column === 2 ? 225 : 320));
@@ -1243,8 +1571,8 @@ function rebuildChoiceList(scene) {
     const nameText = scene.add.text(textX, y - 8, displayName, { font: "12px Arial", fill: "#000" })
       .setInteractive()
       .on("pointerdown", () => pickCharacter(scene, key));
-    const costText = scene.add.text(textX, y + 6, `cost: ${draftCatalog[key].cost}` , { font: "10px Arial", fill: "#333" });
-    choiceThumbs.push({ key, image: img, nameText, costText });
+    const roleText = scene.add.text(textX, y + 6, roleLabel, { font: "10px Arial", fill: "#333" });
+    choiceThumbs.push({ key, image: img, nameText, roleText });
     
     itemInColumn++;
     y += 55;
@@ -1276,7 +1604,7 @@ function getDisplayNameForKey(key) {
 
 function updateDraftUI() {
   let p = players[currentPlayer];
-  infoText.setText(`Joueur ${p.id+1} - Points restants: ${p.points}\nChoisissez vos persos`);
+  infoText.setText(`Joueur ${p.id+1}\nChoisissez vos persos`);
   rebuildChoiceList(infoText.scene); // reconstruire au changement de joueur/faction
   updateChoiceAvailability();
   const scene = infoText.scene;
@@ -1287,20 +1615,12 @@ function updateDraftUI() {
 }
 
 function updateChoiceAvailability() {
-  const p = players[currentPlayer];
-  const catalog = getCatalogForFaction(p.faction);
   for (let entry of choiceThumbs) {
-    const affordable = p.points >= catalog[entry.key].cost;
-    entry.image.setAlpha(affordable ? 1 : 0.4);
-    entry.nameText.setAlpha(affordable ? 1 : 0.5);
-    entry.costText.setAlpha(affordable ? 1 : 0.5);
-    if (affordable) {
-      entry.image.setInteractive();
-      entry.nameText.setInteractive();
-    } else {
-      entry.image.disableInteractive();
-      entry.nameText.disableInteractive();
-    }
+    entry.image.setAlpha(1);
+    entry.nameText.setAlpha(1);
+    if (entry.roleText) entry.roleText.setAlpha(1);
+    entry.image.setInteractive();
+    entry.nameText.setInteractive();
   }
 }
 
@@ -1346,7 +1666,6 @@ function removeArmyItem(scene, playerIndex, itemIndex) {
   const key = players[playerIndex].army[itemIndex];
   if (!key) return;
   players[playerIndex].army.splice(itemIndex, 1);
-  players[playerIndex].points += getCatalogForFaction(players[playerIndex].faction)[key].cost;
   renderArmyThumbnails(scene);
   updateDraftUI();
 }
@@ -1358,12 +1677,6 @@ function clearCurrentBasket(scene) {
   if (!window.confirm(`Voulez-vous supprimer tous les choix du Joueur ${currentPlayer+1} ?`)) {
     return;
   }
-  // rembourser tous les choix
-  let refund = 0;
-  for (let key of p.army) {
-    refund += getCatalogForFaction(p.faction)[key].cost;
-  }
-  p.points += refund;
   p.army = [];
   renderArmyThumbnails(scene);
   updateDraftUI();
@@ -1372,11 +1685,9 @@ function clearCurrentBasket(scene) {
 function pickCharacter(scene, key) {
   let p = players[currentPlayer];
   let char = getCatalogForFaction(p.faction)[key];
-  if (p.points >= char.cost) {
-    p.points -= char.cost;
-    p.army.push(key);
-    updateDraftUI();
-  }
+  if (!char) return;
+  p.army.push(key);
+  updateDraftUI();
 }
 
 function endDraft(scene) {
@@ -1508,114 +1819,67 @@ function updateRulesSidebar() {
   el.innerHTML = rows.join('');
 }
 
-// Fonction pour générer les positions en cercle autour du roi (plus fortes au centre)
+// Positions de départ : uniquement les 2 rangées du haut / du bas (ou 2 colonnes G/D)
+function getHomeZoneCells(playerIndex, count) {
+  const cells = [];
+  if (count <= 2) {
+    if (playerIndex === 0) {
+      for (let y = 0; y <= 1; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    } else {
+      for (let y = GRID_SIZE - 2; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    }
+  } else if (count === 3) {
+    if (playerIndex === 0) {
+      for (let y = 0; y <= 1; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    } else if (playerIndex === 1) {
+      for (let y = GRID_SIZE - 2; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    } else {
+      for (let x = 0; x <= 1; x++) for (let y = 0; y < GRID_SIZE; y++) cells.push({ x, y });
+    }
+  } else {
+    if (playerIndex === 0) {
+      for (let y = 0; y <= 1; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    } else if (playerIndex === 1) {
+      for (let y = GRID_SIZE - 2; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) cells.push({ x, y });
+    } else if (playerIndex === 2) {
+      for (let x = 0; x <= 1; x++) for (let y = 0; y < GRID_SIZE; y++) cells.push({ x, y });
+    } else {
+      for (let x = GRID_SIZE - 2; x < GRID_SIZE; x++) for (let y = 0; y < GRID_SIZE; y++) cells.push({ x, y });
+    }
+  }
+  return cells;
+}
+
+function isInHomeZone(x, y, playerIndex, count) {
+  return getHomeZoneCells(playerIndex, count).some(c => c.x === x && c.y === y);
+}
+
+// Placement en spirale restreint à la zone de camp (2 lignes / 2 colonnes)
 function generateSpiralPositions(kingX, kingY, playerCount, playerIndex) {
-  const positions = [];
-  
-  // Générer les positions en cercles concentriques autour du roi
-  // Cercle 1 (distance 1) - pour les pièces tier 3 (plus fortes)
-  const circle1 = [
-    {x: -1, y: -1}, {x: 0, y: -1}, {x: 1, y: -1},
-    {x: -1, y: 0},                  {x: 1, y: 0},
-    {x: -1, y: 1},  {x: 0, y: 1},  {x: 1, y: 1}
-  ];
-  
-  // Cercle 2 (distance 2) - pour les pièces tier 2 (moyennes)
-  const circle2 = [
-    {x: -2, y: -2}, {x: -1, y: -2}, {x: 0, y: -2}, {x: 1, y: -2}, {x: 2, y: -2},
-    {x: -2, y: -1},                                 {x: 2, y: -1},
-    {x: -2, y: 0},                                  {x: 2, y: 0},
-    {x: -2, y: 1},                                  {x: 2, y: 1},
-    {x: -2, y: 2},  {x: -1, y: 2},  {x: 0, y: 2},  {x: 1, y: 2},  {x: 2, y: 2}
-  ];
-  
-  // Cercle 3 (distance 3) - pour les pièces tier 1 (faibles)
-  const circle3 = [
-    {x: -3, y: -3}, {x: -2, y: -3}, {x: -1, y: -3}, {x: 0, y: -3}, {x: 1, y: -3}, {x: 2, y: -3}, {x: 3, y: -3},
-    {x: -3, y: -2},                                 {x: 3, y: -2},
-    {x: -3, y: -1},                                 {x: 3, y: -1},
-    {x: -3, y: 0},                                  {x: 3, y: 0},
-    {x: -3, y: 1},                                  {x: 3, y: 1},
-    {x: -3, y: 2},                                  {x: 3, y: 2},
-    {x: -3, y: 3},  {x: -2, y: 3},  {x: -1, y: 3},  {x: 0, y: 3},  {x: 1, y: 3},  {x: 2, y: 3},  {x: 3, y: 3}
-  ];
-  
-  // Filtrer les positions selon la position du joueur pour éviter les conflits
-  let filteredCircle1 = circle1;
-  let filteredCircle2 = circle2;
-  let filteredCircle3 = circle3;
-  
-  if (playerCount === 2) {
-    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
-      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
-    } else { // Joueur 2 (bas) - garder les positions du haut
-      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
-    }
-  } else if (playerCount === 3) {
-    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
-      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
-    } else if (playerIndex === 1) { // Joueur 2 (bas) - garder les positions du haut
-      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
-    } else { // Joueur 3 (gauche) - garder les positions de droite
-      filteredCircle1 = circle1.filter(pos => pos.x >= 0);
-      filteredCircle2 = circle2.filter(pos => pos.x >= 0);
-      filteredCircle3 = circle3.filter(pos => pos.x >= 0);
-    }
-  } else { // 4 joueurs
-    if (playerIndex === 0) { // Joueur 1 (haut) - garder les positions du bas
-      filteredCircle1 = circle1.filter(pos => pos.y >= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y >= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y >= 0);
-    } else if (playerIndex === 1) { // Joueur 2 (bas) - garder les positions du haut
-      filteredCircle1 = circle1.filter(pos => pos.y <= 0);
-      filteredCircle2 = circle2.filter(pos => pos.y <= 0);
-      filteredCircle3 = circle3.filter(pos => pos.y <= 0);
-    } else if (playerIndex === 2) { // Joueur 3 (gauche) - garder les positions de droite
-      filteredCircle1 = circle1.filter(pos => pos.x >= 0);
-      filteredCircle2 = circle2.filter(pos => pos.x >= 0);
-      filteredCircle3 = circle3.filter(pos => pos.x >= 0);
-    } else { // Joueur 4 (droite) - garder les positions de gauche
-      filteredCircle1 = circle1.filter(pos => pos.x <= 0);
-      filteredCircle2 = circle2.filter(pos => pos.x <= 0);
-      filteredCircle3 = circle3.filter(pos => pos.x <= 0);
-    }
-  }
-  
-  // Combiner les cercles dans l'ordre (plus proches en premier)
-  const allDirections = [...filteredCircle1, ...filteredCircle2, ...filteredCircle3];
-  
-  // Générer les positions en cercle
-  for (const dir of allDirections) {
-    const x = kingX + dir.x;
-    const y = kingY + dir.y;
-    
-    // Vérifier que la position est dans les limites et n'est pas sur le roi
-    if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && !(x === kingX && y === kingY)) {
-      positions.push({x, y});
-    }
-  }
-  
-  return positions;
+  const zone = getHomeZoneCells(playerIndex, playerCount);
+  const candidates = zone.filter(c => !(c.x === kingX && c.y === kingY));
+  // Plus proches du roi d'abord (pièces fortes au centre)
+  candidates.sort((a, b) => {
+    const da = Math.abs(a.x - kingX) + Math.abs(a.y - kingY);
+    const db = Math.abs(b.x - kingX) + Math.abs(b.y - kingY);
+    if (da !== db) return da - db;
+    if (a.y !== b.y) return a.y - b.y;
+    return a.x - b.x;
+  });
+  return candidates;
 }
 
 function startGame(scene) {
   // Initialiser les poids des objets
   initItemWeights();
+  computeBoardLayout();
   
   // Couleurs des éditeurs pour les backgrounds des pièces (opacité 50%)
   const factionColors = {
-    'Nintendo': 0xff0000, // Rouge Nintendo
-    'PlayStation': 0x003791, // Bleu PlayStation  
-    'SEGA': 0x0066cc, // Bleu SEGA
-    'Xbox': 0x107c10 // Vert Xbox
+    'Nintendo': 0xff0000, 'nintendo': 0xff0000,
+    'PlayStation': 0x003791, 'playstation': 0x003791,
+    'SEGA': 0x0066cc, 'sega': 0x0066cc,
+    'Xbox': 0x107c10, 'xbox': 0x107c10
   };
   
   gameStarted = true;
@@ -1690,40 +1954,56 @@ function startGame(scene) {
     }
   }
   
-  // Créer la nouvelle grille avec la taille correcte
+  // Créer la nouvelle grille avec la taille correcte (style chess.com)
+  const lightSquare = 0xeeeed2;
+  const darkSquare = 0x769656;
   grid = [];
   for (let y=0; y<GRID_SIZE; y++) {
     grid[y] = [];
     for (let x=0; x<GRID_SIZE; x++) {
-      const baseColor = (x+y)%2===0 ? 0xffffff : 0xcccccc;
+      const baseColor = (x+y)%2===0 ? lightSquare : darkSquare;
       const rect = scene.add.rectangle(
         GRID_OFFSET_X + x*TILE_SIZE + TILE_SIZE/2,
         GRID_OFFSET_Y + y*TILE_SIZE + TILE_SIZE/2,
-        TILE_SIZE-2, TILE_SIZE-2,
+        TILE_SIZE, TILE_SIZE,
         baseColor
-      ).setStrokeStyle(1,0x000000).setInteractive();
+      ).setInteractive();
       rect.baseColor = baseColor;
       rect.pos = {x,y};
       rect.on('pointerdown', () => handleClick(scene, rect.pos));
+      // Survol subtil type chess.com
+      rect.on('pointerover', () => {
+        if (!highlightedTiles.includes(rect) && gameStarted) {
+          rect.setFillStyle(baseColor === lightSquare ? 0xf6f669 : 0x829769);
+        }
+      });
+      rect.on('pointerout', () => {
+        if (!highlightedTiles.includes(rect)) {
+          rect.setFillStyle(rect.baseColor);
+        }
+      });
       grid[y][x] = rect;
     }
   }
 
-  // Placer les caisses d'objets selon la taille de grille
+  // Contour du plateau
+  if (scene.boardFrame) scene.boardFrame.destroy();
+  scene.boardFrame = scene.add.rectangle(
+    GRID_OFFSET_X + GRID_SIZE * TILE_SIZE / 2,
+    GRID_OFFSET_Y + GRID_SIZE * TILE_SIZE / 2,
+    GRID_SIZE * TILE_SIZE + 16,
+    GRID_SIZE * TILE_SIZE + 16,
+    0x312e2b
+  ).setDepth(-1);
+
+  // Caisses sur toutes les cases claires de la ligne 5 (1-based → y=4)
   itemCrates = [];
   const cratePositions = [];
-  if (GRID_SIZE === 9) {
-    const cx = Math.floor(GRID_SIZE/2);
-    const cy = Math.floor(GRID_SIZE/2);
-    cratePositions.push({ x: cx, y: cy });
-  } else if (GRID_SIZE === 11) {
-    // Positions demandées (1-based): [5,5], [5,7], [7,5], [7,7]
-    // Conversion 0-based:
-    cratePositions.push({ x: 4, y: 4 }, { x: 4, y: 6 }, { x: 6, y: 4 }, { x: 6, y: 6 });
-  } else if (GRID_SIZE === 15) {
-    // Positions demandées (1-based): [6,6], [6,10], [8,8], [10,6], [10,10]
-    // Conversion 0-based:
-    cratePositions.push({ x: 5, y: 5 }, { x: 5, y: 9 }, { x: 7, y: 7 }, { x: 9, y: 5 }, { x: 9, y: 9 });
+  const crateRow = 4; // ligne 5
+  for (let x = 0; x < GRID_SIZE; x++) {
+    if ((x + crateRow) % 2 === 0) {
+      cratePositions.push({ x, y: crateRow });
+    }
   }
   for (const pos of cratePositions) {
     const sprite = scene.add.image(0,0,'item-crate');
@@ -1792,7 +2072,7 @@ function startGame(scene) {
   for (let i = 0; i < playerCount; i++) {
     players.push({
       name: playerNames[i],
-      faction: playerFactions[i]
+      faction: normalizeFaction(playerFactions[i])
     });
   }
   
@@ -1840,11 +2120,34 @@ function startGame(scene) {
     const kingImageKey = `king-${playerFactions[i].toLowerCase()}`;
     const kingSprite = scene.add.image(0, 0, kingImageKey);
     kingSprite.setDepth(200); // Au-dessus du background
+
+    const roleToLetter = {
+      pawn: 'P',
+      knight: 'C',
+      bishop: 'F',
+      rook: 'T',
+      queen: 'D',
+      king: 'R',
+      unique: 'U'
+    };
+    const letterText = scene.add.text(
+      GRID_OFFSET_X + kingX * TILE_SIZE + TILE_SIZE * 0.5 + TILE_SIZE * 0.28,
+      GRID_OFFSET_Y + kingY * TILE_SIZE + TILE_SIZE * 0.5 - TILE_SIZE * 0.28,
+      roleToLetter.king,
+      {
+        font: `${Math.max(10, Math.floor(TILE_SIZE * 0.25))}px Arial`,
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 4
+      }
+    ).setOrigin(0.5).setDepth(2200);
     
     const kingPiece = {
       sprite: kingSprite,
       backgroundSprite: kingBackgroundSprite, // Ajouter la référence au background
       type: 'king',
+      role: 'king',
+      letterText: letterText,
       x: kingX,
       y: kingY,
       player: i,
@@ -1862,109 +2165,72 @@ function startGame(scene) {
     console.log(`✓ Roi créé pour Joueur ${i + 1}:`, kingPiece.name, `à (${kingX}, ${kingY})`);
   }
 
-  // 2) Placer les pièces sélectionnées pour chaque joueur
+  // 2) Placement type échecs 9×9 (rangée arrière + 9 pions)
   for (let i = 0; i < playerCount; i++) {
-    const army = playerArmies[i] || [];
-    let pieceCount = 0;
-    
-    console.log(`Joueur ${i + 1} - Armée:`, army);
-    
-    // Trier les pièces par tier (du plus fort au plus faible) pour le placement en spirale
-    const sortedArmy = [...army].sort((a, b) => (b.tier || 1) - (a.tier || 1));
-    
-    sortedArmy.forEach(piece => {
-      // Positionner les pièces autour du roi
-      let kingX = Math.floor(GRID_SIZE / 2);
-      let kingY;
-      
-      if (playerCount === 2) {
-        kingY = i === 0 ? 0 : GRID_SIZE - 1;
-      } else if (playerCount === 3) {
-        if (i === 0) {
-          kingY = 0; // Joueur 1 en haut
-        } else if (i === 1) {
-          kingY = GRID_SIZE - 1; // Joueur 2 en bas
-        } else if (i === 2) {
-          kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
-          kingX = 0;
+    const army = (playerArmies[i] || []).slice(0, MAX_ARMY_SIZE);
+    const formation = VGBChess.getChessStartPositions(army, i, GRID_SIZE);
+    const factionColor = factionColors[playerFactions[i]] || 0x808080;
+
+    for (const slot of formation) {
+      if (slot.role === 'king') continue; // déjà placé
+      const piece = slot.piece;
+      if (!piece) continue;
+
+      const pieceX = slot.x;
+      const pieceY = slot.y;
+      if (pieces.some(p => p.x === pieceX && p.y === pieceY)) continue;
+
+      const backgroundSprite = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, factionColor, 0.5);
+      backgroundSprite.setDepth(100);
+
+      const imageKey = piece.type || piece.nameKey || piece.name;
+      const chessMove = VGBChess.getChessMovement({ ...piece, role: slot.role });
+      const sprite = scene.add.image(0, 0, imageKey);
+      sprite.setDepth(200);
+
+      const roleToLetter = {
+        pawn: 'P',
+        knight: 'C',
+        bishop: 'F',
+        rook: 'T',
+        queen: 'D',
+        king: 'R',
+        unique: 'U'
+      };
+      const letter = roleToLetter[slot.role] || '?';
+      const letterText = scene.add.text(
+        GRID_OFFSET_X + pieceX * TILE_SIZE + TILE_SIZE * 0.5 + TILE_SIZE * 0.28,
+        GRID_OFFSET_Y + pieceY * TILE_SIZE + TILE_SIZE * 0.5 - TILE_SIZE * 0.28,
+        letter,
+        {
+          font: `${Math.max(10, Math.floor(TILE_SIZE * 0.25))}px Arial`,
+          fill: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 4
         }
-      } else { // 4 joueurs
-        if (i === 0) {
-          kingY = 0; // Joueur 1 en haut
-        } else if (i === 1) {
-          kingY = GRID_SIZE - 1; // Joueur 2 en bas
-        } else if (i === 2) {
-          kingY = Math.floor(GRID_SIZE / 2); // Joueur 3 au centre gauche
-          kingX = 0;
-        } else if (i === 3) {
-          kingY = Math.floor(GRID_SIZE / 2); // Joueur 4 au centre droit
-          kingX = GRID_SIZE - 1;
-        }
-      }
-      
-      // Calculer la position de la pièce en spirale
-      let pieceX, pieceY;
-      
-      // Générer les positions en spirale autour du roi
-      const spiralPositions = generateSpiralPositions(kingX, kingY, playerCount, i);
-      
-      if (pieceCount < spiralPositions.length) {
-        const pos = spiralPositions[pieceCount];
-        pieceX = pos.x;
-        pieceY = pos.y;
-      } else {
-        // Fallback si on dépasse les positions de spirale
-        pieceX = kingX + (pieceCount % 3) - 1;
-        pieceY = kingY + Math.floor(pieceCount / 3) + 1;
-      }
-      
-      console.log(`Joueur ${i + 1} - Pièce ${pieceCount + 1}:`, {
+      ).setOrigin(0.5).setDepth(2200);
+
+      const gamePiece = {
+        sprite,
+        backgroundSprite,
+        type: slot.role === 'unique' ? imageKey : (piece.type || imageKey),
+        role: slot.role,
+        letterText: letterText,
+        x: pieceX,
+        y: pieceY,
+        player: i,
         name: piece.name,
-        kingX, kingY,
-        pieceX, pieceY,
-        inBounds: pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE
-      });
-      
-      // Vérifier que la pièce n'est pas sur la case du roi
-      const isOnKing = (pieceX === kingX && pieceY === kingY);
-      
-      if (pieceX >= 0 && pieceX < GRID_SIZE && pieceY >= 0 && pieceY < GRID_SIZE && !isOnKing) {
-        // Créer le background coloré selon l'éditeur (opacité 50%)
-        const factionColor = factionColors[playerFactions[i]] || 0x808080; // Gris par défaut
-        const backgroundSprite = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, factionColor, 0.5);
-        backgroundSprite.setDepth(100); // En arrière-plan
-        
-        // Utiliser le type de la pièce comme clé d'image
-        const imageKey = piece.type;
-        const sprite = scene.add.image(0, 0, imageKey);
-        sprite.setDepth(200); // Au-dessus du background
-        
-        const gamePiece = {
-          sprite: sprite,
-          backgroundSprite: backgroundSprite, // Ajouter la référence au background
-          type: 'piece',
-          x: pieceX,
-          y: pieceY,
-          player: i,
-          name: piece.name,
-          image: piece.image,
-          moves: piece.moves,
-          range: piece.range,
-          cost: piece.cost,
-          tier: piece.tier
-        };
-        
-        // Rendre la pièce interactive
-        sprite.setInteractive();
-        sprite.on('pointerdown', () => handleClick(scene, { x: gamePiece.x, y: gamePiece.y }));
-        
-        pieces.push(gamePiece);
-        pieceCount++;
-        console.log(`✓ Pièce créée pour Joueur ${i + 1}:`, gamePiece.name, `à (${pieceX}, ${pieceY})`);
-      } else {
-        console.log(`✗ Pièce hors limites pour Joueur ${i + 1}:`, piece.name, `(${pieceX}, ${pieceY})`);
-      }
-    });
+        image: piece.image,
+        moves: chessMove.moves,
+        range: chessMove.range,
+        cost: piece.cost,
+        tier: piece.tier
+      };
+
+      sprite.setInteractive();
+      sprite.on('pointerdown', () => handleClick(scene, { x: gamePiece.x, y: gamePiece.y }));
+      pieces.push(gamePiece);
+    }
   }
 
   console.log(`Total de pièces créées: ${pieces.length}`);
@@ -1998,41 +2264,18 @@ function startGame(scene) {
   scene.time.delayedCall(2000, () => { startText.destroy(); });
 
   // Timers: init par taille
-  const baseMinutes = (GRID_SIZE === 9) ? 5 : (GRID_SIZE === 11) ? 10 : 15;
+  const baseMinutes = 5;
   playerTimersMs = players.map(() => baseMinutes * 60 * 1000);
 
-  // Textes des noms des joueurs hors de la grille
+  // HUD HTML (noms, faction, timer) — hors canvas
+  setupHtmlHud();
+
+  // Timers Phaser désactivés (affichage HTML)
+  if (timerTexts.length) { timerTexts.forEach(t => t && t.destroy()); }
+  timerTexts = [];
   playerNameTexts.forEach(t => t && t.destroy());
   playerNameTexts = [];
-  const midNames = getKingCenterIndex(GRID_SIZE);
-  const margin = 12;
-  players.forEach((p,i) => {
-    const side = (i===0)?'top':(i===1)?'bottom':(i===2)?'left':'right';
-    let nx = 0, ny = 0;
-    if (side === 'top') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y - 20; }
-    if (side === 'bottom') { nx = GRID_OFFSET_X + midNames*TILE_SIZE + TILE_SIZE/2; ny = GRID_OFFSET_Y + GRID_SIZE*TILE_SIZE + 20; }
-    if (side === 'left') { nx = GRID_OFFSET_X - 30; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
-    if (side === 'right') { nx = GRID_OFFSET_X + GRID_SIZE*TILE_SIZE + 30; ny = GRID_OFFSET_Y + midNames*TILE_SIZE + TILE_SIZE/2; }
-    const tintColor = brandTints[p.faction || 'nintendo'] || 0x000000;
-    const factionLabel = getFactionDisplayName(p.faction || 'nintendo');
-    const label = `${p.name} (${factionLabel})`;
-    const txt = scene.add.text(nx, ny, label, { font: "18px Arial", fill: `#${tintColor.toString(16).padStart(6,'0')}` }).setOrigin(0.5);
-    if (side === 'left') txt.setAngle(-90);
-    if (side === 'right') txt.setAngle(90);
-    txt.setDepth(1500);
-    playerNameTexts.push(txt);
-  });
 
-  // Créer les textes de timer pour chaque joueur (après la création des noms)
-  if (timerTexts.length) { timerTexts.forEach(t => t && t.destroy()); }
-  timerTexts = players.map((p,i) => {
-    const nameText = playerNameTexts[i];
-    const t = scene.add.text(0,0, formatMs(playerTimersMs[i]), { font: "14px Arial", fill: "#333", backgroundColor: "#fff" }).setDepth(1600);
-    positionTimerTextNearName(t, nameText);
-    return t;
-  });
-  
-  // Lancer tick si activé
   if (timerEvent) timerEvent.remove(false);
   if (timerEnabled) {
     timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
@@ -2058,11 +2301,9 @@ function loadPresetAndStart(scene) {
     const raw = localStorage.getItem('vgb_preset');
     if (!raw) return false;
     const preset = JSON.parse(raw);
-    if (!preset || !preset.gridSize || !Array.isArray(preset.players) || preset.players.length < 2) return false;
-    GRID_SIZE = preset.gridSize;
-    const available = 900 - 2*GRID_OFFSET_Y;
-    TILE_SIZE = Math.floor(available / GRID_SIZE);
-    players = preset.players.map((pp, i) => ({ id: i, points: 20, army: [], name: pp.name || `Joueur ${i+1}`, faction: pp.faction || 'nintendo' }));
+    if (!preset || !Array.isArray(preset.players) || preset.players.length < 2) return false;
+    computeBoardLayout();
+    players = preset.players.map((pp, i) => ({ id: i, points: 50, army: [], name: pp.name || `Joueur ${i+1}`, faction: pp.faction || 'nintendo' }));
     currentPlayer = 0;
     setupDraftUI(scene);
     updateDraftUI();
@@ -2074,6 +2315,14 @@ function updatePieces() {
   for (let p of pieces) {
     p.sprite.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
     p.sprite.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
+
+    // Lettre de rôle (visualisation) en haut à droite
+    if (p.letterText) {
+      const ox = TILE_SIZE * 0.28;
+      const oy = -TILE_SIZE * 0.28;
+      p.letterText.x = p.sprite.x + ox;
+      p.letterText.y = p.sprite.y + oy;
+    }
     
     // Positionner le background coloré s'il existe
     if (p.backgroundSprite) {
@@ -2187,6 +2436,7 @@ function updatePieces() {
   updateOcarinaPositions();
   // Mettre à jour l'indicateur de mode secondaire
   updateSecondaryModeIndicator();
+  if (typeof syncAllHtmlHudItems === 'function') syncAllHtmlHudItems();
   updateRulesSidebar();
 }
 
@@ -2310,6 +2560,12 @@ function handleClick(scene, pos) {
   console.log('handleClick appelé:', { pos, gameStarted, currentPlayer });
   if (!gameStarted) {
     console.log('Jeu pas encore démarré');
+    return;
+  }
+
+  // Mode en ligne : seul le joueur dont c'est le siège peut jouer
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && !VGBOnline.isMyTurn(currentPlayer)) {
+    showInfoMessage("Ce n'est pas votre tour (partie en ligne)", 1500);
     return;
   }
   
@@ -2452,7 +2708,11 @@ function handleClick(scene, pos) {
     if (currentItemAction.type === 'cursor') {
       // Vérifier si une pièce peut être possédée à cette position
       const targetPiece = getPieceAt(pos);
-      if (!targetPiece || !canPossessPiece(targetPiece, currentPlayer)) return;
+      // Clic hors cible = annulation (évite le soft-lock)
+      if (!targetPiece || !canPossessPiece(targetPiece, currentPlayer)) {
+        cancelCurrentItemAction('Possession annulée');
+        return;
+      }
       possessPiece(targetPiece, currentPlayer);
       const cursorInventoryIndex = currentItemAction.inventoryIndex;
       currentItemAction.active = false;
@@ -2551,8 +2811,11 @@ function handleClick(scene, pos) {
     return;
   }
   
-  // Sélection/désélection d'une pièce du joueur courant (y compris les pièces possédées qui restent contrôlées par leur joueur d'origine)
-  if (clickedPiece && clickedPiece.player === currentPlayer) {
+  // Sélection/désélection d'une pièce du joueur courant OU d'une pièce possédée par le curseur Sims
+  const canControlClicked = clickedPiece && (
+    clickedPiece.player === currentPlayer || isPiecePossessedByCurrentPlayer(clickedPiece)
+  );
+  if (canControlClicked) {
     // Désélectionner toute pièce adverse
     selectedEnemyPiece = null;
     
@@ -2682,6 +2945,7 @@ function handleClick(scene, pos) {
           // Nettoyer l'ocarina si la pièce en avait un
           removeOcarinaFromPiece(target);
         target.sprite.destroy();
+        if (target.letterText) target.letterText.destroy();
         if (target.backgroundSprite) target.backgroundSprite.destroy();
         pieces = pieces.filter(p => p !== target);
         }
@@ -2723,6 +2987,7 @@ function handleClick(scene, pos) {
               removeHeartFromPiece(piece);
               removeOcarinaFromPiece(piece);
               if (piece.sprite) piece.sprite.destroy();
+              if (piece.letterText) piece.letterText.destroy();
               if (piece.backgroundSprite) piece.backgroundSprite.destroy();
             }
             
@@ -2870,213 +3135,51 @@ function getPieceAt(pos) {
 }
 
 function getReachablePositions(piece) {
-  // Vérifier si la pièce est transformée en cavalier par l'Ocarina
-  const isKnight = knightPieces.some(kp => kp.piece === piece);
-  
-  if (isKnight) {
+  // Ocarina → cavalier
+  if (knightPieces.some(kp => kp.piece === piece)) {
     return getKnightMoves(piece);
   }
-  
-  const positions = [];
-  const rule = getRuleForPiece(piece);
-  
-  // Vérifier si la pièce est possédée et limiter ses mouvements à sa "maison"
-  const possessed = possessedPieces.find(pp => pp.piece === piece);
-  if (possessed) {
-    // Limiter les mouvements aux limites de la maison
-    const houseBounds = possessed.houseBounds;
-    const iterateFrom = (startX, startY, dir, maxSteps, usedTeleport) => {
-      for (let step = 1; step <= maxSteps; step++) {
-        const nx = startX + dir[0] * step;
-        const ny = startY + dir[1] * step;
-        
-        // Vérifier les limites de la maison
-        if (nx < houseBounds.startX || nx > houseBounds.endX || 
-            ny < houseBounds.startY || ny > houseBounds.endY) {
-          break; // Sortir des limites de la maison
-        }
-        
-        const occ = getPieceAt({ x: nx, y: ny });
-        if (occ && occ.player === piece.player) break; // Pièce alliée
-        if (occ && occ.player !== piece.player) {
-          // Vérifier protection étoile
-          if (starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn) {
-            continue; // Pièce protégée, continuer
-          }
-          positions.push({ x: nx, y: ny }); // Capturer
-          break;
-        }
-        positions.push({ x: nx, y: ny }); // Case vide
-      }
-    };
-    
-    // Appliquer les mouvements selon les règles
-    for (const dir of rule.moves) {
-      iterateFrom(piece.x, piece.y, dir, rule.range, false);
-    }
-    
-    return positions;
+
+  let positions;
+  if (piece.role === 'pawn') {
+    positions = getPawnMoves(piece);
+  } else {
+    positions = getOriginalMoves(piece);
   }
 
-  const isPortalPos = (x, y, color) => {
-    if (color === 'orange' && portalOrange) return portalOrange.x === x && portalOrange.y === y;
-    if (color === 'blue' && portalBlue) return portalBlue.x === x && portalBlue.y === y;
-    return false;
-  };
-
-  const isTetriminoPos = (x, y) => {
-    return tetriminos.some(t => t.x === x && t.y === y);
-  };
-
-  const iterateFrom = (startX, startY, dir, maxSteps, usedTeleport) => {
-    for (let step = 1; step <= maxSteps; step++) {
-      const nx = startX + dir[0] * step;
-      const ny = startY + dir[1] * step;
-      if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) break;
-      
-      // Vérifier si la case contient un tetrimino (mur)
-      if (isTetriminoPos(nx, ny)) {
-        // Les cavaliers peuvent sauter par-dessus les tetriminos
-        // Un cavalier se déplace en L (2+1 ou 1+2), donc range = 1 et step = 1
-        const isKnightMove = (rule.range === 1 && step === 1 && 
-          (Math.abs(dir[0]) === 2 && Math.abs(dir[1]) === 1) || 
-          (Math.abs(dir[0]) === 1 && Math.abs(dir[1]) === 2));
-        
-        if (isKnightMove) {
-          continue; // continuer le mouvement (sauter par-dessus)
-        } else {
-          break; // s'arrêter pour les autres pièces
-        }
-      }
-      
-      const occ = getPieceAt({ x: nx, y: ny });
-
-      // Portail: si on touche ORANGE et BLUE existe, on permet de poursuivre depuis BLUE
-      if (!usedTeleport && isPortalPos(nx, ny, 'orange') && portalBlue) {
-        // On peut s'arrêter sur orange si vide
-        if (!occ) positions.push({ x: nx, y: ny });
-        // Calculer pas restants après avoir atteint orange
-        const remaining = maxSteps - step;
-        // Si la case BLEUE est occupée
-        const occBlue = getPieceAt({ x: portalBlue.x, y: portalBlue.y });
-        if (occBlue) {
-        // Si ennemi: on peut capturer BLEU puis on s'arrête (si pas protégé par étoile)
-        if (occBlue.player !== piece.player && !(starInvincible && starInvincible.playerId === occBlue.player && starInvincible.untilPlayerTurn)) {
-          positions.push({ x: portalBlue.x, y: portalBlue.y });
-        }
-          break;
-        } else {
-          // Ajouter la case BLEUE comme atteignable et poursuivre au-delà
-          positions.push({ x: portalBlue.x, y: portalBlue.y });
-          if (remaining > 0) {
-            // continuer depuis BLEU dans la même direction
-            iterateFrom(portalBlue.x, portalBlue.y, dir, remaining, true);
-          }
-          break;
-        }
-      }
-
-      if (!occ) {
-        positions.push({ x: nx, y: ny });
-        continue;
-      }
-      // Case occupée: on peut capturer un ennemi mais on s'arrête ensuite
-      if (occ.player !== piece.player) {
-        // Vérifier si la pièce cible est protégée par l'étoile
-        if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn)) {
-        positions.push({ x: nx, y: ny });
-        }
-      }
-      break;
-    }
-  };
-
-  // Gestion spéciale pour les cavaliers (mouvements en L)
-  const isKnightMove = (dir) => {
-    return rule.range === 1 && (
-      (Math.abs(dir[0]) === 2 && Math.abs(dir[1]) === 1) || 
-      (Math.abs(dir[0]) === 1 && Math.abs(dir[1]) === 2)
+  const possessed = possessedPieces.find(pp => pp.piece === piece);
+  if (possessed) {
+    const b = possessed.houseBounds;
+    positions = positions.filter(p =>
+      p.x >= b.startX && p.x <= b.endX && p.y >= b.startY && p.y <= b.endY
     );
-  };
-
-  for (let dir of rule.moves) {
-    if (isKnightMove(dir)) {
-      // Mouvement de cavalier : sauter directement à la case de destination
-      const nx = piece.x + dir[0];
-      const ny = piece.y + dir[1];
-      if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-        const occ = getPieceAt({ x: nx, y: ny });
-        if (!occ) {
-          positions.push({ x: nx, y: ny });
-        } else if (occ.player !== piece.player) {
-          // Vérifier si la pièce cible est protégée par l'étoile
-          if (!(starInvincible && starInvincible.playerId === occ.player && starInvincible.untilPlayerTurn)) {
-            positions.push({ x: nx, y: ny });
-          }
-        }
-      }
-    } else {
-      iterateFrom(piece.x, piece.y, dir, rule.range, false);
-    }
   }
   return positions;
 }
 
 function getRuleForPiece(piece) {
-  // Retourne l'objet { moves, range } pour la pièce
-  // Utiliser directement les mouvements de la pièce si disponibles
+  if (typeof VGBChess !== 'undefined') {
+    const m = VGBChess.getChessMovement(piece);
+    if (m.special === 'pawn') {
+      // getReachablePositions utilise getOriginalMoves pour les pions via autre chemin
+      return { moves: m.moves, range: m.range, special: 'pawn' };
+    }
+    return { moves: m.moves, range: m.range, special: m.special };
+  }
   if (piece.moves && piece.range !== undefined) {
     return { moves: piece.moves, range: piece.range };
   }
-  
-  // Fallback pour les anciennes pièces
   const owner = players[piece.player];
   if (!owner) return { moves: [], range: 0 };
-  if (piece.type === 'king') {
-    const k = kings[owner.faction];
+  if (piece.type === 'king' || piece.role === 'king') {
+    const k = kings[normalizeFaction(owner.faction)];
     return k ? { moves: k.moves, range: k.range } : { moves: [], range: 0 };
   }
-  const catalog = getCatalogForFaction(owner.faction);
-  const entry = catalog[piece.type];
-  return entry ? { moves: entry.moves, range: entry.range } : { moves: [], range: 0 };
+  return { moves: [], range: 0 };
 }
 
-function endGameWithRanking(ranking) {
-  gameStarted = false;
-  clearHighlights();
-  let msg = '';
-  if (Array.isArray(ranking) && ranking.length > 0) {
-    msg = 'Classement final:\n' + ranking.map((pid, idx) => `${idx+1}. Joueur ${pid+1}`).join('\n');
-  } else {
-    msg = 'Partie terminée.';
-  }
-  if (turnText) {
-    turnText.setText(msg);
-  } else if (infoText) {
-    infoText.setText(msg);
-  }
-  // Mémoriser les réglages actuels pour relancer facilement
-  savePreset();
-  // Bouton DOM pour relancer avec les mêmes réglages
-  let btn = document.getElementById('restart-same-settings');
-  if (btn) btn.remove();
-  btn = document.createElement('button');
-  btn.id = 'restart-same-settings';
-  btn.textContent = 'Démarrer une nouvelle partie avec les mêmes réglages';
-  btn.style.position = 'fixed';
-  btn.style.right = '20px';
-  btn.style.bottom = '20px';
-  btn.style.zIndex = '9999';
-  btn.style.padding = '10px 12px';
-  btn.style.font = '14px Arial';
-  btn.style.background = '#cfc';
-  btn.style.border = '1px solid #9c9';
-  btn.style.borderRadius = '6px';
-  btn.onclick = () => {
-    try { localStorage.setItem('vgb_start_with_preset', '1'); } catch(e) {}
-    window.location.reload();
-  };
-  document.body.appendChild(btn);
+function endGameWithRanking_legacy_unused(ranking) {
+  // Conservé pour compatibilité — remplacé par endGameWithRanking plus bas
 }
 
 function maybePickupItem(piece) {
@@ -3095,27 +3198,27 @@ function maybePickupItem(piece) {
 
 function giveItemToPlayer(playerId, itemKey) {
   const scene = infoText.scene;
-  // créer une icône (empilement jusqu'à 3 max)
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
-  if (playerItemIcons[playerId].length >= 3) return; // limite 3 objets
+  if (playerItemIcons[playerId].length >= 3) return;
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
-  const icon = scene.add.image(0,0,textureKey).setDisplaySize(24,24).setInteractive();
-  icon.on('pointerdown', () => tryUseItem(playerId, icon));
-  // Pour lightning: ajouter compteur 4 tours complets avant utilisation
+  const icon = scene.add.image(-100, -100, textureKey).setDisplaySize(24, 24).setVisible(false);
   const entry = { sprite: icon, item: itemKey };
   if (itemKey === 'lightning') entry.chargeTurns = 5;
   playerItemIcons[playerId].push(entry);
+  syncAllHtmlHudItems();
   updatePieces();
 }
 
-function tryUseItem(playerId, clickedIconSprite) {
+function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
   if (!gameStarted) return;
   if (playerId !== currentPlayer) return; // utiliser à son tour
   if (itemUsedThisTurn) return; // un seul objet par tour
   const arr = playerItemIcons[playerId] || [];
   if (arr.length === 0) return;
   let idx = 0;
-  if (clickedIconSprite) {
+  if (typeof inventoryIndex === 'number' && inventoryIndex >= 0) {
+    idx = inventoryIndex;
+  } else if (clickedIconSprite) {
     const found = arr.findIndex(e => e && e.sprite === clickedIconSprite);
     if (found >= 0) idx = found;
   }
@@ -3258,11 +3361,20 @@ function tryUseItem(playerId, clickedIconSprite) {
     }
   }
   if (icon.item === 'cursor') {
+    // Re-clic sur le curseur = annulation
+    if (currentItemAction && currentItemAction.active && currentItemAction.type === 'cursor') {
+      cancelCurrentItemAction('Possession annulée');
+      return;
+    }
     // Activer mode possession: prochain clic sur une pièce faible/moyenne adverse la possède
-    currentItemAction = { playerId, type: 'cursor', active: true, inventoryIndex: idx };
-    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('cursor').toLowerCase()}`, 5000);
-    // Highlight des pièces possibles (faibles et moyennes adverses) en vert pâle
     const allowed = getPossessablePieces(playerId);
+    if (!allowed.length) {
+      showInfoMessage(`Aucune pièce adverse (faible/moyenne) à posséder`, 2500);
+      return;
+    }
+    currentItemAction = { playerId, type: 'cursor', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-target')} ${t('cursor').toLowerCase()} (recliquez l'objet pour annuler)`, 5000);
+    // Highlight des pièces possibles (faibles et moyennes adverses) en vert pâle
     highlightPieces(allowed, 0x81c784); // vert pâle
   }
   if (icon.item === 'heart') {
@@ -3275,22 +3387,9 @@ function tryUseItem(playerId, clickedIconSprite) {
   if (icon.item === 'sandglass') {
     // Utiliser la sablière du temps: réduire le temps des adversaires selon la taille du plateau
     if (timerEnabled && playerTimersMs.length > 0) {
-      // Calculer le temps à soustraire selon la taille du plateau
-      let timeToSubtract;
-      let timeText;
-      if (GRID_SIZE === 9) {
-        timeToSubtract = 60000; // 1 minute
-        timeText = "1 minute";
-      } else if (GRID_SIZE === 11) {
-        timeToSubtract = 120000; // 2 minutes
-        timeText = "2 minutes";
-      } else if (GRID_SIZE === 15) {
-        timeToSubtract = 180000; // 3 minutes
-        timeText = "3 minutes";
-      } else {
-        timeToSubtract = 60000; // fallback: 1 minute
-        timeText = "1 minute";
-      }
+      // Calculer le temps à soustraire (plateau 9×9)
+      const timeToSubtract = 60000; // 1 minute
+      const timeText = "1 minute";
       
       let affectedPlayers = 0;
       for (let i = 0; i < playerTimersMs.length; i++) {
@@ -3554,34 +3653,46 @@ function getPossessablePieces(playerId) {
 
 function canPossessPiece(piece, playerId) {
   // Ne peut pas posséder ses propres pièces
-  if (piece.player === playerId) return false;
+  if (!piece || piece.player === playerId) return false;
   
   // Ne peut pas posséder les rois
-  if (piece.type === 'king') return false;
+  if (piece.type === 'king' || piece.role === 'king') return false;
   
-  // Vérifier le tier de la pièce (faible ou moyen)
-  const faction = players[piece.player] && players[piece.player].faction ? players[piece.player].faction : 'nintendo';
-  const catalog = getCatalogForFaction(faction);
-  
-  // Essayer d'abord avec piece.type, puis avec piece.name si piece.type ne fonctionne pas
-  let pieceData = catalog[piece.type];
-  if (!pieceData && piece.name) {
-    pieceData = catalog[piece.name];
+  // Possession limitée aux pièces « faibles » : pion et cavalier
+  const role = piece.role || null;
+  if (role) {
+    return role === 'pawn' || role === 'knight';
   }
-  
-  if (!pieceData) return false;
-  
-  // Seulement les pièces de tier 1 (faible) ou 2 (moyen)
-  return pieceData.tier === 1 || pieceData.tier === 2;
+
+  // Fallback: données catalogue / piecesData
+  const nameKey = piece.name
+    ? String(piece.name).toLowerCase().replace(/\s+/g, '-')
+    : null;
+  const fromData = (typeof piecesData !== 'undefined' && nameKey)
+    ? piecesData.find(p => (p.type === piece.type) || (p.nameKey === nameKey) || (p.name === piece.name))
+    : null;
+  if (fromData && fromData.role) {
+    return fromData.role === 'pawn' || fromData.role === 'knight';
+  }
+
+  return false;
+}
+
+function cancelCurrentItemAction(message) {
+  if (!currentItemAction) return;
+  currentItemAction.active = false;
+  currentItemAction = null;
+  clearHighlights();
+  if (message) showInfoMessage(message, 2000);
+  else hideInfoMessage();
 }
 
 function possessPiece(piece, playerId) {
   const scene = infoText.scene;
   const originalPlayer = piece.player;
   
-  // NE PAS changer le propriétaire de la pièce - elle reste contrôlée par son joueur d'origine
-  
-  // Déplacer la pièce près du roi du joueur d'ORIGINE
+  // Le possesseur contrôle la pièce pendant 1 tour (sans changer le propriétaire permanent)
+  // Déplacer la pièce près du roi du joueur d'ORIGINE (zone "maison")
   const originalKing = pieces.find(p => p.player === originalPlayer && p.type === 'king');
   if (originalKing) {
     const newPos = findPositionNearKing(originalKing.x, originalKing.y);
@@ -3591,6 +3702,10 @@ function possessPiece(piece, playerId) {
       if (piece.sprite) {
         piece.sprite.x = GRID_OFFSET_X + piece.x * TILE_SIZE + TILE_SIZE/2;
         piece.sprite.y = GRID_OFFSET_Y + piece.y * TILE_SIZE + TILE_SIZE/2;
+      }
+      if (piece.backgroundSprite) {
+        piece.backgroundSprite.x = piece.sprite.x;
+        piece.backgroundSprite.y = piece.sprite.y;
       }
     }
   }
@@ -3602,25 +3717,21 @@ function possessPiece(piece, playerId) {
     'cursor'
   );
   cursorSprite.setDisplaySize(20, 20);
-  cursorSprite.setDepth(1500); // Au-dessus des pièces
+  cursorSprite.setDepth(1500);
   cursorSprite.setVisible(true);
   
-  // Calculer les limites de la "maison" basée sur le joueur d'origine
   const houseBounds = calculateHouseBounds(originalPlayer);
   
-  // Enregistrer la possession
   possessedPieces.push({
     piece: piece,
     cursorSprite: cursorSprite,
     originalPlayer: originalPlayer,
     possessorPlayer: playerId,
-    houseBounds: houseBounds
+    houseBounds: houseBounds,
+    expiresAfterPossessorTurn: true
   });
   
-  if (infoText) infoText.setText(`Joueur ${playerId+1}: ${piece.type} possédée !`);
-  setTimeout(() => {
-    if (infoText) infoText.setText("");
-  }, 2000);
+  showInfoMessage(`${piece.name || piece.type} possédée ! Contrôlez-la ce tour.`, 3000);
 }
 
 function findPositionNearKing(kingX, kingY) {
@@ -3891,16 +4002,28 @@ function getKnightMoves(piece) {
 }
 
 function getOriginalMoves(piece) {
+  // Pions : règles d'échecs
+  if (piece.role === 'pawn' || piece.type === 'pawn') {
+    return getPawnMoves(piece);
+  }
+  const pieceData = getPieceMovementData(piece);
+  if (pieceData && pieceData.special === 'pawn') {
+    return getPawnMoves(piece);
+  }
+
   const moves = [];
   
   // Obtenir les données de mouvement de la pièce
-  const pieceData = getPieceMovementData(piece);
   if (!pieceData) {
     // Fallback : mouvement de roi si pas de données
     return getBasicKingMoves(piece);
   }
   
   const { moves: moveDirections, range } = pieceData;
+  if (!moveDirections || !moveDirections.length) {
+    if (pieceData.special === 'pawn') return getPawnMoves(piece);
+    return getBasicKingMoves(piece);
+  }
   
   // Fonction pour vérifier si une position contient un tetrimino
   const isTetriminoPos = (x, y) => {
@@ -3920,28 +4043,26 @@ function getOriginalMoves(piece) {
       // Vérifier si la case contient un tetrimino (mur)
       if (isTetriminoPos(newX, newY)) {
         // Les cavaliers peuvent sauter par-dessus les tetriminos
-        const isKnightMove = (range === 1 && distance === 1 && 
-          (Math.abs(dx) === 2 && Math.abs(dy) === 1) || 
-          (Math.abs(dx) === 1 && Math.abs(dy) === 2));
+        const isKnightMove = (piece.role === 'knight' || pieceData.special === 'knight' ||
+          (range === 1 && ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dx) === 1 && Math.abs(dy) === 2))));
         
         if (isKnightMove) {
-          continue; // continuer le mouvement (sauter par-dessus)
+          continue;
         } else {
-          break; // s'arrêter pour les autres pièces
+          break;
         }
       }
       
       const targetPiece = getPieceAt({x: newX, y: newY});
       
       if (!targetPiece) {
-        // Case vide - mouvement valide
         moves.push({x: newX, y: newY});
+        // Cavalier : un seul saut
+        if (piece.role === 'knight' || pieceData.special === 'knight') break;
       } else if (targetPiece.player !== piece.player) {
-        // Pièce ennemie - capture possible puis arrêt
         moves.push({x: newX, y: newY});
         break;
       } else {
-        // Pièce alliée - arrêt
         break;
       }
     }
@@ -3951,34 +4072,54 @@ function getOriginalMoves(piece) {
 }
 
 function getPieceMovementData(piece) {
-  // Obtenir la faction du joueur
+  if (typeof VGBChess !== 'undefined') {
+    const m = VGBChess.getChessMovement(piece);
+    return m;
+  }
   const player = players[piece.player];
   const faction = player ? player.faction : 'nintendo';
   
-  if (piece.type === 'king') {
-    // Données du roi pour cette faction
-    return kings[faction];
-  } else {
-    // Utiliser les données de mouvement stockées dans la pièce
-    if (piece.moves && piece.range) {
-      return {
-        moves: piece.moves,
-        range: piece.range
-      };
-    }
-    
-    // Fallback : chercher dans le catalogue par nom
-    const catalog = factionCatalogs[faction];
-    if (catalog && piece.name) {
-      // Chercher par nom de pièce
-      const pieceKey = Object.keys(catalog).find(key => 
-        piece.name.toLowerCase().includes(key.toLowerCase())
-      );
-      return pieceKey ? catalog[pieceKey] : null;
-    }
-    
-    return null;
+  if (piece.type === 'king' || piece.role === 'king') {
+    return kings[normalizeFaction(faction)] || { moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 };
   }
+  if (piece.moves && piece.range) {
+    return { moves: piece.moves, range: piece.range };
+  }
+  return null;
+}
+
+function getPawnMoves(piece) {
+  const dir = (typeof VGBChess !== 'undefined') ? VGBChess.pawnDirection(piece.player) : (piece.player === 0 ? 1 : -1);
+  const moves = [];
+  const isBlocked = (x, y) => {
+    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return true;
+    if (tetriminos.some(t => t.x === x && t.y === y)) return true;
+    return false;
+  };
+
+  const fwdY = piece.y + dir;
+  if (!isBlocked(piece.x, fwdY) && !getPieceAt({ x: piece.x, y: fwdY })) {
+    moves.push({ x: piece.x, y: fwdY });
+    const startRow = piece.player === 0 ? 1 : GRID_SIZE - 2;
+    if (piece.y === startRow) {
+      const fwd2 = piece.y + dir * 2;
+      if (!isBlocked(piece.x, fwd2) && !getPieceAt({ x: piece.x, y: fwd2 })) {
+        moves.push({ x: piece.x, y: fwd2 });
+      }
+    }
+  }
+  for (const dx of [-1, 1]) {
+    const cx = piece.x + dx;
+    const cy = piece.y + dir;
+    if (isBlocked(cx, cy)) continue;
+    const target = getPieceAt({ x: cx, y: cy });
+    if (target && target.player !== piece.player) {
+      if (!(starInvincible && starInvincible.playerId === target.player && starInvincible.untilPlayerTurn)) {
+        moves.push({ x: cx, y: cy });
+      }
+    }
+  }
+  return moves;
 }
 
 function getBasicKingMoves(piece) {
@@ -4027,6 +4168,17 @@ function isValidMove(piece, x, y) {
 function isPiecePossessedByCurrentPlayer(piece) {
   const possessed = possessedPieces.find(pp => pp.piece === piece);
   return possessed && possessed.possessorPlayer === currentPlayer;
+}
+
+function expirePossessedPiecesAfterTurn() {
+  // Retirer les possessions dont le possesseur n'est plus le joueur actif
+  for (let i = possessedPieces.length - 1; i >= 0; i--) {
+    const pp = possessedPieces[i];
+    if (pp.expiresAfterPossessorTurn && pp.possessorPlayer !== currentPlayer) {
+      if (pp.cursorSprite && pp.cursorSprite.destroy) pp.cursorSprite.destroy();
+      possessedPieces.splice(i, 1);
+    }
+  }
 }
 
 function getTornadoTeleportPositions() {
@@ -4226,6 +4378,7 @@ function detonateBombAt(pos) {
       // Nettoyer l'ocarina si la pièce en avait un
       removeOcarinaFromPiece(victim);
       victim.sprite.destroy();
+      if (victim.letterText) victim.letterText.destroy();
       if (victim.backgroundSprite) victim.backgroundSprite.destroy();
       pieces = pieces.filter(p => !(p.x === tx && p.y === ty && p.player === victim.player && p.type === victim.type));
       if (wasKing) {
@@ -4296,12 +4449,48 @@ function clearHighlights() {
   highlightOverlays = [];
 }
 
-function highlightPositions(positions, color = 0xfff59d) {
+function highlightPositions(positions, color = null) {
   clearHighlights();
+  const scene = infoText && infoText.scene;
   for (let pos of positions) {
+    if (!grid[pos.y] || !grid[pos.y][pos.x]) continue;
     const tile = grid[pos.y][pos.x];
-    tile.setFillStyle(color);
-    highlightedTiles.push(tile);
+    const target = getPieceAt(pos);
+
+    if (color != null) {
+      // Couleur explicite (items, etc.) — teinte la case
+      tile.setFillStyle(color);
+      highlightedTiles.push(tile);
+    } else if (target) {
+      // Capture : anneau rouge type chess.com
+      const ring = scene.add.circle(
+        GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE / 2,
+        GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.42,
+        0x000000,
+        0
+      ).setStrokeStyle(Math.max(3, TILE_SIZE * 0.08), 0xeb5e34, 0.85).setDepth(180);
+      highlightOverlays.push(ring);
+      highlightedTiles.push(tile);
+    } else {
+      // Coup légal : pastille semi-transparente
+      const dot = scene.add.circle(
+        GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE / 2,
+        GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.16,
+        0x000000,
+        0.22
+      ).setDepth(180);
+      highlightOverlays.push(dot);
+      highlightedTiles.push(tile);
+    }
+  }
+
+  // Mettre en évidence la case de la pièce sélectionnée
+  if (selectedPiece && grid[selectedPiece.y] && grid[selectedPiece.y][selectedPiece.x]) {
+    const sel = grid[selectedPiece.y][selectedPiece.x];
+    sel.setFillStyle(0xf6f669);
+    if (!highlightedTiles.includes(sel)) highlightedTiles.push(sel);
   }
 }
 
@@ -4329,6 +4518,14 @@ function updateTurnUI() {
     updateTurnUI();
     return;
   }
+
+  // Fin de possession Sims : expire quand le tour du possesseur est passé
+  expirePossessedPiecesAfterTurn();
+  
+  // Annuler toute action d'objet en cours au changement de tour (sécurité anti soft-lock)
+  if (currentItemAction && currentItemAction.active) {
+    cancelCurrentItemAction();
+  }
   
   // Vérifier si l'effet de l'étoile doit se terminer
   checkStarEffect();
@@ -4346,6 +4543,8 @@ function updateTurnUI() {
     clearHighlights();
   }
   
+  refreshHtmlHudTurn();
+  syncAllHtmlHudItems();
   // Mettre en évidence le nom du joueur actif (vert et bold)
   playerNameTexts.forEach((text, index) => {
     if (text) {
@@ -4370,6 +4569,11 @@ function updateTurnUI() {
   });
   // Mettre à jour la position des icônes d'objets à côté des noms
   updatePieces();
+
+  // Sync en ligne (sauf si on applique un état distant)
+  if (!window.__vgbApplyingRemote) {
+    maybePushOnlineState();
+  }
 }
 
 function decrementLightningCharges() {
@@ -4392,7 +4596,7 @@ function triggerLightningEffect() {
 }
 
 function isWhiteSquare(x, y) {
-  // même logique que baseColor (x+y)%2===0 blanc
+  // Case claire du plateau (équivalent ancien "blanc")
   return ((x + y) % 2) === 0;
 }
 
@@ -4408,6 +4612,7 @@ function applyLightningKill() {
     // Nettoyer l'ocarina si la pièce en avait un
     removeOcarinaFromPiece(v);
     if (v && v.sprite) v.sprite.destroy();
+    if (v && v.letterText) v.letterText.destroy();
     if (v && v.backgroundSprite) v.backgroundSprite.destroy();
     if (v.type === 'king') {
       kingDied = true;
@@ -4470,7 +4675,14 @@ function tickTimer(scene) {
   if (!gameStarted || !timerEnabled) return;
   if (players.length === 0) return;
   const nowIdx = currentPlayer;
+  const syncHudTimer = (i) => {
+    const el = document.getElementById('hud-timer-' + i);
+    if (!el) return;
+    el.textContent = formatMs(playerTimersMs[i] || 0);
+    el.classList.toggle('urgent', (playerTimersMs[i] || 0) < 30000);
+  };
   playerTimersMs[nowIdx] = Math.max(0, playerTimersMs[nowIdx] - 250);
+  syncHudTimer(nowIdx);
   // MAJ texte
   if (timerTexts[nowIdx]) timerTexts[nowIdx].setText(formatMs(playerTimersMs[nowIdx]));
   // feedback visuel sous 10s
@@ -4502,6 +4714,7 @@ function tickTimer(scene) {
         removeHeartFromPiece(piece);
         removeOcarinaFromPiece(piece);
         if (piece.sprite) piece.sprite.destroy();
+        if (piece.letterText) piece.letterText.destroy();
         if (piece.backgroundSprite) piece.backgroundSprite.destroy();
       }
       
@@ -4534,20 +4747,43 @@ function tickTimer(scene) {
 }
 
 function endGameWithRanking(ranking) {
+  gameStarted = false;
+  clearHighlights();
+
   // Créer le message de fin de partie avec le classement
-  let message = "🏆 FIN DE PARTIE 🏆\n\n";
+  let message = "FIN DE PARTIE\n\n";
   
   for (let i = 0; i < ranking.length; i++) {
     const playerId = ranking[i];
     const player = players[playerId];
     const position = i + 1;
-    const emoji = position === 1 ? "🥇" : position === 2 ? "🥈" : position === 3 ? "🥉" : "🏅";
-    
-    message += `${emoji} ${position}er : ${player.name}\n`;
+    const label = position === 1 ? "1er" : position === 2 ? "2e" : position === 3 ? "3e" : (position + "e");
+    const name = player ? player.name : (`Joueur ${playerId + 1}`);
+    message += `${label} : ${name}\n`;
+  }
+
+  // Elo en ligne
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    const winnerSeat = ranking && ranking.length ? ranking[0] : null;
+    VGBOnline.finish(winnerSeat).then((data) => {
+      if (data && data.elo) {
+        const myId = VGBOnline.user && VGBOnline.user.id;
+        const p1 = data.elo.player1;
+        const p2 = data.elo.player2;
+        const mine = (p1 && p1.id === myId) ? p1.elo : (p2 && p2.elo);
+        if (mine != null) {
+          message += `\nNouveau Elo : ${mine}`;
+          showEndGameMessage(message);
+        }
+      }
+    }).catch(() => {});
+    VGBOnline.stopPolling();
+    VGBOnline.enabled = false;
   }
   
   // Afficher le message de manière permanente avec le bouton intégré
   showEndGameMessage(message);
+  savePreset();
 }
 
 function showEndGameMessage(message) {
@@ -4638,724 +4874,547 @@ function updateAdInfo(reset = false) {
 // SYSTÈME DE SÉLECTION DES PERSONNAGES
 // ========================================
 
+
+function setupHtmlHud() {
+  for (let i = 0; i < 2; i++) {
+    const el = document.getElementById('hud-player-' + i);
+    if (!el) continue;
+    el.hidden = false;
+    const name = (players[i] && players[i].name) || playerNames[i] || ('Joueur ' + (i + 1));
+    const faction = (players[i] && players[i].faction) || playerFactions[i] || 'nintendo';
+    const nameEl = document.getElementById('hud-name-' + i);
+    const facEl = document.getElementById('hud-faction-' + i);
+    const timEl = document.getElementById('hud-timer-' + i);
+    if (nameEl) nameEl.textContent = name;
+    if (facEl) facEl.textContent = '(' + getFactionDisplayName(faction) + ')';
+    if (timEl) {
+      timEl.textContent = formatMs(playerTimersMs[i] || 0);
+      timEl.classList.toggle('urgent', (playerTimersMs[i] || 0) < 30000);
+    }
+    syncHtmlHudItems(i);
+  }
+  refreshHtmlHudTurn();
+}
+
+function refreshHtmlHudTurn() {
+  for (let i = 0; i < 2; i++) {
+    const el = document.getElementById('hud-player-' + i);
+    if (el) el.classList.toggle('active-turn', gameStarted && i === currentPlayer);
+  }
+}
+
+function syncHtmlHudItems(playerId) {
+  const box = document.getElementById('hud-items-' + playerId);
+  if (!box) return;
+  box.innerHTML = '';
+  const arr = playerItemIcons[playerId] || [];
+  arr.forEach((entry, idx) => {
+    if (!entry) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'hud-item-btn';
+    btn.disabled = playerId !== currentPlayer;
+    const img = document.createElement('img');
+    const key = entry.item === 'portals' ? 'portals' : entry.item;
+    // Chercher le chemin image depuis itemsData si dispo
+    const ITEM_IMG = {
+      bobomb: 'public/images/items/bobomb.png',
+      portals: 'public/images/items/portals.png',
+      lightning: 'public/images/items/Lightning.png',
+      star: 'public/images/items/star.png',
+      tetrimino: 'public/images/items/tetrimino.png',
+      tornado: 'public/images/items/tornado.png',
+      banana: 'public/images/items/banana.png',
+      phoenix: 'public/images/items/phoenix-down.png',
+      cursor: 'public/images/items/sims-cursor.png',
+      heart: 'public/images/items/heart.png',
+      sandglass: 'public/images/items/hourglass.png',
+      mask: 'public/images/items/mask-majora.png',
+      ocarina: 'public/images/items/oracina.png'
+    };
+    let src = ITEM_IMG[entry.item] || ('public/images/items/' + key + '.png');
+    if (typeof getItemByKey === 'function') {
+      const found = getItemByKey(entry.item);
+      if (found && found.image) src = found.image;
+    }
+    img.src = src;
+    img.alt = entry.item;
+    btn.appendChild(img);
+    if (entry.item === 'lightning' && entry.chargeTurns > 0) {
+      const c = document.createElement('span');
+      c.className = 'hud-charge';
+      c.textContent = String(entry.chargeTurns);
+      btn.appendChild(c);
+      btn.style.opacity = '0.6';
+    }
+    btn.addEventListener('click', () => {
+      tryUseItem(playerId, entry.sprite || null, idx);
+    });
+    box.appendChild(btn);
+  });
+}
+
+function syncAllHtmlHudItems() {
+  syncHtmlHudItems(0);
+  syncHtmlHudItems(1);
+}
+
 function startCharacterSelection() {
-  // Récupérer les paramètres de configuration
-  const gridSizeSelect = document.getElementById('grid-size-select');
-  const playerCountSelect = document.getElementById('player-count-select');
-  
-  GRID_SIZE = parseInt(gridSizeSelect.value);
-  TILE_SIZE = Math.floor(780 / GRID_SIZE);
-  playerCount = parseInt(playerCountSelect.value);
-  
-  // Réinitialiser les données
+  computeBoardLayout();
+  playerCount = 2;
   characterSelectionMode = true;
   currentPlayerIndex = 0;
-  playerArmies = [];
-  playerMoney = [];
-  playerNames = [];
-  playerFactions = [];
-  
-  // Initialiser les joueurs avec les points selon la taille du plateau
-  const budget = (GRID_SIZE === 9) ? 20 : (GRID_SIZE === 11) ? 40 : 60;
-  for (let i = 0; i < playerCount; i++) {
-    playerArmies.push([]);
-    playerMoney.push(budget);
-    playerNames.push(`Joueur ${i + 1}`);
-    playerFactions.push('Nintendo');
-  }
-  
-  // Charger toutes les pièces disponibles
+  playerArmies = [[], []];
+  playerMoney = [999, 999];
+  playerNames = ['Joueur 1', 'Joueur 2'];
+  playerFactions = ['Nintendo', 'PlayStation'];
   availablePieces = piecesData.filter(piece => piece.type !== 'king');
-  
-  // Créer l'interface de sélection
+  window._draftRole = 'pawn';
   createCharacterSelectionUI();
 }
 
 function createCharacterSelectionUI() {
-  // Créer le conteneur principal
-  const selectionContainer = document.createElement('div');
-  selectionContainer.id = 'character-selection-container';
-  selectionContainer.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--primary-bg);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    font-family: var(--font-family);
-  `;
-  
-  // Header
+  const old = document.getElementById('character-selection-container');
+  if (old) old.remove();
+
+  const root = document.createElement('div');
+  root.id = 'character-selection-container';
+  root.style.cssText = 'position:fixed;inset:0;z-index:1000;background:var(--primary-bg);display:flex;flex-direction:column;font-family:Arial,sans-serif;color:#fff;';
+
   const header = document.createElement('div');
-  header.style.cssText = `
-    background: var(--secondary-bg);
-    padding: 20px;
-    border-bottom: 2px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  `;
-  
+  header.style.cssText = 'padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;';
   const title = document.createElement('h1');
-  title.textContent = '🎮 ' + t('game-title');
-  title.style.cssText = `
-    color: var(--accent-gold);
-    margin: 0;
-    font-size: 28px;
-    font-weight: bold;
-  `;
-  
+  title.textContent = "Composer l'armée";
+  title.style.cssText = 'margin:0;font-size:20px;color:#ffd700;';
   const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '✕';
-  closeBtn.style.cssText = `
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  `;
-  closeBtn.addEventListener('click', () => {
-    const container = document.getElementById('character-selection-container');
-    if (container) container.remove();
-    characterSelectionMode = false;
-  });
-  
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'width:40px;height:40px;border:none;border-radius:50%;background:#c0392b;color:#fff;font-size:18px;cursor:pointer;';
+  closeBtn.onclick = () => root.remove();
   header.appendChild(title);
   header.appendChild(closeBtn);
-  
-  // Contenu principal
-  const mainContent = document.createElement('div');
-  mainContent.style.cssText = `
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  `;
-  
-  // Zone de sélection (2/3)
-  const selectionArea = document.createElement('div');
-  selectionArea.style.cssText = `
-    width: 66.67%;
-    padding: 20px;
-    overflow-y: auto;
-    background: var(--primary-bg);
-  `;
-  
-  // Informations du joueur actuel
-  const playerInfo = document.createElement('div');
-  playerInfo.style.cssText = `
-    background: var(--accent-color);
-    color: white;
-    padding: 20px;
-    border-radius: var(--border-radius);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  `;
-  
-  const playerNameDiv = document.createElement('div');
-  playerNameDiv.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  `;
-  
-  const playerNameInput = document.createElement('input');
-  playerNameInput.type = 'text';
-  playerNameInput.value = playerNames[currentPlayerIndex];
-  playerNameInput.id = 'player-name-input';
-  playerNameInput.setAttribute('data-t', 'player');
-  playerNameInput.style.cssText = `
-    background: white;
-    color: #000000;
-    border: none;
-    padding: 8px 12px;
-    border-radius: var(--border-radius);
-    font-size: 18px;
-    font-weight: bold;
-    min-width: 150px;
-  `;
-  
+
+  const controls = document.createElement('div');
+  controls.style.cssText = 'padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;border-bottom:1px solid var(--border-color);';
+
+  const nameInput = document.createElement('input');
+  nameInput.id = 'player-name-input';
+  nameInput.value = playerNames[currentPlayerIndex];
+  nameInput.placeholder = 'Pseudo';
+  nameInput.style.cssText = 'padding:10px;border-radius:8px;border:1px solid var(--border-color);background:rgba(0,0,0,.25);color:#fff;font-size:16px;min-height:44px;min-width:140px;';
+  nameInput.oninput = (e) => { playerNames[currentPlayerIndex] = e.target.value; updateDraftSummary(); };
+
   const factionSelect = document.createElement('select');
   factionSelect.id = 'faction-select';
-  factionSelect.style.cssText = `
-    background: white;
-    color: #000000;
-    border: none;
-    padding: 8px 12px;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    min-width: 120px;
-  `;
-  
-  const factions = ['Nintendo', 'PlayStation', 'Xbox', 'SEGA'];
-  factions.forEach(faction => {
-    const option = document.createElement('option');
-    option.value = faction;
-    option.textContent = faction.charAt(0).toUpperCase() + faction.slice(1);
-    if (faction === playerFactions[currentPlayerIndex]) option.selected = true;
-    factionSelect.appendChild(option);
+  factionSelect.style.cssText = 'padding:10px;border-radius:8px;border:1px solid var(--border-color);background:rgba(0,0,0,.25);color:#fff;font-size:16px;min-height:44px;';
+  ['Nintendo','PlayStation','Xbox','SEGA'].forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.textContent = f;
+    if (f === playerFactions[currentPlayerIndex]) o.selected = true;
+    factionSelect.appendChild(o);
   });
-  
-  playerNameDiv.appendChild(playerNameInput);
-  playerNameDiv.appendChild(factionSelect);
-  
-  const moneyDisplay = document.createElement('div');
-  moneyDisplay.id = 'money-display';
-  moneyDisplay.style.cssText = `
-    font-size: 18px;
-    font-weight: bold;
-  `;
-  
-  playerInfo.appendChild(playerNameDiv);
-  playerInfo.appendChild(moneyDisplay);
-  
-  // Grille des personnages
-  const charactersGrid = document.createElement('div');
-  charactersGrid.id = 'characters-grid';
-  charactersGrid.style.cssText = `
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
-  `;
-  
-  // Zone des équipes (1/3)
-  const teamsArea = document.createElement('div');
-  teamsArea.style.cssText = `
-    width: 33.33%;
-    background: var(--secondary-bg);
-    padding: 20px;
-    overflow-y: auto;
-    border-left: 2px solid var(--border-color);
-  `;
-  
-  const teamsTitle = document.createElement('h2');
-  teamsTitle.textContent = t('team');
-  teamsTitle.style.cssText = `
-    color: var(--accent-gold);
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 20px;
-  `;
-  
-  const teamsContainer = document.createElement('div');
-  teamsContainer.id = 'teams-container';
-  teamsContainer.style.cssText = `
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  `;
-  
-  // Créer les équipes
-  for (let i = 0; i < playerCount; i++) {
-    const teamDiv = document.createElement('div');
-    teamDiv.id = `team-${i}`;
-    teamDiv.style.cssText = `
-      background: var(--card-bg);
-      border: 2px solid ${i === currentPlayerIndex ? 'var(--accent-gold)' : 'var(--border-color)'};
-      border-radius: var(--border-radius);
-      padding: 15px;
-      box-shadow: var(--shadow-light);
-    `;
-    
-    const teamHeader = document.createElement('div');
-    teamHeader.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    `;
-    
-    const teamTitle = document.createElement('h3');
-    teamTitle.textContent = playerNames[i];
-    teamTitle.id = `team-title-${i}`;
-    teamTitle.style.cssText = `
-      color: var(--accent-gold);
-      margin: 0;
-      font-size: 16px;
-    `;
-    
-    const teamMoney = document.createElement('div');
-    teamMoney.id = `team-money-${i}`;
-    teamMoney.style.cssText = `
-      color: var(--text-secondary);
-      font-size: 12px;
-    `;
-    
-    teamHeader.appendChild(teamTitle);
-    teamHeader.appendChild(teamMoney);
-    
-    const teamUnits = document.createElement('div');
-    teamUnits.id = `team-units-${i}`;
-    teamUnits.style.cssText = `
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-height: 40px;
-    `;
-    
-    teamDiv.appendChild(teamHeader);
-    teamDiv.appendChild(teamUnits);
-    teamsContainer.appendChild(teamDiv);
-  }
-  
-  // Boutons de contrôle
-  const controlsDiv = document.createElement('div');
-  controlsDiv.style.cssText = `
-    background: var(--secondary-bg);
-    padding: 20px;
-    border-top: 2px solid var(--border-color);
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-  `;
-  
-  const prevPlayerBtn = document.createElement('button');
-  prevPlayerBtn.textContent = '← ' + t('previous-player');
-  prevPlayerBtn.id = 'prev-player-btn';
-  prevPlayerBtn.style.cssText = `
-    padding: 12px 24px;
-    background: ${currentPlayerIndex > 0 ? 'var(--accent-color)' : 'var(--text-muted)'};
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    font-weight: bold;
-    cursor: ${currentPlayerIndex > 0 ? 'pointer' : 'not-allowed'};
-    transition: all 0.3s ease;
-    opacity: ${currentPlayerIndex > 0 ? '1' : '0.5'};
-  `;
-  
-  const nextPlayerBtn = document.createElement('button');
-  nextPlayerBtn.textContent = t('next-player') + ' →';
-  nextPlayerBtn.id = 'next-player-btn';
-  nextPlayerBtn.style.cssText = `
-    padding: 12px 24px;
-    background: var(--accent-gold);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  `;
-  
-  const startGameBtn = document.createElement('button');
-  startGameBtn.textContent = '🚀 ' + t('start-game-button');
-  startGameBtn.id = 'start-game-btn';
-  startGameBtn.style.cssText = `
-    padding: 12px 24px;
-    background: var(--accent-gold);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    display: none;
-    transition: all 0.3s ease;
-  `;
-  
-  // Assembler l'interface
-  selectionArea.appendChild(playerInfo);
-  selectionArea.appendChild(charactersGrid);
-  
-  teamsArea.appendChild(teamsTitle);
-  teamsArea.appendChild(teamsContainer);
-  
-  mainContent.appendChild(selectionArea);
-  mainContent.appendChild(teamsArea);
-  
-  controlsDiv.appendChild(prevPlayerBtn);
-  controlsDiv.appendChild(nextPlayerBtn);
-  controlsDiv.appendChild(startGameBtn);
-  
-  selectionContainer.appendChild(header);
-  selectionContainer.appendChild(mainContent);
-  selectionContainer.appendChild(controlsDiv);
-  
-  document.body.appendChild(selectionContainer);
-  
-  // Générer les cartes de personnages
-  generateCharacterCards();
-  updateTeamsDisplay();
-  updatePlayerInfo();
-  
-  // Événements
-  prevPlayerBtn.addEventListener('click', prevPlayer);
-  nextPlayerBtn.addEventListener('click', nextPlayer);
-  startGameBtn.addEventListener('click', startGameFromSelection);
-  playerNameInput.addEventListener('change', (e) => {
-    playerNames[currentPlayerIndex] = e.target.value;
-    updateTeamsDisplay();
-  });
-  factionSelect.addEventListener('change', (e) => {
-    const newFaction = e.target.value;
-    const oldFaction = playerFactions[currentPlayerIndex];
-    
-    // Si l'éditeur change, supprimer tous les personnages déjà sélectionnés
-    if (newFaction !== oldFaction) {
-      // Rembourser les points des personnages sélectionnés
-      const totalRefund = playerArmies[currentPlayerIndex].reduce((sum, piece) => sum + piece.cost, 0);
-      playerMoney[currentPlayerIndex] += totalRefund;
-      
-      // Vider l'armée du joueur
-      playerArmies[currentPlayerIndex] = [];
-      
-      // Mettre à jour l'affichage
-      updateTeamsDisplay();
-      updatePlayerInfo();
-      
-      showInfoMessage(`Éditeur changé ! ${totalRefund} points remboursés.`, 3000);
-    }
-    
-    playerFactions[currentPlayerIndex] = newFaction;
+  factionSelect.onchange = (e) => {
+    playerFactions[currentPlayerIndex] = e.target.value;
+    playerArmies[currentPlayerIndex] = [];
     generateCharacterCards();
+    updateDraftSummary();
+  };
+
+  const playerLabel = document.createElement('span');
+  playerLabel.id = 'draft-player-label';
+  playerLabel.style.cssText = 'font-weight:bold;color:#ffd700;';
+
+  controls.appendChild(playerLabel);
+  controls.appendChild(nameInput);
+  controls.appendChild(factionSelect);
+
+  const roleBar = document.createElement('div');
+  roleBar.id = 'role-tabs';
+  roleBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border-color);';
+
+  const main = document.createElement('div');
+  main.style.cssText = 'flex:1;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:12px;';
+
+  const summary = document.createElement('div');
+  summary.id = 'draft-summary';
+  summary.style.cssText = 'font-size:13px;color:var(--text-secondary);line-height:1.5;';
+
+  const formation = document.createElement('div');
+  formation.id = 'draft-formation';
+  formation.style.cssText = 'display:grid;grid-template-columns:repeat(9,1fr);gap:4px;max-width:520px;';
+
+  const grid = document.createElement('div');
+  grid.id = 'characters-grid';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;';
+
+  main.appendChild(summary);
+  main.appendChild(formation);
+  main.appendChild(grid);
+
+  const footer = document.createElement('div');
+  footer.style.cssText = 'padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border-color);';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.id = 'prev-player-btn';
+  prevBtn.textContent = '← Joueur précédent';
+  prevBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:#555;color:#fff;font-weight:bold;cursor:pointer;';
+  prevBtn.onclick = prevPlayer;
+
+  const nextBtn = document.createElement('button');
+  nextBtn.id = 'next-player-btn';
+  nextBtn.textContent = 'Joueur suivant →';
+  nextBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:#f1c40f;color:#111;font-weight:bold;cursor:pointer;';
+  nextBtn.onclick = nextPlayer;
+
+  const startBtn = document.createElement('button');
+  startBtn.id = 'start-game-btn';
+  startBtn.textContent = (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) ? 'Valider mon armée' : 'Lancer la partie';
+  startBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;font-weight:bold;cursor:pointer;margin-left:auto;';
+  startBtn.onclick = () => {
+    if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
+      if (!VGBChess.isArmyComplete(playerArmies[currentPlayerIndex])) {
+        showInfoMessage("Complétez votre armée (17 pièces)", 2500);
+        return;
+      }
+      startGameFromSelection();
+      return;
+    }
+    if (!VGBChess.isArmyComplete(playerArmies[0]) || !VGBChess.isArmyComplete(playerArmies[1])) {
+      showInfoMessage('Les deux joueurs doivent compléter leur armée', 2500);
+      return;
+    }
+    startGameFromSelection();
+  };
+
+  const clearBtn = document.createElement('button');
+  clearBtn.textContent = 'Vider';
+  clearBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:1px solid #666;border-radius:8px;background:transparent;color:#fff;cursor:pointer;';
+  clearBtn.onclick = () => {
+    playerArmies[currentPlayerIndex] = [];
+    buildRoleTabs();
+    generateCharacterCards();
+    updateDraftSummary();
+  };
+
+  const randomBtn = document.createElement('button');
+  randomBtn.textContent = 'Aléatoire';
+  randomBtn.title = 'Remplir automatiquement l\'armée avec des pièces aléatoires';
+  randomBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:#3498db;color:#fff;font-weight:bold;cursor:pointer;';
+  randomBtn.onclick = () => fillArmyRandomly();
+
+  footer.appendChild(prevBtn);
+  footer.appendChild(nextBtn);
+  footer.appendChild(clearBtn);
+  footer.appendChild(randomBtn);
+  footer.appendChild(startBtn);
+
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  }
+
+  root.appendChild(header);
+  root.appendChild(controls);
+  root.appendChild(roleBar);
+  root.appendChild(main);
+  root.appendChild(footer);
+  document.body.appendChild(root);
+
+  buildRoleTabs();
+  updatePlayerInfo();
+  generateCharacterCards();
+  updateDraftSummary();
+}
+
+function buildRoleTabs() {
+  const bar = document.getElementById('role-tabs');
+  if (!bar) return;
+  bar.innerHTML = '';
+  const roles = ['pawn','knight','bishop','rook','queen','unique'];
+  roles.forEach(role => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const have = VGBChess.countRoleInArmy(playerArmies[currentPlayerIndex], role);
+    const need = VGBChess.ROLE_LIMITS[role];
+    btn.textContent = VGBChess.getRoleLabel(role) + ' ' + have + '/' + need;
+    const active = (window._draftRole || 'pawn') === role;
+    btn.style.cssText = 'padding:8px 12px;min-height:40px;border-radius:8px;border:2px solid '+(active?'#ffd700':'var(--border-color)')+';background:'+(active?'rgba(255,215,0,.15)':'rgba(0,0,0,.2)')+';color:'+(active?'#ffd700':'#fff')+';font-size:13px;font-weight:bold;cursor:pointer;';
+    btn.onclick = () => {
+      window._draftRole = role;
+      buildRoleTabs();
+      generateCharacterCards();
+    };
+    bar.appendChild(btn);
   });
 }
 
 function generateCharacterCards() {
   const grid = document.getElementById('characters-grid');
+  if (!grid) return;
   grid.innerHTML = '';
-  
-  // Filtrer les pièces par faction du joueur actuel
-  const currentFaction = playerFactions[currentPlayerIndex];
-  const factionPieces = availablePieces.filter(piece => piece.faction === currentFaction);
-  
-  factionPieces.forEach(piece => {
+  const role = window._draftRole || 'pawn';
+  const faction = playerFactions[currentPlayerIndex];
+  const pool = availablePieces.filter(p => p.faction === faction && p.role === role);
+  const have = VGBChess.countRoleInArmy(playerArmies[currentPlayerIndex], role);
+  const need = VGBChess.ROLE_LIMITS[role];
+  const full = have >= need;
+
+  if (!pool.length) {
+    grid.innerHTML = '<p style="color:#aaa;">Aucun personnage pour ce rôle / cet éditeur.</p>';
+    return;
+  }
+
+  pool.forEach(piece => {
+    const count = playerArmies[currentPlayerIndex].filter(p => p.name === piece.name && p.role === role).length;
     const card = document.createElement('div');
-    card.className = 'character-card';
-    card.dataset.pieceId = piece.name;
-    
-    // Vérifier si le personnage peut être acheté
-    const canAfford = playerMoney[currentPlayerIndex] >= piece.cost;
-    const selectedCount = playerArmies[currentPlayerIndex].filter(p => p.name === piece.name).length;
-    
-    card.style.cssText = `
-      background: var(--card-bg);
-      border: 2px solid ${selectedCount > 0 ? 'var(--accent-gold)' : canAfford ? 'var(--border-color)' : 'var(--text-muted)'};
-      border-radius: var(--border-radius);
-      padding: 12px;
-      text-align: center;
-      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
-      transition: all 0.3s ease;
-      position: relative;
-      opacity: ${canAfford ? '1' : '0.5'};
-      box-shadow: var(--shadow-light);
-    `;
-    
-    // Image du personnage
-    const img = document.createElement('img');
-    img.src = piece.image;
-    img.alt = piece.name;
-    img.style.cssText = `
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 8px auto;
-    `;
-    
-    // Nom et coût
-    const nameDiv = document.createElement('div');
-    nameDiv.textContent = piece.name;
-    nameDiv.style.cssText = `
-      font-weight: bold;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-      font-size: 14px;
-    `;
-    
-    const costDiv = document.createElement('div');
-    costDiv.textContent = `${piece.cost} pts`;
-    costDiv.style.cssText = `
-      color: ${canAfford ? 'var(--accent-gold)' : 'var(--text-muted)'};
-      font-weight: bold;
-      font-size: 12px;
-    `;
-    
-    // Compteur de sélection
-    if (selectedCount > 0) {
-      const countBadge = document.createElement('div');
-      countBadge.textContent = selectedCount;
-      countBadge.style.cssText = `
-        position: absolute;
-        top: 5px;
-        left: 5px;
-        background: var(--accent-gold);
-        color: white;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: bold;
-      `;
-      card.appendChild(countBadge);
+    card.style.cssText = 'background:rgba(255,255,255,.04);border:2px solid '+(count?'#ffd700':'var(--border-color)')+';border-radius:10px;padding:10px;text-align:center;cursor:pointer;opacity:'+(full && !count ? '.45':'1')+';position:relative;';
+    card.innerHTML = '<img src="'+piece.image+'" alt="" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;">'+
+      '<div style="font-size:13px;font-weight:bold;">'+piece.name+'</div>'+
+      '<div style="font-size:11px;color:#aaa;">'+VGBChess.getRoleLabel(role)+'</div>';
+    if (count > 0) {
+      const badge = document.createElement('div');
+      badge.textContent = '×'+count;
+      badge.style.cssText = 'position:absolute;top:6px;right:6px;background:#ffd700;color:#111;border-radius:10px;padding:2px 6px;font-size:11px;font-weight:bold;';
+      card.appendChild(badge);
     }
-    
-    card.appendChild(img);
-    card.appendChild(nameDiv);
-    card.appendChild(costDiv);
-    
-    // Événement de clic
-    if (canAfford) {
-      card.addEventListener('click', () => selectCharacter(piece));
-    }
-    
-    // Hover effect
-    if (canAfford) {
-      card.addEventListener('mouseenter', () => {
-        card.style.borderColor = selectedCount > 0 ? 'var(--accent-color)' : 'var(--accent-gold)';
-        card.style.transform = 'translateY(-2px)';
-        card.style.boxShadow = 'var(--shadow-medium)';
-      });
-      
-      card.addEventListener('mouseleave', () => {
-        card.style.borderColor = selectedCount > 0 ? 'var(--accent-gold)' : 'var(--border-color)';
-        card.style.transform = 'translateY(0)';
-        card.style.boxShadow = 'var(--shadow-light)';
-      });
-    }
-    
+    card.onclick = () => {
+      if (full) {
+        if (count > 0) removeCharacter(piece);
+        else showInfoMessage('Quota ' + VGBChess.getRoleLabel(role) + ' atteint', 2000);
+        return;
+      }
+      selectCharacter(piece);
+    };
     grid.appendChild(card);
   });
 }
 
 function selectCharacter(piece) {
-  if (playerMoney[currentPlayerIndex] < piece.cost) {
-    showInfoMessage('Pas assez de points !', 2000);
+  const role = piece.role || window._draftRole || 'pawn';
+  const have = VGBChess.countRoleInArmy(playerArmies[currentPlayerIndex], role);
+  if (have >= VGBChess.ROLE_LIMITS[role]) {
+    showInfoMessage('Maximum ' + VGBChess.ROLE_LIMITS[role] + ' ' + VGBChess.getRoleLabel(role), 2000);
     return;
   }
-  
-  // Ajouter à l'armée du joueur
-  playerArmies[currentPlayerIndex].push(piece);
-  playerMoney[currentPlayerIndex] -= piece.cost;
-  
-  updateTeamsDisplay();
-  updatePlayerInfo();
+  playerArmies[currentPlayerIndex].push(Object.assign({}, piece, { role: role }));
+  buildRoleTabs();
   generateCharacterCards();
+  updateDraftSummary();
+}
+
+function fillArmyRandomly() {
+  const faction = playerFactions[currentPlayerIndex];
+  const army = [];
+  const roles = Object.keys(VGBChess.ROLE_LIMITS);
+  let missing = [];
+
+  for (let r = 0; r < roles.length; r++) {
+    const role = roles[r];
+    const need = VGBChess.ROLE_LIMITS[role];
+    const pool = (availablePieces || piecesData).filter(function(p) {
+      return p.faction === faction && p.role === role && p.type !== 'king';
+    });
+    if (!pool.length) {
+      missing.push(VGBChess.getRoleLabel(role));
+      continue;
+    }
+    for (let i = 0; i < need; i++) {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      army.push(Object.assign({}, pick, { role: role }));
+    }
+  }
+
+  playerArmies[currentPlayerIndex] = army;
+  buildRoleTabs();
+  generateCharacterCards();
+  updateDraftSummary();
+
+  if (missing.length) {
+    showInfoMessage('Armée remplie (manque : ' + missing.join(', ') + ')', 3000);
+  } else {
+    showInfoMessage('Armée remplie aléatoirement !', 2000);
+  }
 }
 
 function removeCharacter(piece) {
-  // Trouver et supprimer le personnage de l'armée du joueur
-  const index = playerArmies[currentPlayerIndex].findIndex(p => p.name === piece.name);
-  if (index !== -1) {
-    playerArmies[currentPlayerIndex].splice(index, 1);
-    playerMoney[currentPlayerIndex] += piece.cost;
-    
-    updateTeamsDisplay();
-    updatePlayerInfo();
+  const role = piece.role || window._draftRole;
+  const idx = playerArmies[currentPlayerIndex].findIndex(p => p.name === piece.name && p.role === role);
+  if (idx >= 0) {
+    playerArmies[currentPlayerIndex].splice(idx, 1);
+    buildRoleTabs();
     generateCharacterCards();
+    updateDraftSummary();
   }
 }
 
-function nextPlayer() {
-  if (currentPlayerIndex < playerCount - 1) {
-    currentPlayerIndex++;
-    
-    // Changer automatiquement l'éditeur au suivant (rotation Nintendo -> SEGA -> PlayStation -> Xbox)
-    const defaultFactions = ['Nintendo', 'SEGA', 'PlayStation', 'Xbox'];
-    if (currentPlayerIndex < defaultFactions.length) {
-      playerFactions[currentPlayerIndex] = defaultFactions[currentPlayerIndex];
+function updateDraftSummary() {
+  const el = document.getElementById('draft-summary');
+  const form = document.getElementById('draft-formation');
+  const progress = VGBChess.armyProgress(playerArmies[currentPlayerIndex]);
+  if (el) {
+    el.innerHTML = '<strong>' + progress.have + '/' + progress.need + ' cases</strong> — ' +
+      Object.keys(VGBChess.ROLE_LIMITS).map(function(r) {
+        return VGBChess.getRoleLabel(r) + ' ' + VGBChess.countRoleInArmy(playerArmies[currentPlayerIndex], r) + '/' + VGBChess.ROLE_LIMITS[r];
+      }).join(' · ') +
+      '<br><span style="color:#aaa;font-size:12px;">Formation : Tour · Cavalier · Fou · Dame · Roi · Unique · Fou · Cavalier · Tour — puis 9 pions</span>';
+  }
+  if (form) {
+    form.innerHTML = '';
+    const army = playerArmies[currentPlayerIndex];
+    const byRole = {};
+    for (let i = 0; i < army.length; i++) {
+      const p = army[i];
+      if (!byRole[p.role]) byRole[p.role] = [];
+      byRole[p.role].push(p);
     }
-    
-    updatePlayerInfo();
-    updateTeamsDisplay();
-    generateCharacterCards();
-  } else {
-    // Dernier joueur - afficher le bouton de démarrage
-    document.getElementById('next-player-btn').style.display = 'none';
-    document.getElementById('prev-player-btn').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'block';
-    showInfoMessage('Tous les joueurs ont terminé leur sélection ! Vous pouvez démarrer la partie.', 3000);
+    const take2 = function(r) {
+      if (!byRole[r] || !byRole[r].length) return null;
+      return byRole[r].shift();
+    };
+    const renderCell = function(piece, role) {
+      const cell = document.createElement('div');
+      cell.style.cssText = 'aspect-ratio:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;overflow:hidden;';
+      if (role === 'king') {
+        const fac = String(playerFactions[currentPlayerIndex] || 'nintendo').toLowerCase();
+        cell.innerHTML = '<img src="public/images/'+fac+'/characters/king.png" style="width:90%;height:90%;object-fit:contain;" title="Roi">';
+      } else if (piece) {
+        cell.innerHTML = '<img src="'+piece.image+'" style="width:90%;height:90%;object-fit:contain;" title="'+piece.name+'">';
+      } else {
+        cell.textContent = VGBChess.getRoleLabel(role).charAt(0);
+      }
+      return cell;
+    };
+    VGBChess.BACK_RANK_ROLES.forEach(function(role) {
+      const piece = role === 'king' ? null : take2(role);
+      form.appendChild(renderCell(piece, role));
+    });
+    for (let i = 0; i < 9; i++) {
+      form.appendChild(renderCell(take2('pawn'), 'pawn'));
+    }
   }
-}
 
-function prevPlayer() {
-  if (currentPlayerIndex > 0) {
-    currentPlayerIndex--;
-    updatePlayerInfo();
-    updateTeamsDisplay();
-    generateCharacterCards();
+  const startBtn = document.getElementById('start-game-btn');
+  if (startBtn) {
+    const online = typeof VGBOnline !== 'undefined' && VGBOnline.enabled;
+    if (online) {
+      const complete = VGBChess.isArmyComplete(playerArmies[currentPlayerIndex]);
+      startBtn.style.display = 'block';
+      startBtn.disabled = !complete;
+      startBtn.style.opacity = complete ? '1' : '.5';
+    } else {
+      const both = VGBChess.isArmyComplete(playerArmies[0]) && VGBChess.isArmyComplete(playerArmies[1]);
+      const onLast = currentPlayerIndex === playerCount - 1;
+      startBtn.style.display = onLast ? 'block' : 'none';
+      startBtn.disabled = onLast && !both;
+      startBtn.style.opacity = (!onLast || both) ? '1' : '.5';
+    }
   }
 }
 
 function updatePlayerInfo() {
-  const playerNameInput = document.getElementById('player-name-input');
+  const label = document.getElementById('draft-player-label');
+  if (label) label.textContent = 'Joueur ' + (currentPlayerIndex + 1) + ' / ' + playerCount;
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) nameInput.value = playerNames[currentPlayerIndex] || '';
   const factionSelect = document.getElementById('faction-select');
-  const moneyDisplay = document.getElementById('money-display');
-  
-  if (playerNameInput) {
-    playerNameInput.value = playerNames[currentPlayerIndex];
-    playerNameInput.placeholder = t('player') + ' ' + (currentPlayerIndex + 1);
-  }
-  
-  if (factionSelect) {
-    factionSelect.value = playerFactions[currentPlayerIndex];
-  }
-  
-  if (moneyDisplay) {
-    moneyDisplay.textContent = `${playerMoney[currentPlayerIndex]} points restants`;
-  }
-  
-  // Mettre à jour l'argent de chaque équipe
-  for (let i = 0; i < playerCount; i++) {
-    const teamMoney = document.getElementById(`team-money-${i}`);
-    const teamTitle = document.getElementById(`team-title-${i}`);
-    if (teamMoney) {
-      teamMoney.textContent = `${playerMoney[i]} points`;
-    }
-    if (teamTitle) {
-      teamTitle.textContent = playerNames[i];
-    }
-  }
-  
-  // Mettre à jour les bordures des équipes
-  for (let i = 0; i < playerCount; i++) {
-    const teamDiv = document.getElementById(`team-${i}`);
-    if (teamDiv) {
-      teamDiv.style.borderColor = i === currentPlayerIndex ? 'var(--accent-gold)' : 'var(--border-color)';
-    }
-  }
-  
-  // Mettre à jour l'état des boutons de navigation
+  if (factionSelect) factionSelect.value = playerFactions[currentPlayerIndex];
   updateNavigationButtons();
 }
 
 function updateNavigationButtons() {
-  const prevPlayerBtn = document.getElementById('prev-player-btn');
-  const nextPlayerBtn = document.getElementById('next-player-btn');
-  const startGameBtn = document.getElementById('start-game-btn');
-  
-  if (prevPlayerBtn) {
-    const canGoBack = currentPlayerIndex > 0;
-    prevPlayerBtn.style.background = canGoBack ? 'var(--accent-color)' : 'var(--text-muted)';
-    prevPlayerBtn.style.cursor = canGoBack ? 'pointer' : 'not-allowed';
-    prevPlayerBtn.style.opacity = canGoBack ? '1' : '0.5';
-  }
-  
-  if (nextPlayerBtn) {
-    const canGoForward = currentPlayerIndex < playerCount - 1;
-    nextPlayerBtn.style.background = canGoForward ? 'var(--accent-gold)' : 'var(--text-muted)';
-    nextPlayerBtn.style.cursor = canGoForward ? 'pointer' : 'not-allowed';
-    nextPlayerBtn.style.opacity = canGoForward ? '1' : '0.5';
-    
-    // Si c'est le dernier joueur, changer le texte du bouton
-    if (currentPlayerIndex === playerCount - 1) {
-      nextPlayerBtn.textContent = 'Terminer la sélection →';
-      nextPlayerBtn.style.background = 'var(--accent-gold)';
-      nextPlayerBtn.style.cursor = 'pointer';
-      nextPlayerBtn.style.opacity = '1';
-    } else {
-      nextPlayerBtn.textContent = 'Joueur suivant →';
-    }
-  }
-  
-  // Afficher le bouton de démarrage si tous les joueurs ont fini
-  if (startGameBtn) {
-    const allPlayersFinished = currentPlayerIndex === playerCount - 1;
-    startGameBtn.style.display = allPlayersFinished ? 'block' : 'none';
-  }
+  const prev = document.getElementById('prev-player-btn');
+  const next = document.getElementById('next-player-btn');
+  if (prev) prev.style.opacity = currentPlayerIndex > 0 ? '1' : '.4';
+  if (next) next.textContent = currentPlayerIndex >= playerCount - 1 ? 'Terminer →' : 'Joueur suivant →';
+  updateDraftSummary();
 }
 
 function updateTeamsDisplay() {
-  for (let i = 0; i < playerCount; i++) {
-    const teamUnits = document.getElementById(`team-units-${i}`);
-    teamUnits.innerHTML = '';
-    
-    playerArmies[i].forEach((piece, index) => {
-      const unitDiv = document.createElement('div');
-      unitDiv.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: var(--primary-bg);
-        padding: 6px;
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-        min-width: 50px;
-        position: relative;
-        transition: all 0.3s ease;
-        box-shadow: var(--shadow-light);
-      `;
-      
-      // Bouton de suppression (seulement pour le joueur actuel)
-      if (i === currentPlayerIndex) {
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '×';
-        removeBtn.style.cssText = `
-          position: absolute;
-          top: -5px;
-          right: -5px;
-          background: var(--accent-color);
-          color: white;
-          border: none;
-          border-radius: 50%;
-          width: 20px;
-          height: 20px;
-          font-size: 12px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1;
-        `;
-        removeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          removeCharacter(piece);
-        });
-        unitDiv.appendChild(removeBtn);
-      }
-      
-      const img = document.createElement('img');
-      img.src = piece.image;
-      img.alt = piece.name;
-      img.style.cssText = `
-        width: 30px;
-        height: 30px;
-        object-fit: contain;
-      `;
-      
-      unitDiv.appendChild(img);
-      
-      // Hover effect
-      unitDiv.addEventListener('mouseenter', () => {
-        unitDiv.style.transform = 'translateY(-2px)';
-        unitDiv.style.boxShadow = 'var(--shadow-medium)';
-      });
-      
-      unitDiv.addEventListener('mouseleave', () => {
-        unitDiv.style.transform = 'translateY(0)';
-        unitDiv.style.boxShadow = 'var(--shadow-light)';
-      });
-      
-      teamUnits.appendChild(unitDiv);
-    });
+  updateDraftSummary();
+}
+
+function nextPlayer() {
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) return;
+  if (!VGBChess.isArmyComplete(playerArmies[currentPlayerIndex])) {
+    showInfoMessage("Complétez l'armée (17 pièces) avant de continuer", 2500);
+    return;
+  }
+  if (currentPlayerIndex < playerCount - 1) {
+    currentPlayerIndex++;
+    const defaults = ['Nintendo', 'PlayStation', 'Xbox', 'SEGA'];
+    if (!playerFactions[currentPlayerIndex]) {
+      playerFactions[currentPlayerIndex] = defaults[currentPlayerIndex % defaults.length];
+    }
+    window._draftRole = 'pawn';
+    updatePlayerInfo();
+    buildRoleTabs();
+    generateCharacterCards();
+    updateDraftSummary();
+  } else {
+    updateDraftSummary();
   }
 }
 
-function startGameFromSelection() {
-  // Récupérer et mettre à jour la taille du plateau sélectionnée
-  const gridSizeSelect = document.getElementById('grid-size-select');
-  if (gridSizeSelect) {
-    GRID_SIZE = parseInt(gridSizeSelect.value);
-    TILE_SIZE = Math.floor(780 / GRID_SIZE);
-    console.log(`Taille du plateau mise à jour: ${GRID_SIZE}x${GRID_SIZE}, TILE_SIZE: ${TILE_SIZE}`);
+function prevPlayer() {
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) return;
+  if (currentPlayerIndex > 0) {
+    currentPlayerIndex--;
+    window._draftRole = 'pawn';
+    updatePlayerInfo();
+    buildRoleTabs();
+    generateCharacterCards();
+    updateDraftSummary();
   }
+}
+
+
+function startGameFromSelection() {
+  // Mode en ligne : envoyer mon armée et attendre l'adversaire
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    const seat = VGBOnline.seat;
+    const army = (playerArmies[seat] || []).map(p => ({
+      name: p.name,
+      type: p.type,
+      faction: p.faction,
+      cost: p.cost,
+      tier: p.tier,
+      range: p.range,
+      moves: p.moves,
+      image: p.image,
+      nameKey: p.nameKey
+    }));
+    const faction = playerFactions[seat];
+    const name = playerNames[seat] || (VGBOnline.user && VGBOnline.user.username) || `Joueur ${seat + 1}`;
+
+    const statusEl = document.getElementById('match-status');
+    showInfoMessage('Envoi de votre armée…', 2000);
+
+    VGBOnline.submitDraft({ faction, army, name }).then((data) => {
+      if (data.bothReady) {
+        applyOnlineDraftAndStart(data.state);
+      } else {
+        // Attendre l'adversaire
+        const selectionContainer = document.getElementById('character-selection-container');
+        if (selectionContainer) {
+          const waiting = document.createElement('div');
+          waiting.id = 'online-waiting-draft';
+          waiting.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;color:#ffd700;font-size:20px;z-index:10;text-align:center;padding:24px;';
+          waiting.textContent = 'Armée validée — en attente de l’adversaire…';
+          selectionContainer.appendChild(waiting);
+        }
+        VGBOnline.startMatchPoll((remote) => {
+          if (remote.status === 'playing' || (remote.state && remote.state.armies && remote.state.armies[0] && remote.state.armies[1])) {
+            applyOnlineDraftAndStart(remote.state);
+          }
+        });
+      }
+    }).catch((err) => {
+      alert(err.message || 'Erreur envoi draft');
+    });
+    return;
+  }
+
+  // Récupérer et mettre à jour la taille du plateau sélectionnée
+  computeBoardLayout();
   
   // Cacher l'interface de sélection
   const selectionContainer = document.getElementById('character-selection-container');
@@ -5368,20 +5427,18 @@ function startGameFromSelection() {
   if (gameSetup) {
     gameSetup.style.display = 'none';
   }
+  const gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.add('game-active');
+  const tagline = document.querySelector('.tagline');
+  if (tagline) tagline.style.display = 'none';
   
   characterSelectionMode = false;
-  
-  // Créer les pièces sur le plateau selon les sélections
   createPiecesFromSelection();
   
-  // Les pièces seront mises à jour dans startGame après création des sprites
-  
-  // Mettre à jour l'affichage des pièces en jeu après la création des pièces
   setTimeout(() => {
     updateRulesSidebar();
   }, 200);
   
-  // Afficher le canvas après un court délai pour s'assurer qu'il est créé
   setTimeout(() => {
     const canvas = document.querySelector('.game-root canvas');
     if (canvas) {
@@ -5389,8 +5446,138 @@ function startGameFromSelection() {
     }
   }, 100);
   
-  // Démarrer le jeu directement
   startGame(game.scene.scenes[0]);
+}
+
+function applyOnlineDraftAndStart(state) {
+  if (!state || !state.armies) return;
+
+  playerCount = 2;
+  computeBoardLayout();
+
+  playerArmies = [
+    (state.armies[0] || []).slice().slice(0, MAX_ARMY_SIZE),
+    (state.armies[1] || []).slice().slice(0, MAX_ARMY_SIZE)
+  ];
+  playerFactions = [
+    state.factions && state.factions[0] ? state.factions[0] : 'Nintendo',
+    state.factions && state.factions[1] ? state.factions[1] : 'PlayStation'
+  ];
+  playerNames = [
+    (state.names && state.names[0]) || 'Joueur 1',
+    (state.names && state.names[1]) || 'Joueur 2'
+  ];
+
+  const selectionContainer = document.getElementById('character-selection-container');
+  if (selectionContainer) selectionContainer.remove();
+  const gameSetup = document.getElementById('game-setup');
+  if (gameSetup) gameSetup.style.display = 'none';
+  const gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.add('game-active');
+  const tagline = document.querySelector('.tagline');
+  if (tagline) tagline.style.display = 'none';
+
+  characterSelectionMode = false;
+  createPiecesFromSelection();
+
+  setTimeout(() => {
+    const canvas = document.querySelector('.game-root canvas');
+    if (canvas) canvas.classList.add('game-started');
+    startGame(game.scene.scenes[0]);
+    // Sync des coups
+    VGBOnline.startMatchPoll(onOnlineRemoteUpdate);
+  }, 100);
+}
+
+function serializeOnlineBoardState() {
+  return {
+    pieces: (pieces || []).map(p => ({
+      type: p.type,
+      name: p.name,
+      x: p.x,
+      y: p.y,
+      player: p.player,
+      tier: p.tier,
+      moves: p.moves,
+      range: p.range,
+      cost: p.cost,
+      image: p.image
+    })),
+    currentPlayer,
+    roundCounter,
+    eliminationOrder: eliminationOrder.slice(),
+    playerNames: playerNames.slice(0, playerCount),
+    playerFactions: playerFactions.slice(0, playerCount)
+  };
+}
+
+function applyRemoteBoardState(state) {
+  if (!state || !Array.isArray(state.pieces)) return;
+  window.__vgbApplyingRemote = true;
+  try {
+    // Appliquer positions
+    for (const rp of state.pieces) {
+      let local = pieces.find(p => p.player === rp.player && p.type === rp.type && p.name === rp.name);
+      if (!local) {
+        local = pieces.find(p => p.player === rp.player && p.x === rp.x && p.y === rp.y);
+      }
+      if (local) {
+        local.x = rp.x;
+        local.y = rp.y;
+      }
+    }
+    // Retirer pièces absentes côté remote
+    for (let i = pieces.length - 1; i >= 0; i--) {
+      const p = pieces[i];
+      const stillThere = state.pieces.some(rp =>
+        rp.player === p.player && rp.type === p.type && rp.name === p.name
+      );
+      if (!stillThere) {
+        cleanupCursorForPiece(p);
+        if (p.sprite) p.sprite.destroy();
+        if (p.backgroundSprite) p.backgroundSprite.destroy();
+        pieces.splice(i, 1);
+      }
+    }
+    if (typeof state.currentPlayer === 'number') currentPlayer = state.currentPlayer;
+    if (typeof state.roundCounter === 'number') roundCounter = state.roundCounter;
+    if (Array.isArray(state.eliminationOrder)) eliminationOrder = state.eliminationOrder.slice();
+    updatePieces();
+    updateTurnUI();
+  } finally {
+    window.__vgbApplyingRemote = false;
+  }
+}
+
+let onlinePushBusy = false;
+let onlineLastKnownTurn = null;
+
+function maybePushOnlineState() {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.enabled || !VGBOnline.match) return;
+  if (onlinePushBusy || window.__vgbApplyingRemote) return;
+  // Pousser uniquement quand le tour vient de quitter mon siège (j'ai joué)
+  if (onlineLastKnownTurn === currentPlayer) return;
+  const prev = onlineLastKnownTurn;
+  onlineLastKnownTurn = currentPlayer;
+  if (prev !== VGBOnline.seat) return;
+  onlinePushBusy = true;
+  const state = serializeOnlineBoardState();
+  VGBOnline.pushGameState(state, currentPlayer).finally(() => {
+    onlinePushBusy = false;
+  });
+}
+
+function onOnlineRemoteUpdate(data) {
+  if (!data) return;
+  if (data.status === 'finished') {
+    showInfoMessage('Partie en ligne terminée', 4000);
+    VGBOnline.stopPolling();
+    return;
+  }
+  if (data.state && Array.isArray(data.state.pieces)) {
+    // Ne pas écraser si c'est encore mon tour local récent sans pièces
+    applyRemoteBoardState(data.state);
+  }
 }
 
 function createPiecesFromSelection() {
@@ -5399,7 +5586,162 @@ function createPiecesFromSelection() {
   console.log('Données de sélection préparées');
 }
 
-// Fonction supprimée - les sprites sont créés dans startGame
+// ——— UI mode Local / En ligne ———
+(function initOnlineUI() {
+  const modeLocal = document.getElementById('mode-local');
+  const modeOnline = document.getElementById('mode-online');
+  const localSetup = document.getElementById('local-setup');
+  const onlineSetup = document.getElementById('online-setup');
+  if (!modeLocal || !modeOnline) return;
+
+  function setMode(mode) {
+    const isOnline = mode === 'online';
+    modeLocal.classList.toggle('active', !isOnline);
+    modeOnline.classList.toggle('active', isOnline);
+    if (localSetup) localSetup.style.display = isOnline ? 'none' : 'block';
+    if (onlineSetup) onlineSetup.classList.toggle('visible', isOnline);
+    if (isOnline) refreshOnlineUI();
+  }
+
+  modeLocal.addEventListener('click', () => setMode('local'));
+  modeOnline.addEventListener('click', () => setMode('online'));
+
+  async function refreshLeaderboard() {
+    const ol = document.getElementById('elo-leaderboard');
+    if (!ol || typeof VGBOnline === 'undefined') return;
+    try {
+      const rows = await VGBOnline.fetchLeaderboard(8);
+      if (!rows.length) {
+        ol.innerHTML = '<li>Aucun joueur encore — soyez le premier !</li>';
+        return;
+      }
+      ol.innerHTML = rows.map(r => `<li><strong>${r.username}</strong> — ${r.elo} Elo (${r.wins}V/${r.losses}D)</li>`).join('');
+    } catch (e) {
+      ol.innerHTML = '<li>Classement indisponible (API PHP requise)</li>';
+    }
+  }
+
+  function showLoggedIn() {
+    const auth = document.getElementById('online-auth-box');
+    const play = document.getElementById('online-play-box');
+    if (auth) auth.style.display = 'none';
+    if (play) play.style.display = 'block';
+    const badge = document.getElementById('online-elo-badge');
+    const label = document.getElementById('online-user-label');
+    if (badge && VGBOnline.user) badge.textContent = `Elo ${VGBOnline.user.elo}`;
+    if (label && VGBOnline.user) label.textContent = `Connecté : ${VGBOnline.user.username}`;
+  }
+
+  function showLoggedOut() {
+    const auth = document.getElementById('online-auth-box');
+    const play = document.getElementById('online-play-box');
+    if (auth) auth.style.display = 'block';
+    if (play) play.style.display = 'none';
+  }
+
+  async function refreshOnlineUI() {
+    await refreshLeaderboard();
+    if (VGBOnline.token && VGBOnline.user) {
+      try {
+        await VGBOnline.refreshMe();
+        showLoggedIn();
+      } catch (e) {
+        VGBOnline.clearSession();
+        showLoggedOut();
+      }
+    } else {
+      showLoggedOut();
+    }
+  }
+
+  const btnLogin = document.getElementById('btn-online-login');
+  const btnRegister = document.getElementById('btn-online-register');
+  const btnLogout = document.getElementById('btn-logout');
+  const btnFind = document.getElementById('btn-find-match');
+  const btnCancel = document.getElementById('btn-cancel-match');
+  const statusEl = document.getElementById('match-status');
+
+  async function doAuth(isRegister) {
+    const u = document.getElementById('online-username').value.trim();
+    const p = document.getElementById('online-password').value;
+    try {
+      if (isRegister) await VGBOnline.register(u, p);
+      else await VGBOnline.login(u, p);
+      showLoggedIn();
+      refreshLeaderboard();
+    } catch (e) {
+      alert(e.message || 'Erreur');
+    }
+  }
+
+  if (btnLogin) btnLogin.addEventListener('click', () => doAuth(false));
+  if (btnRegister) btnRegister.addEventListener('click', () => doAuth(true));
+  if (btnLogout) btnLogout.addEventListener('click', async () => {
+    await VGBOnline.logout();
+    showLoggedOut();
+  });
+
+  if (btnFind) btnFind.addEventListener('click', async () => {
+    const grid = 9;
+    statusEl.textContent = 'Recherche d’un adversaire…';
+    btnFind.style.display = 'none';
+    if (btnCancel) btnCancel.style.display = 'block';
+    try {
+      const data = await VGBOnline.enqueue(grid);
+      if (!data.matched) {
+        VGBOnline.startQueuePoll(grid, (d) => {
+          if (d.error) statusEl.textContent = d.error;
+          else if (!d.matched) statusEl.textContent = 'En file d’attente…';
+        });
+      }
+    } catch (e) {
+      statusEl.textContent = e.message;
+      btnFind.style.display = 'block';
+      if (btnCancel) btnCancel.style.display = 'none';
+    }
+  });
+
+  if (btnCancel) btnCancel.addEventListener('click', async () => {
+    await VGBOnline.cancelQueue();
+    statusEl.textContent = 'Recherche annulée';
+    btnFind.style.display = 'block';
+    btnCancel.style.display = 'none';
+  });
+
+  window.VGBOnline_onMatched = function (match) {
+    statusEl.textContent = `Adversaire trouvé : ${match.opponent ? match.opponent.username : '???'} (Elo ${match.opponent ? match.opponent.elo : '—'})`;
+    btnFind.style.display = 'block';
+    if (btnCancel) btnCancel.style.display = 'none';
+
+    // Lancer la sélection 2 joueurs, sièges verrouillés
+    computeBoardLayout();
+    playerCount = 2;
+    characterSelectionMode = true;
+    currentPlayerIndex = match.seat;
+    playerArmies = [[], []];
+    const budget = 50;
+    playerMoney = [budget, budget];
+    playerNames = [
+      match.seat === 0 ? (match.you.username) : (match.opponent.username),
+      match.seat === 1 ? (match.you.username) : (match.opponent.username)
+    ];
+    playerFactions = ['Nintendo', 'PlayStation'];
+    availablePieces = piecesData.filter(piece => piece.type !== 'king');
+    const gameSetup = document.getElementById('game-setup');
+    if (gameSetup) gameSetup.style.display = 'none';
+    createCharacterSelectionUI();
+    // Empêcher de changer de joueur en online : on reste sur son siège
+  };
+
+  // Escape annule l'action d'objet en cours
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && currentItemAction && currentItemAction.active) {
+      cancelCurrentItemAction('Action annulée');
+    }
+  });
+
+  refreshLeaderboard();
+})();
 
 /* https://www.reddit.com/r/retrogaming/comments/1hkzmcw/i_redrew_some_nes_sprites_of_various_nintendo/?tl=fr */
 </script>
