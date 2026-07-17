@@ -349,6 +349,53 @@
   transition: border-color 0.2s, background 0.2s;
 }
 
+.local-opponent-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 16px;
+  text-align: left;
+}
+.local-opponent-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.local-opponent-options input[type="radio"] {
+  accent-color: #f1c40f;
+}
+.ai-difficulty-row {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+}
+.ai-difficulty-row.visible {
+  display: flex;
+}
+.ai-difficulty-row label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.ai-difficulty-row select {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  font-size: 14px;
+  min-height: 40px;
+}
+
 .mode-btn.active {
   border-color: #ffd700;
   background: rgba(255, 215, 0, 0.12);
@@ -919,6 +966,24 @@ body.end-game-open {
         <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px;">
           Duel 1v1 — plateau 9×9 façon échecs. Composez votre armée : 9 pions, 2 cavaliers, 2 fous, 2 tours, 1 dame, 1 unique (+ le roi).
         </p>
+        <div class="local-opponent-options" role="group" aria-label="Type de partie locale">
+          <label>
+            <input type="radio" name="local-opponent" id="opponent-human" value="human" checked>
+            2 joueurs (même appareil)
+          </label>
+          <label>
+            <input type="radio" name="local-opponent" id="opponent-ai" value="ai">
+            Contre l’IA
+          </label>
+          <div class="ai-difficulty-row" id="ai-difficulty-row">
+            <label for="ai-difficulty">Difficulté</label>
+            <select id="ai-difficulty">
+              <option value="easy">Facile</option>
+              <option value="medium" selected>Moyenne</option>
+              <option value="hard">Difficile</option>
+            </select>
+          </div>
+        </div>
         <button id="start-character-selection" class="setup-btn" data-t="start-game">Composer les armées</button>
       </div>
 
@@ -995,6 +1060,7 @@ body.end-game-open {
 <script src="/data/items.js"></script>
 <script src="/js/translations.js?v=20260717c"></script>
 <script src="/js/chess-roles.js?v=20260717c"></script>
+<script src="/js/ai.js"></script>
 <script src="/js/online.js"></script>
 <script>
 VGBHeader.injectHeader('index');
@@ -1044,6 +1110,11 @@ let grid = [];
 let pieces = [];
 let currentPlayer = 0; // index joueur qui doit jouer
 let gameStarted = false;
+let aiEnabled = false;
+let aiSeat = 1;
+let aiDifficulty = 'medium';
+let aiThinking = false;
+let aiTurnTimer = null;
 let selectedPiece = null;
 let selectedEnemyPiece = null; // Pièce adverse actuellement sélectionnée pour voir ses mouvements
 let highlightedTiles = [];
@@ -2298,6 +2369,11 @@ function startGame(scene) {
   
   gameStarted = true;
   currentPlayer = 0;
+  aiThinking = false;
+  if (aiTurnTimer) {
+    clearTimeout(aiTurnTimer);
+    aiTurnTimer = null;
+  }
   
   // S'assurer que le cadre de message est caché au début de la partie
   if (infoBackground) {
@@ -2977,6 +3053,11 @@ function handleClick(scene, pos) {
     return;
   }
 
+  // Pendant le tour de l'IA, ignorer les clics humains
+  if (aiEnabled && currentPlayer === aiSeat && !window.__vgbAiMove) {
+    return;
+  }
+
   // Mode en ligne : seul le joueur dont c'est le siège peut jouer
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && !VGBOnline.isMyTurn(currentPlayer)) {
     showInfoMessage("Ce n'est pas votre tour (partie en ligne)", 1500);
@@ -3626,6 +3707,7 @@ function giveItemToPlayer(playerId, itemKey) {
 function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
   if (!gameStarted) return;
   if (playerId !== currentPlayer) return; // utiliser à son tour
+  if (aiEnabled && currentPlayer === aiSeat && !window.__vgbAiMove) return;
   if (itemUsedThisTurn) return; // un seul objet par tour
   const arr = playerItemIcons[playerId] || [];
   if (arr.length === 0) return;
@@ -4988,6 +5070,125 @@ function updateTurnUI() {
   if (!window.__vgbApplyingRemote) {
     maybePushOnlineState();
   }
+
+  scheduleAiTurn();
+}
+
+function aiDifficultyLabel(diff) {
+  if (diff === 'easy') return 'Facile';
+  if (diff === 'hard') return 'Difficile';
+  return 'Moyenne';
+}
+
+function readLocalAiSettings() {
+  const aiRadio = document.getElementById('opponent-ai');
+  const diffSelect = document.getElementById('ai-difficulty');
+  aiEnabled = !!(aiRadio && aiRadio.checked);
+  aiSeat = 1;
+  aiDifficulty = (diffSelect && diffSelect.value) || 'medium';
+  if (!['easy', 'medium', 'hard'].includes(aiDifficulty)) aiDifficulty = 'medium';
+}
+
+function syncAiDifficultyUI() {
+  const row = document.getElementById('ai-difficulty-row');
+  const aiRadio = document.getElementById('opponent-ai');
+  if (!row) return;
+  row.classList.toggle('visible', !!(aiRadio && aiRadio.checked));
+}
+
+function fillArmyRandomlyFor(playerIndex) {
+  const prev = currentPlayerIndex;
+  currentPlayerIndex = playerIndex;
+  fillArmyRandomly();
+  currentPlayerIndex = prev;
+}
+
+function buildAiApi(onlyPiece) {
+  return {
+    difficulty: aiDifficulty,
+    seat: aiSeat,
+    pieces: pieces,
+    gridSize: GRID_SIZE,
+    onlyPiece: onlyPiece || null,
+    getMoves: function (piece) { return getReachablePositions(piece); },
+    getPieceAt: function (pos) { return getPieceAt(pos); },
+    hasHeart: function (p) { return heartPieces.some(function (hp) { return hp.piece === p; }); },
+    isStarProtected: function (p) {
+      return !!(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn);
+    }
+  };
+}
+
+function executeAiMove() {
+  if (!aiEnabled || !gameStarted || currentPlayer !== aiSeat) return;
+  if (eliminationOrder.includes(aiSeat)) return;
+
+  const scene = (infoText && infoText.scene)
+    || (typeof game !== 'undefined' && game.scene && game.scene.scenes && game.scene.scenes[0]);
+  if (!scene || typeof VGBAI === 'undefined') {
+    // Pas de moteur IA : passer le tour pour éviter un soft-lock
+    currentPlayer = getNextActivePlayer();
+    updateTurnUI();
+    return;
+  }
+
+  let onlyPiece = null;
+  if (forcedPiece && forcedPiece.playerId === aiSeat && forcedPiece.piece) {
+    onlyPiece = forcedPiece.piece;
+  }
+
+  const move = VGBAI.chooseMove(buildAiApi(onlyPiece));
+  if (!move || !move.piece || !move.to) {
+    moveCount++;
+    currentPlayer = getNextActivePlayer();
+    itemUsedThisTurn = false;
+    updateTurnUI();
+    return;
+  }
+
+  window.__vgbAiMove = true;
+  try {
+    selectedPiece = move.piece;
+    selectedEnemyPiece = null;
+    handleClick(scene, move.to);
+  } finally {
+    window.__vgbAiMove = false;
+  }
+}
+
+function scheduleAiTurn() {
+  if (!aiEnabled || !gameStarted) return;
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) return;
+  if (currentPlayer !== aiSeat) return;
+  if (eliminationOrder.includes(aiSeat)) return;
+  if (aiThinking) return;
+
+  if (aiTurnTimer) {
+    clearTimeout(aiTurnTimer);
+    aiTurnTimer = null;
+  }
+
+  aiThinking = true;
+  const delay = aiDifficulty === 'easy' ? 350 : (aiDifficulty === 'hard' ? 750 : 500);
+  showInfoMessage('L’IA réfléchit…', delay + 100);
+
+  aiTurnTimer = setTimeout(function () {
+    aiTurnTimer = null;
+    try {
+      executeAiMove();
+    } catch (err) {
+      console.error('IA error', err);
+      if (gameStarted && currentPlayer === aiSeat) {
+        currentPlayer = getNextActivePlayer();
+        updateTurnUI();
+      }
+    } finally {
+      aiThinking = false;
+      if (aiEnabled && gameStarted && currentPlayer === aiSeat && !eliminationOrder.includes(aiSeat)) {
+        scheduleAiTurn();
+      }
+    }
+  }, delay);
 }
 
 function decrementLightningCharges() {
@@ -5162,6 +5363,11 @@ function tickTimer(scene) {
 
 function endGameWithRanking(ranking) {
   gameStarted = false;
+  aiThinking = false;
+  if (aiTurnTimer) {
+    clearTimeout(aiTurnTimer);
+    aiTurnTimer = null;
+  }
   clearHighlights();
   hideInfoMessage();
   isEndGameMessage = true;
@@ -5538,13 +5744,14 @@ function syncAllHtmlHudItems() {
 
 function startCharacterSelection() {
   computeBoardLayout();
+  readLocalAiSettings();
   playerCount = 2;
   characterSelectionMode = true;
   currentPlayerIndex = 0;
   playerArmies = [[], []];
   playerMoney = [999, 999];
-  playerNames = ['Joueur 1', 'Joueur 2'];
-  playerFactions = ['Nintendo', 'PlayStation'];
+  playerNames = ['Joueur 1', aiEnabled ? ('IA — ' + aiDifficultyLabel(aiDifficulty)) : 'Joueur 2'];
+  playerFactions = ['Nintendo', aiEnabled ? 'PlayStation' : 'PlayStation'];
   availablePieces = piecesData.filter(piece => piece.type !== 'king');
   window._draftRole = 'pawn';
   createCharacterSelectionUI();
@@ -5561,7 +5768,7 @@ function createCharacterSelectionUI() {
   const header = document.createElement('div');
   header.style.cssText = 'padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;';
   const title = document.createElement('h1');
-  title.textContent = "Composer l'armée";
+  title.textContent = aiEnabled ? 'Composer votre armée (vs IA)' : "Composer l'armée";
   title.style.cssText = 'margin:0;font-size:20px;color:#ffd700;';
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
@@ -5644,12 +5851,37 @@ function createCharacterSelectionUI() {
 
   const startBtn = document.createElement('button');
   startBtn.id = 'start-game-btn';
-  startBtn.textContent = (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) ? 'Valider mon armée' : 'Lancer la partie';
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
+    startBtn.textContent = 'Valider mon armée';
+  } else if (aiEnabled) {
+    startBtn.textContent = 'Lancer contre l’IA';
+  } else {
+    startBtn.textContent = 'Lancer la partie';
+  }
   startBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;font-weight:bold;cursor:pointer;margin-left:auto;';
   startBtn.onclick = () => {
     if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
       if (!VGBChess.isArmyComplete(playerArmies[currentPlayerIndex])) {
         showInfoMessage("Complétez votre armée (17 pièces)", 2500);
+        return;
+      }
+      startGameFromSelection();
+      return;
+    }
+    if (aiEnabled) {
+      if (!VGBChess.isArmyComplete(playerArmies[0])) {
+        showInfoMessage('Complétez votre armée (17 pièces)', 2500);
+        return;
+      }
+      // Armée IA aléatoire
+      if (!playerFactions[aiSeat]) playerFactions[aiSeat] = 'PlayStation';
+      playerNames[aiSeat] = 'IA — ' + aiDifficultyLabel(aiDifficulty);
+      const prevIdx = currentPlayerIndex;
+      currentPlayerIndex = aiSeat;
+      fillArmyRandomly();
+      currentPlayerIndex = prevIdx;
+      if (!VGBChess.isArmyComplete(playerArmies[aiSeat])) {
+        showInfoMessage('Impossible de générer l’armée de l’IA pour cet éditeur', 3000);
         return;
       }
       startGameFromSelection();
@@ -5699,6 +5931,9 @@ function createCharacterSelectionUI() {
   footer.appendChild(startBtn);
 
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  } else if (aiEnabled) {
     prevBtn.style.display = 'none';
     nextBtn.style.display = 'none';
   }
@@ -5946,6 +6181,11 @@ function updateDraftSummary() {
       startBtn.style.display = 'block';
       startBtn.disabled = !complete;
       startBtn.style.opacity = complete ? '1' : '.5';
+    } else if (aiEnabled) {
+      const mine = VGBChess.isArmyComplete(playerArmies[0]);
+      startBtn.style.display = 'block';
+      startBtn.disabled = !mine;
+      startBtn.style.opacity = mine ? '1' : '.5';
     } else {
       const both = VGBChess.isArmyComplete(playerArmies[0]) && VGBChess.isArmyComplete(playerArmies[1]);
       const onLast = currentPlayerIndex === playerCount - 1;
@@ -5958,7 +6198,10 @@ function updateDraftSummary() {
 
 function updatePlayerInfo() {
   const label = document.getElementById('draft-player-label');
-  if (label) label.textContent = 'Joueur ' + (currentPlayerIndex + 1) + ' / ' + playerCount;
+  if (label) {
+    if (aiEnabled) label.textContent = 'Votre armée (vs IA — ' + aiDifficultyLabel(aiDifficulty) + ')';
+    else label.textContent = 'Joueur ' + (currentPlayerIndex + 1) + ' / ' + playerCount;
+  }
   const nameInput = document.getElementById('player-name-input');
   if (nameInput) nameInput.value = playerNames[currentPlayerIndex] || '';
   const factionSelect = document.getElementById('faction-select');
@@ -6250,7 +6493,15 @@ function createPiecesFromSelection() {
   }
 
   modeLocal.addEventListener('click', () => setMode('local'));
-  modeOnline.addEventListener('click', () => setMode('online'));
+  modeOnline.addEventListener('click', () => {
+    aiEnabled = false;
+    setMode('online');
+  });
+
+  document.querySelectorAll('input[name="local-opponent"]').forEach(function (el) {
+    el.addEventListener('change', syncAiDifficultyUI);
+  });
+  syncAiDifficultyUI();
 
   async function refreshLeaderboard() {
     const ol = document.getElementById('elo-leaderboard');
