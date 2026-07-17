@@ -11,6 +11,7 @@
           '<nav class="site-nav" id="site-nav-panel">' +
             '<a href="index.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
             '<a href="classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
+            '<a href="deck.html" class="nav-link'+(active==='deck'?' active':'')+'">Mes decks</a>' +
             '<a href="pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             '<a href="objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +

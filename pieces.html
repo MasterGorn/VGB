@@ -9,19 +9,54 @@
 <link rel="stylesheet" href="public/css/global.css" />
 <style>
 /* Styles spécifiques à la page des pièces */
-.pieces-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; margin:20px 0; }
-.piece-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:10px; padding:20px; text-align:center; box-shadow:var(--shadow-light); transition:transform 0.3s ease, box-shadow 0.3s ease; }
-.piece-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-medium); }
-.piece-image { width:100%; max-width:200px; height:auto; border-radius:8px; margin-bottom:16px; }
-.piece-name { font-size:18px; font-weight:bold; margin-bottom:8px; color:var(--text-primary); }
-.piece-description { color:var(--text-secondary); font-size:12px; line-height:1.4; }
+.pieces-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+.piece-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.piece-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-medium); }
+.piece-image { width: 100%; max-width: 140px; height: auto; border-radius: 8px; margin-bottom: 10px; }
+.piece-name { font-size: 15px; font-weight: bold; margin-bottom: 6px; color: var(--text-primary); }
+.piece-description { color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
+@media (max-width: 1100px) {
+  .pieces-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 860px) {
+  .pieces-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+@media (max-width: 560px) {
+  .pieces-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .piece-card { padding: 10px; }
+}
 
 /* Badges spécifiques */
 .badge.nintendo { background:var(--accent-red); }
 .badge.playstation { background:var(--accent-purple); }
 .badge.sega { background:var(--accent-blue); }
 .badge.xbox { background:var(--accent-green); }
-.badge.role { background:#ffc107; color:#000; }
+.badge.role {
+  background: #ffc107;
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+.badge.role .role-icon {
+  font-size: 1.15em;
+  line-height: 1;
+  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", "DejaVu Sans", serif;
+}
 .badge.range { background:#6f42c1; }
 
 /* Filtres actifs */
@@ -42,7 +77,7 @@
       <label for="sortBy" data-t="sort-by">Trier par :</label>
       <select id="sortBy" class="form-control">
         <option value="name" data-t="name">Nom</option>
-        <option value="role" data-t="strength">Force (rôle)</option>
+        <option value="role" data-t="role">Rôle</option>
         <option value="faction" data-t="editor">Éditeur</option>
         <option value="universe" data-t="universe">Univers</option>
       </select>
@@ -82,6 +117,15 @@
         <option value="Game & Watch" data-t="game-watch">Game & Watch</option>
         <option value="Ring Fit Adventure" data-t="ring-fit-adventure">Ring Fit Adventure</option>
         <option value="Sonic" data-t="sonic">Sonic</option>
+        <option value="Golden Axe" data-t="golden-axe">Golden Axe</option>
+        <option value="Skies of Arcadia" data-t="skies-of-arcadia">Skies of Arcadia</option>
+        <option value="OutRun 2" data-t="outrun-2">OutRun 2</option>
+        <option value="Jet Set Radio" data-t="jet-set-radio">Jet Set Radio</option>
+        <option value="Crazy Taxi" data-t="crazy-taxi">Crazy Taxi</option>
+        <option value="Space Harrier" data-t="space-harrier">Space Harrier</option>
+        <option value="Super Monkey Ball" data-t="super-monkey-ball">Super Monkey Ball</option>
+        <option value="Puyo Puyo" data-t="puyo-puyo">Puyo Puyo</option>
+        <option value="Billy Hatcher" data-t="billy-hatcher">Billy Hatcher</option>
         <option value="Streets of Rage" data-t="streets-of-rage">Streets of Rage</option>
         <option value="Halo" data-t="halo">Halo</option>
         <option value="Gears of War" data-t="gears-of-war">Gears of War</option>
@@ -89,16 +133,16 @@
     </div>
     
     <div class="control-group">
-      <label for="roleFilter" data-t="strength">Force :</label>
+      <label for="roleFilter" data-t="role">Rôle :</label>
       <select id="roleFilter" class="form-control">
-        <option value="" data-t="all-strengths">Toutes</option>
-        <option value="pawn">Pion</option>
-        <option value="knight">Cavalier</option>
-        <option value="bishop">Fou</option>
-        <option value="rook">Tour</option>
-        <option value="queen">Dame</option>
-        <option value="king">Roi</option>
-        <option value="unique">Unique</option>
+        <option value="" data-t="all-roles">Tous</option>
+        <option value="pawn">♟ Pion</option>
+        <option value="knight">♞ Cavalier</option>
+        <option value="bishop">♝ Fou</option>
+        <option value="rook">♜ Tour</option>
+        <option value="queen">♛ Dame</option>
+        <option value="king">♚ Roi</option>
+        <option value="unique">★ Unique</option>
       </select>
     </div>
   </div>
@@ -110,10 +154,10 @@
   <div id="piecesGrid" class="pieces-grid">  </div>
 </main>
 
-<script src="public/js/translations.js"></script>
+<script src="public/js/translations.js?v=20260717g"></script>
 <script src="public/js/header.js"></script>
-<script src="public/data/pieces.js"></script>
-<script src="public/js/chess-roles.js"></script>
+<script src="public/data/pieces.js?v=20260717g"></script>
+<script src="public/js/chess-roles.js?v=20260717g"></script>
 <script>
 // Les données des pièces sont maintenant importées depuis pieces.js
 
@@ -151,6 +195,19 @@ function getRoleLabel(role) {
   return labels[role] || role || t('unknown');
 }
 
+function getRoleIcon(role) {
+  const icons = {
+    pawn: '♟',
+    knight: '♞',
+    bishop: '♝',
+    rook: '♜',
+    queen: '♛',
+    king: '♚',
+    unique: '★'
+  };
+  return icons[role] || '◆';
+}
+
 // Fonction pour afficher les pièces
 function displayPieces(pieces) {
   const grid = document.getElementById('piecesGrid');
@@ -160,17 +217,13 @@ function displayPieces(pieces) {
     const card = document.createElement('div');
     card.className = 'piece-card';
     
-    // Obtenir le chemin de l'image de démonstration
-    const demoImagePath = getMovementDemoImage(piece);
-    
-    // Utiliser la même logique que la page des objets avec fallback
     const nameKey = piece.nameKey || piece.name.toLowerCase().replace(/\s+/g, '-');
     const descriptionKey = piece.descriptionKey || piece.name.toLowerCase().replace(/\s+/g, '-') + '-desc';
     
-    // Traduire avec fallback sur la valeur originale
     const translatedName = piece.nameKey ? t(nameKey) : piece.name;
     const translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
     const roleLabel = getRoleLabel(piece.role);
+    const roleIcon = getRoleIcon(piece.role);
     
     card.innerHTML = `
       <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
@@ -179,58 +232,12 @@ function displayPieces(pieces) {
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
         <span class="badge">${t(piece.universeKey || piece.universe)}</span>
-        <span class="badge role">${roleLabel}</span>
-        ${piece.role === 'unique' ? `<span class="badge range">${t('range')}: ${piece.range}</span>` : ''}
-      </div>
-      <div class="moves" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-        <strong data-t="movements">${t('movements')}:</strong> ${getMovesDescription(piece.moves, piece.role)}
-      </div>
-      <div class="movement-demo" style="margin-top: 8px; text-align: center;">
-        <img src="${demoImagePath}" alt="Démonstration de mouvement" style="width: 120px; height: 120px; border: 1px solid var(--border-color); border-radius: 4px;" onerror="this.style.display='none'">
-        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" data-t="movement-demo">${t('movement-demo')}</div>
+        <span class="badge role" title="${roleLabel}"><span class="role-icon" aria-hidden="true">${roleIcon}</span>${roleLabel}</span>
       </div>
     `;
     
     grid.appendChild(card);
   });
-}
-
-// Fonction pour obtenir la description des mouvements
-function getMovesDescription(moves, role) {
-  if (role && typeof VGBChess !== 'undefined') {
-    const chess = VGBChess.getChessMovement({ role: role, moves: moves, range: 8 });
-    if (chess.special === 'pawn') return 'Avance + capture en diagonale (règles d\'échecs)';
-    if (role === 'knight') return 'Saut en L (cavalier)';
-    if (role === 'bishop') return 'Diagonales';
-    if (role === 'rook') return 'Lignes et colonnes';
-    if (role === 'queen') return 'Toutes directions';
-    if (role === 'king') return '1 case dans toutes les directions';
-    if (role === 'unique') return 'Mouvement spécial Unique';
-  }
-  if (moves && moves.length === 8) {
-    return t('all-directions');
-  }
-  return `${(moves || []).length} ${t('directions-possible')}`;
-}
-
-// Fonction pour obtenir le chemin de l'image de démonstration
-function getMovementDemoImage(piece) {
-  // Extraire le nom de fichier de l'image du personnage
-  let fileName = piece.name;
-  if (piece.image) {
-    const imagePath = piece.image;
-    const imageName = imagePath.split('/').pop().split('.')[0];
-    fileName = imageName;
-  }
-  
-  // Convertir en minuscules et remplacer les espaces par des tirets
-  fileName = fileName.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
-  
-  // Construire le chemin vers l'image de démonstration
-  const faction = piece.faction.toLowerCase();
-  return `public/images/${faction}/demo/${fileName}-movement-demo.png`;
 }
 
 // Fonction pour appliquer les filtres et le tri
@@ -285,8 +292,8 @@ function updateActiveFilters() {
       if (key === 'faction') {
         displayKey = t('editor');
       } else if (key === 'role') {
-        displayKey = t('strength');
-        displayValue = getRoleLabel(value);
+        displayKey = t('role');
+        displayValue = getRoleIcon(value) + ' ' + getRoleLabel(value);
       }
       
       tag.innerHTML = `

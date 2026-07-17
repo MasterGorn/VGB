@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mes decks — Video Games Battle</title>
+<link rel="stylesheet" href="public/css/header.css" />
+<link rel="stylesheet" href="public/css/common.css" />
+<link rel="stylesheet" href="public/css/global.css" />
+<style>
+  .container { max-width: 900px; margin: 0 auto; padding: 100px 16px 40px; }
+  h1 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 8px; color: #ffd700; }
+  .sub { color: rgba(255,255,255,0.65); margin-bottom: 20px; font-size: 14px; }
+  .card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 16px;
+    background: rgba(255,255,255,0.04);
+    margin-bottom: 14px;
+  }
+  .deck-list { display: grid; gap: 12px; }
+  .deck-item {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    justify-content: space-between;
+  }
+  .deck-item h2 { margin: 0; font-size: 17px; color: #fff; }
+  .meta { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .badge-default {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: rgba(255,215,0,0.2); color: #ffd700; border: 1px solid #ffd700; margin-left: 8px;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  button, .btn {
+    font-size: 14px; font-weight: bold; padding: 10px 14px; border-radius: 8px;
+    border: none; cursor: pointer; min-height: 44px; color: #fff; text-decoration: none;
+    display: inline-flex; align-items: center;
+  }
+  .btn-primary { background: linear-gradient(135deg, #e67e22, #f1c40f); color: #111; }
+  .btn-secondary { background: #3498db; }
+  .btn-danger { background: #c0392b; }
+  .btn-ghost { background: transparent; border: 1px solid #666; }
+  .msg { color: #ff8a80; font-size: 13px; margin-top: 8px; }
+  .ok { color: #2ecc71; }
+  .slots-preview {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+  }
+  .slot-chip {
+    font-size: 11px; padding: 2px 6px; border-radius: 4px;
+    background: rgba(0,0,0,0.35); color: rgba(255,255,255,0.85);
+  }
+  a { color: #ffd700; }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<main class="container">
+  <h1>Mes decks</h1>
+  <p class="sub">Enregistrez jusqu’à 5 armées favorites (17 pièces par rôle). Chargez-les au draft pour ne plus tout choisir à chaque partie.</p>
+
+  <div class="card" id="guest-card">
+    <p>Connectez-vous pour gérer vos decks.</p>
+    <a class="btn btn-primary" href="login.html">Se connecter</a>
+  </div>
+
+  <div id="decks-panel" style="display:none;">
+    <div class="actions" style="margin-bottom:16px;">
+      <a class="btn btn-primary" href="index.html">Composer / jouer</a>
+      <button type="button" class="btn btn-secondary" id="btn-refresh">Actualiser</button>
+    </div>
+    <div class="deck-list" id="deck-list"></div>
+    <p class="msg" id="msg"></p>
+    <p class="sub">Astuce : pendant le draft sur la page Jouer, utilisez <strong>Charger deck</strong> et <strong>Sauver deck</strong>.</p>
+  </div>
+</main>
+
+<script src="public/js/translations.js"></script>
+<script src="public/js/header.js"></script>
+<script src="public/js/chess-roles.js"></script>
+<script src="public/js/online.js"></script>
+<script>
+VGBHeader.injectHeader('deck');
+if (typeof initTranslation === 'function') initTranslation();
+
+const guestCard = document.getElementById('guest-card');
+const panel = document.getElementById('decks-panel');
+const listEl = document.getElementById('deck-list');
+const msg = document.getElementById('msg');
+
+function roleLabel(role) {
+  return (typeof VGBChess !== 'undefined' && VGBChess.getRoleLabel)
+    ? VGBChess.getRoleLabel(role) : role;
+}
+
+function showMsg(text, ok) {
+  msg.textContent = text || '';
+  msg.className = 'msg' + (ok ? ' ok' : '');
+}
+
+async function loadDecks() {
+  showMsg('');
+  listEl.innerHTML = '';
+  try {
+    const decks = await VGBOnline.listDecks();
+    if (!decks.length) {
+      listEl.innerHTML = '<div class="card"><p>Aucun deck pour l’instant. Composez une armée au draft puis cliquez « Sauver deck ».</p></div>';
+      return;
+    }
+    decks.forEach((deck) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const counts = {};
+      (deck.slots || []).forEach((s) => { counts[s.role] = (counts[s.role] || 0) + 1; });
+      const chips = Object.keys(counts).map((r) =>
+        `<span class="slot-chip">${roleLabel(r)} ×${counts[r]}</span>`
+      ).join('');
+      card.innerHTML = `
+        <div class="deck-item">
+          <div>
+            <h2>${escapeHtml(deck.name)}${deck.isDefault ? '<span class="badge-default">Défaut</span>' : ''}</h2>
+            <div class="meta">${escapeHtml(deck.faction)} · ${deck.slots.length} pièces</div>
+            <div class="slots-preview">${chips}</div>
+          </div>
+          <div class="actions">
+            ${deck.isDefault ? '' : `<button type="button" class="btn btn-ghost" data-default="${deck.id}">Par défaut</button>`}
+            <button type="button" class="btn btn-danger" data-del="${deck.id}">Supprimer</button>
+          </div>
+        </div>`;
+      listEl.appendChild(card);
+    });
+    listEl.querySelectorAll('[data-del]').forEach((btn) => {
+      btn.onclick = async () => {
+        if (!confirm('Supprimer ce deck ?')) return;
+        try {
+          await VGBOnline.deleteDeck(btn.getAttribute('data-del'));
+          showMsg('Deck supprimé', true);
+          loadDecks();
+        } catch (e) {
+          showMsg(e.message);
+        }
+      };
+    });
+    listEl.querySelectorAll('[data-default]').forEach((btn) => {
+      btn.onclick = async () => {
+        try {
+          await VGBOnline.setDefaultDeck(btn.getAttribute('data-default'));
+          showMsg('Deck par défaut mis à jour', true);
+          loadDecks();
+        } catch (e) {
+          showMsg(e.message);
+        }
+      };
+    });
+  } catch (e) {
+    showMsg(e.message);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+document.getElementById('btn-refresh').onclick = loadDecks;
+
+(async function init() {
+  if (!VGBOnline.token) return;
+  try {
+    await VGBOnline.refreshMe();
+    guestCard.style.display = 'none';
+    panel.style.display = 'block';
+    loadDecks();
+  } catch (e) {
+    VGBOnline.clearSession();
+  }
+})();
+</script>
+</body>
+</html>

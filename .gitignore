@@ -58,9 +58,15 @@ site/
 
 # Fichiers de serveur local
 server.js
-package.json
 package-lock.json
 yarn.lock
+.env
+server/.env
+
+# Garder le package.json du backend Mongo
+!server/package.json
+!server/package-lock.json
+
 
 # Fichiers de test temporaires
 test-multiplayer.html

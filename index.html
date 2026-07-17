@@ -922,10 +922,10 @@ body.end-game-open {
   </div>
 </div>
 <script src="public/js/header.js"></script>
-<script src="public/data/pieces.js"></script>
+<script src="public/data/pieces.js?v=20260717c"></script>
 <script src="public/data/items.js"></script>
-<script src="public/js/translations.js"></script>
-<script src="public/js/chess-roles.js"></script>
+<script src="public/js/translations.js?v=20260717c"></script>
+<script src="public/js/chess-roles.js?v=20260717c"></script>
 <script src="public/js/online.js"></script>
 <script>
 VGBHeader.injectHeader('index');
@@ -1331,6 +1331,25 @@ function preload() {
   this.load.image('chupea', 'chupea.png');
   this.load.image('chubach', 'chubach.png');
   this.load.image('chuih', 'chuih.png');
+
+  // Catalogue SEGA élargi
+  this.load.image('clarissa', 'clarissa.png');
+  this.load.image('tyris-flare', 'tyris-flare.png');
+  this.load.image('gena', 'gena.png');
+  this.load.image('billy-hatcher', 'billy-hatcher.png');
+  this.load.image('ax-battler', 'ax-battler.png');
+  this.load.image('bd-joe', 'b.-d.-joe.png');
+  this.load.image('mec-space-harrier', 'mec-space-harrier.png');
+  this.load.image('taro-sega-boy', 'taro-sega-boy.png');
+  this.load.image('taro-sega-girl', 'taro-sega-girl.png');
+  this.load.image('death-adder', 'death-adder.png');
+  this.load.image('gilius-thunderhead', 'gilius-thunderhead.png');
+  this.load.image('aiai', 'AiAi.png');
+  this.load.image('puyo-puyo', 'puyo-puyo.png');
+  this.load.image('alberto', 'alberto.png');
+  this.load.image('gus', 'gus.png');
+  this.load.image('mew-mew', 'mew-mew.png');
+  this.load.image('axel', 'axel.png');
 
   // Items
   this.load.setPath('public/images/items/');
@@ -5563,10 +5582,24 @@ function createCharacterSelectionUI() {
   randomBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:#3498db;color:#fff;font-weight:bold;cursor:pointer;';
   randomBtn.onclick = () => fillArmyRandomly();
 
+  const loadDeckBtn = document.createElement('button');
+  loadDeckBtn.textContent = 'Charger deck';
+  loadDeckBtn.title = 'Charger votre deck enregistré (compte requis)';
+  loadDeckBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:none;border-radius:8px;background:#9b59b6;color:#fff;font-weight:bold;cursor:pointer;';
+  loadDeckBtn.onclick = () => loadSavedDeckIntoDraft();
+
+  const saveDeckBtn = document.createElement('button');
+  saveDeckBtn.textContent = 'Sauver deck';
+  saveDeckBtn.title = 'Enregistrer cette armée comme deck favori';
+  saveDeckBtn.style.cssText = 'padding:12px 16px;min-height:48px;border:1px solid #9b59b6;border-radius:8px;background:transparent;color:#cf9fff;font-weight:bold;cursor:pointer;';
+  saveDeckBtn.onclick = () => saveCurrentArmyAsDeck();
+
   footer.appendChild(prevBtn);
   footer.appendChild(nextBtn);
   footer.appendChild(clearBtn);
   footer.appendChild(randomBtn);
+  footer.appendChild(loadDeckBtn);
+  footer.appendChild(saveDeckBtn);
   footer.appendChild(startBtn);
 
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) {
@@ -5694,6 +5727,61 @@ function fillArmyRandomly() {
     showInfoMessage('Armée remplie (manque : ' + missing.join(', ') + ')', 3000);
   } else {
     showInfoMessage('Armée remplie aléatoirement !', 2000);
+  }
+}
+
+async function loadSavedDeckIntoDraft() {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.token) {
+    showInfoMessage('Connectez-vous pour charger un deck', 2500);
+    return;
+  }
+  try {
+    const deck = await VGBOnline.getDeck();
+    if (!deck || !deck.slots) {
+      showInfoMessage('Aucun deck enregistré', 2500);
+      return;
+    }
+    const catalog = (typeof piecesData !== 'undefined') ? piecesData : availablePieces;
+    const army = VGBOnline.slotsToArmy(deck.slots, catalog);
+    if (!VGBChess.isArmyComplete(army)) {
+      showInfoMessage('Deck incomplet ou pièces manquantes', 2500);
+      return;
+    }
+    playerFactions[currentPlayerIndex] = deck.faction;
+    playerArmies[currentPlayerIndex] = army;
+    const factionSelect = document.getElementById('faction-select');
+    if (factionSelect) factionSelect.value = deck.faction;
+    buildRoleTabs();
+    generateCharacterCards();
+    updateDraftSummary();
+    updatePlayerInfo();
+    showInfoMessage('Deck « ' + deck.name + ' » chargé', 2200);
+  } catch (e) {
+    showInfoMessage(e.message || 'Erreur chargement deck', 2500);
+  }
+}
+
+async function saveCurrentArmyAsDeck() {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.token) {
+    showInfoMessage('Connectez-vous pour sauver un deck', 2500);
+    return;
+  }
+  if (!VGBChess.isArmyComplete(playerArmies[currentPlayerIndex])) {
+    showInfoMessage('Complétez l\'armée (17 pièces) avant de sauver', 2500);
+    return;
+  }
+  const name = prompt('Nom du deck', 'Mon deck') || 'Mon deck';
+  try {
+    const slots = VGBOnline.armyToSlots(playerArmies[currentPlayerIndex]);
+    const deck = await VGBOnline.saveDeck({
+      name: name.trim().slice(0, 40),
+      faction: playerFactions[currentPlayerIndex],
+      slots,
+      isDefault: true,
+    });
+    showInfoMessage('Deck « ' + deck.name + ' » enregistré', 2200);
+  } catch (e) {
+    showInfoMessage(e.message || 'Erreur sauvegarde deck', 3000);
   }
 }
 
