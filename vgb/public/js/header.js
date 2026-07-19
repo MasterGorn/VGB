@@ -14,14 +14,12 @@
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
             '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
-            '<a href="/movement-demo.html" class="nav-link nav-link-mobile-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
             '<a href="/login.html" class="nav-link nav-link-mobile-only" data-t="login">Se connecter</a>' +
           '</nav>' +
           '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
-            '<a href="/movement-demo.html" class="nav-link nav-link-desktop-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
             '<a href="/login.html" class="nav-link nav-link-desktop-only" data-t="login">Se connecter</a>' +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
