@@ -1,4 +1,42 @@
 (function(){
+  var LOGIN_HREF = '/login.html';
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function getSessionUser() {
+    if (typeof VGBOnline !== 'undefined' && VGBOnline.user && VGBOnline.user.username) {
+      return VGBOnline.user;
+    }
+    try {
+      var raw = localStorage.getItem('vgb_online_session');
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (data && data.user && data.user.username) return data.user;
+    } catch (e) {}
+    return null;
+  }
+
+  function authLabel(user) {
+    if (!user || !user.username) return 'Se connecter';
+    var elo = (typeof user.elo === 'number') ? user.elo : (user.elo || '—');
+    return escapeHtml(user.username) + ' <span class="nav-elo">' + escapeHtml(elo) + ' Elo</span>';
+  }
+
+  function renderAuthLink(extraClass, active) {
+    var user = getSessionUser();
+    var isLogin = active === 'login';
+    var cls = 'nav-link header-auth-link ' + extraClass + (isLogin ? ' active' : '') + (user ? ' nav-link-user' : '');
+    var label = user ? authLabel(user) : '<span data-t="login">Se connecter</span>';
+    var title = user ? (user.username + ' — ' + (user.elo != null ? user.elo : '—') + ' Elo') : 'Se connecter';
+    return '<a href="' + LOGIN_HREF + '" class="' + cls + '" title="' + escapeHtml(title) + '">' + label + '</a>';
+  }
+
   function renderHeader(active) {
     return (
       '<header class="site-header">' +
@@ -14,15 +52,13 @@
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
             '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
-            '<a href="/movement-demo.html" class="nav-link nav-link-mobile-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
-            '<a href="/login.html" class="nav-link nav-link-mobile-only" data-t="login">Se connecter</a>' +
+            renderAuthLink('nav-link-mobile-only', active) +
           '</nav>' +
           '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
-            '<a href="/movement-demo.html" class="nav-link nav-link-desktop-only'+(active==='movement-demo'?' active':'')+'" data-t="movements">Mouvements</a>' +
-            '<a href="/login.html" class="nav-link nav-link-desktop-only" data-t="login">Se connecter</a>' +
+            renderAuthLink('nav-link-desktop-only', active) +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
                 '<span class="flag-icon" id="current-flag">🇫🇷</span>' +
@@ -99,12 +135,37 @@
     }
   }
 
+  function refreshAuth() {
+    var user = getSessionUser();
+    document.querySelectorAll('.header-auth-link').forEach(function(link) {
+      var isUser = !!user;
+      link.classList.toggle('nav-link-user', isUser);
+      if (isUser) {
+        link.removeAttribute('data-t');
+        link.innerHTML = authLabel(user);
+        link.title = user.username + ' — ' + (user.elo != null ? user.elo : '—') + ' Elo';
+      } else {
+        link.setAttribute('data-t', 'login');
+        link.innerHTML = 'Se connecter';
+        link.title = 'Se connecter';
+      }
+    });
+  }
+
   function injectHeader(active) {
     var placeholder = document.getElementById('header-root');
     if (!placeholder) return;
     placeholder.outerHTML = renderHeader(active);
     bindMobileNav();
     injectFooter(active);
+    refreshAuth();
+
+    // Rafraîchir depuis l'API si disponible (Elo à jour)
+    if (typeof VGBOnline !== 'undefined' && typeof VGBOnline.refreshMe === 'function') {
+      VGBOnline.refreshMe().then(function() {
+        refreshAuth();
+      }).catch(function() {});
+    }
 
     if (typeof initHeaderLanguageSelector === 'function') {
       setTimeout(function() {
@@ -113,5 +174,9 @@
     }
   }
 
-  window.VGBHeader = { injectHeader: injectHeader, injectFooter: injectFooter };
+  window.VGBHeader = {
+    injectHeader: injectHeader,
+    injectFooter: injectFooter,
+    refreshAuth: refreshAuth
+  };
 })();
