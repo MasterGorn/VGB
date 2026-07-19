@@ -67,10 +67,12 @@ Le script `scripts/vercel-postbuild.mjs` contourne le bug Next 16 + Root Directo
 | `PATCH/DELETE /api/decks/[id]` | MAJ / suppression |
 | `GET /api/leaderboard` | Classement Elo |
 | `POST /api/elo` | MAJ Elo après partie |
+| `POST /api/match` | File d’attente / matchmaking (`enqueue`, `cancel`, `status`) |
+| `POST /api/game` | Draft, sync état, fin de partie (`get`, `setDraft`, `pushState`, `finish`) |
 | `GET /api/health` | Santé |
 
 ## Notes
 
 - Comptes **username + password** (pas d’e-mail pour l’instant).
-- Matchmaking 1v1 reste sur l’API PHP legacy si besoin ; auth / decks / Elo Atlas passent par Next.
-- Ancien front MAMP à la racine du repo est conservé pour compatibilité.
+- Matchmaking 1v1 classé : API Next `/api/match` + `/api/game` (MongoDB Atlas).
+- Ancien front MAMP / PHP à la racine du repo reste disponible en fallback (`localStorage vgb_api_mode=php`).
