@@ -93,11 +93,13 @@ function showProfile() {
   document.getElementById('profile-name').textContent = 'Connecté : ' + VGBOnline.user.username;
   document.getElementById('profile-elo').textContent = 'Elo ' + VGBOnline.user.elo +
     ` — ${VGBOnline.user.wins}V / ${VGBOnline.user.losses}D / ${VGBOnline.user.draws}N`;
+  if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
 }
 
 function showAuth() {
   authCard.style.display = 'block';
   profileCard.style.display = 'none';
+  if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
 }
 
 async function doAuth(register) {

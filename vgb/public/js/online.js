@@ -50,12 +50,18 @@
         storageKey,
         JSON.stringify({ token: this.token, user: this.user, mode: this.mode })
       );
+      if (typeof VGBHeader !== "undefined" && typeof VGBHeader.refreshAuth === "function") {
+        VGBHeader.refreshAuth();
+      }
     },
 
     clearSession() {
       this.token = null;
       this.user = null;
       localStorage.removeItem(storageKey);
+      if (typeof VGBHeader !== "undefined" && typeof VGBHeader.refreshAuth === "function") {
+        VGBHeader.refreshAuth();
+      }
     },
 
     async request(url, body, method) {
