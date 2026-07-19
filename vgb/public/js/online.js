@@ -50,12 +50,18 @@
         storageKey,
         JSON.stringify({ token: this.token, user: this.user, mode: this.mode })
       );
+      if (typeof VGBHeader !== "undefined" && typeof VGBHeader.refreshAuth === "function") {
+        VGBHeader.refreshAuth();
+      }
     },
 
     clearSession() {
       this.token = null;
       this.user = null;
       localStorage.removeItem(storageKey);
+      if (typeof VGBHeader !== "undefined" && typeof VGBHeader.refreshAuth === "function") {
+        VGBHeader.refreshAuth();
+      }
     },
 
     async request(url, body, method) {
@@ -286,6 +292,11 @@
     },
 
     async enqueue(gridSize) {
+      if (this.mode === "next") {
+        const data = await this.request("/api/match", { action: "enqueue", gridSize });
+        if (data.matched) this.onMatched(data.match);
+        return data;
+      }
       const API = phpEndpoints();
       const data = await this.request(API.match, { action: "enqueue", gridSize });
       if (data.matched) this.onMatched(data.match);
@@ -294,6 +305,9 @@
 
     async cancelQueue() {
       this.stopQueuePoll();
+      if (this.mode === "next") {
+        return this.request("/api/match", { action: "cancel" });
+      }
       const API = phpEndpoints();
       return this.request(API.match, { action: "cancel" });
     },
@@ -302,8 +316,13 @@
       this.stopQueuePoll();
       this.queueTimer = setInterval(async () => {
         try {
-          const API = phpEndpoints();
-          const data = await this.request(API.match, { action: "status" });
+          let data;
+          if (this.mode === "next") {
+            data = await this.request("/api/match", { action: "status" });
+          } else {
+            const API = phpEndpoints();
+            data = await this.request(API.match, { action: "status" });
+          }
           if (onUpdate) onUpdate(data);
           if (data.matched) {
             this.stopQueuePoll();
@@ -334,40 +353,49 @@
 
     async submitDraft({ faction, army, name }) {
       if (!this.match) throw new Error("Pas de partie");
-      const API = phpEndpoints();
-      const data = await this.request(API.game, {
+      const payload = {
         action: "setDraft",
         matchId: this.match.matchId,
         faction,
         army,
         name,
-      });
+      };
+      const data =
+        this.mode === "next"
+          ? await this.request("/api/game", payload)
+          : await this.request(phpEndpoints().game, payload);
       this.lastVersion = (data.state && data.state.version) || this.lastVersion;
       return data;
     },
 
     async pushGameState(state, currentSeat) {
       if (!this.match || !this.enabled) return;
-      const API = phpEndpoints();
       state.version = (this.lastVersion || 0) + 1;
-      const data = await this.request(API.game, {
+      const payload = {
         action: "pushState",
         matchId: this.match.matchId,
         state,
         currentSeat,
-      });
+      };
+      const data =
+        this.mode === "next"
+          ? await this.request("/api/game", payload)
+          : await this.request(phpEndpoints().game, payload);
       if (data.state) this.lastVersion = data.state.version || this.lastVersion;
       return data;
     },
 
     async finish(winnerSeat) {
       if (!this.match) return;
-      const API = phpEndpoints();
-      const data = await this.request(API.game, {
+      const payload = {
         action: "finish",
         matchId: this.match.matchId,
         winnerSeat,
-      });
+      };
+      const data =
+        this.mode === "next"
+          ? await this.request("/api/game", payload)
+          : await this.request(phpEndpoints().game, payload);
       try {
         await this.refreshMe();
       } catch (e) {}
@@ -378,11 +406,14 @@
       this.stopPolling();
       this.pollTimer = setInterval(async () => {
         try {
-          const API = phpEndpoints();
-          const data = await this.request(API.game, {
+          const payload = {
             action: "get",
             matchId: this.match.matchId,
-          });
+          };
+          const data =
+            this.mode === "next"
+              ? await this.request("/api/game", payload)
+              : await this.request(phpEndpoints().game, payload);
           const version = (data.state && data.state.version) || 0;
           if (version > this.lastVersion) {
             this.lastVersion = version;

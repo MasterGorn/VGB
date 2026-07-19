@@ -1139,6 +1139,7 @@ let eliminationOrder = [];
 let gridSizeUIElems = [];
 // Options de partie
 let timerEnabled = true;
+let timersArmed = false; // true après le 1er coup joué
 let timerOptionEl = null;
 // Items & caisses
 let itemCrates = []; // [{ x, y, sprite, active, lastRound }]
@@ -2369,11 +2370,22 @@ function startGame(scene) {
   
   gameStarted = true;
   currentPlayer = 0;
+  moveCount = 0;
+  timersArmed = false;
+  onlineLastKnownTurn = null;
   aiThinking = false;
   if (aiTurnTimer) {
     clearTimeout(aiTurnTimer);
     aiTurnTimer = null;
   }
+
+  // Nettoyer les anciennes pièces (sprites)
+  for (const p of pieces) {
+    if (p.sprite) p.sprite.destroy();
+    if (p.letterText) p.letterText.destroy();
+    if (p.backgroundSprite) p.backgroundSprite.destroy();
+  }
+  pieces = [];
   
   // S'assurer que le cadre de message est caché au début de la partie
   if (infoBackground) {
@@ -2637,6 +2649,7 @@ function startGame(scene) {
       backgroundSprite: kingBackgroundSprite, // Ajouter la référence au background
       type: 'king',
       role: 'king',
+      onlineId: 'p' + i + '-king',
       letterText: letterText,
       x: kingX,
       y: kingY,
@@ -2705,6 +2718,7 @@ function startGame(scene) {
         backgroundSprite,
         type: slot.role === 'unique' ? imageKey : (piece.type || imageKey),
         role: slot.role,
+        onlineId: 'p' + i + '-' + slot.role + '-' + pieceX + '-' + pieceY + '-' + (piece.nameKey || piece.name || ''),
         letterText: letterText,
         x: pieceX,
         y: pieceY,
@@ -5006,6 +5020,9 @@ function checkStarEffect() {
 
 function updateTurnUI() {
   const mid = getKingCenterIndex(GRID_SIZE);
+
+  // Le chrono ne part qu'après le premier coup
+  if (moveCount > 0) armGameTimers();
   
   // Vérifier si le joueur actuel est éliminé et passer au suivant si nécessaire
   if (eliminationOrder.includes(currentPlayer)) {
@@ -5287,7 +5304,7 @@ function formatMs(ms) {
 }
 
 function tickTimer(scene) {
-  if (!gameStarted || !timerEnabled) return;
+  if (!gameStarted || !timerEnabled || !timersArmed) return;
   if (players.length === 0) return;
   const nowIdx = currentPlayer;
   const syncHudTimer = (i) => {
@@ -6263,6 +6280,7 @@ function startGameFromSelection() {
     const army = (playerArmies[seat] || []).map(p => ({
       name: p.name,
       type: p.type,
+      role: p.role,
       faction: p.faction,
       cost: p.cost,
       tier: p.tier,
@@ -6338,8 +6356,12 @@ function startGameFromSelection() {
   startGame(game.scene.scenes[0]);
 }
 
+let onlineGameStartedOnce = false;
+
 function applyOnlineDraftAndStart(state) {
   if (!state || !state.armies) return;
+  if (onlineGameStartedOnce || gameStarted) return;
+  onlineGameStartedOnce = true;
 
   playerCount = 2;
   computeBoardLayout();
@@ -6369,19 +6391,27 @@ function applyOnlineDraftAndStart(state) {
   characterSelectionMode = false;
   createPiecesFromSelection();
 
-  setTimeout(() => {
-    const canvas = document.querySelector('.game-root canvas');
-    if (canvas) canvas.classList.add('game-started');
-    startGame(game.scene.scenes[0]);
-    // Sync des coups
-    VGBOnline.startMatchPoll(onOnlineRemoteUpdate);
-  }, 100);
+  // Laisser le layout CSS/canvas se stabiliser avant de placer les pièces
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const canvas = document.querySelector('.game-root canvas');
+      if (canvas) canvas.classList.add('game-started');
+      if (typeof game !== 'undefined' && game.scale) {
+        try { game.scale.refresh(); } catch (e) {}
+      }
+      startGame(game.scene.scenes[0]);
+      onlineLastKnownTurn = currentPlayer;
+      VGBOnline.startMatchPoll(onOnlineRemoteUpdate);
+    }, 200);
+  });
 }
 
 function serializeOnlineBoardState() {
   return {
     pieces: (pieces || []).map(p => ({
+      onlineId: p.onlineId,
       type: p.type,
+      role: p.role,
       name: p.name,
       x: p.x,
       y: p.y,
@@ -6394,6 +6424,8 @@ function serializeOnlineBoardState() {
     })),
     currentPlayer,
     roundCounter,
+    moveCount,
+    timersArmed,
     eliminationOrder: eliminationOrder.slice(),
     playerNames: playerNames.slice(0, playerCount),
     playerFactions: playerFactions.slice(0, playerCount)
@@ -6404,33 +6436,46 @@ function applyRemoteBoardState(state) {
   if (!state || !Array.isArray(state.pieces)) return;
   window.__vgbApplyingRemote = true;
   try {
-    // Appliquer positions
+    // Appliquer positions (priorité onlineId pour les skins en double)
     for (const rp of state.pieces) {
-      let local = pieces.find(p => p.player === rp.player && p.type === rp.type && p.name === rp.name);
+      let local = null;
+      if (rp.onlineId) {
+        local = pieces.find(p => p.onlineId === rp.onlineId);
+      }
       if (!local) {
-        local = pieces.find(p => p.player === rp.player && p.x === rp.x && p.y === rp.y);
+        local = pieces.find(p => p.player === rp.player && p.type === rp.type && p.name === rp.name && p.x === rp.x && p.y === rp.y);
+      }
+      if (!local) {
+        local = pieces.find(p => p.player === rp.player && p.name === rp.name && p.role === rp.role);
       }
       if (local) {
         local.x = rp.x;
         local.y = rp.y;
+        if (rp.onlineId && !local.onlineId) local.onlineId = rp.onlineId;
       }
     }
     // Retirer pièces absentes côté remote
     for (let i = pieces.length - 1; i >= 0; i--) {
       const p = pieces[i];
       const stillThere = state.pieces.some(rp =>
-        rp.player === p.player && rp.type === p.type && rp.name === p.name
+        (rp.onlineId && p.onlineId && rp.onlineId === p.onlineId) ||
+        (rp.player === p.player && rp.type === p.type && rp.name === p.name)
       );
       if (!stillThere) {
         cleanupCursorForPiece(p);
         if (p.sprite) p.sprite.destroy();
+        if (p.letterText) p.letterText.destroy();
         if (p.backgroundSprite) p.backgroundSprite.destroy();
         pieces.splice(i, 1);
       }
     }
     if (typeof state.currentPlayer === 'number') currentPlayer = state.currentPlayer;
     if (typeof state.roundCounter === 'number') roundCounter = state.roundCounter;
+    if (typeof state.moveCount === 'number') moveCount = state.moveCount;
+    if (state.timersArmed) timersArmed = true;
     if (Array.isArray(state.eliminationOrder)) eliminationOrder = state.eliminationOrder.slice();
+    // Critique : aligner le suivi de tour sinon le 2e joueur ne pousse plus son état
+    onlineLastKnownTurn = currentPlayer;
     updatePieces();
     updateTurnUI();
   } finally {
@@ -6441,6 +6486,10 @@ function applyRemoteBoardState(state) {
 let onlinePushBusy = false;
 let onlineLastKnownTurn = null;
 
+function armGameTimers() {
+  if (!timersArmed) timersArmed = true;
+}
+
 function maybePushOnlineState() {
   if (typeof VGBOnline === 'undefined' || !VGBOnline.enabled || !VGBOnline.match) return;
   if (onlinePushBusy || window.__vgbApplyingRemote) return;
@@ -6449,6 +6498,7 @@ function maybePushOnlineState() {
   const prev = onlineLastKnownTurn;
   onlineLastKnownTurn = currentPlayer;
   if (prev !== VGBOnline.seat) return;
+  armGameTimers();
   onlinePushBusy = true;
   const state = serializeOnlineBoardState();
   VGBOnline.pushGameState(state, currentPlayer).finally(() => {
@@ -6611,6 +6661,8 @@ function createPiecesFromSelection() {
     if (btnCancel) btnCancel.style.display = 'none';
 
     // Lancer la sélection 2 joueurs, sièges verrouillés
+    onlineGameStartedOnce = false;
+    gameStarted = false;
     computeBoardLayout();
     playerCount = 2;
     characterSelectionMode = true;
