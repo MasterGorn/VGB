@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/css/global.css" />
 <style>
   .container { max-width: 420px; margin: 0 auto; padding: 120px 16px 40px; }
+  .container.profile-wide { max-width: 720px; }
   h1 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 16px; color: #ffd700; }
   .card {
     border: 1px solid rgba(255,255,255,0.12);
@@ -45,11 +46,141 @@
   .elo { margin-top: 12px; color: #ffd700; font-weight: bold; }
   .msg { margin-top: 10px; font-size: 13px; color: #ff8a80; }
   a { color: #ffd700; }
+
+  .match-history {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 0 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .match-history-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 2px;
+  }
+  .match-history-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+  .match-history-dot.win {
+    background: #2ecc71;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.35);
+  }
+  .match-history-dot.loss {
+    background: #e74c3c;
+    color: #fff;
+  }
+  .match-history-dot.draw {
+    background: #95a5a6;
+    color: #fff;
+  }
+  .match-history-dot.empty {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .replay-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .replay-section h2 {
+    font-size: 15px;
+    margin: 0 0 10px;
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .replay-section h2 span {
+    font-size: 11px;
+    font-weight: normal;
+    color: rgba(255,255,255,0.5);
+  }
+  .replay-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .replay-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .replay-item-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .replay-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .replay-item-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+  }
+  .replay-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .replay-badge.win { background: #2ecc71; color: #fff; }
+  .replay-badge.loss { background: #e74c3c; color: #fff; }
+  .replay-badge.draw { background: #95a5a6; color: #fff; }
+  .replay-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .replay-actions button {
+    flex: none;
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .replay-empty {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin: 0;
+  }
 </style>
 </head>
 <body>
 <div id="header-root"></div>
-<main class="container">
+<main class="container" id="page-container">
   <h1>Compte en ligne</h1>
   <div class="card" id="auth-card">
     <div class="row">
@@ -70,6 +201,15 @@
   <div class="card" id="profile-card" style="display:none;">
     <p id="profile-name"></p>
     <p class="elo" id="profile-elo"></p>
+    <div class="match-history" id="match-history" aria-label="Historique des 5 derniers matchs"></div>
+    <div class="replay-section" id="replay-auto-section" hidden>
+      <h2>Derniers matchs <span id="replay-auto-count"></span></h2>
+      <ul class="replay-list" id="replay-auto-list"></ul>
+    </div>
+    <div class="replay-section" id="replay-fav-section" hidden>
+      <h2>Replays favoris <span id="replay-fav-count"></span></h2>
+      <ul class="replay-list" id="replay-fav-list"></ul>
+    </div>
     <div class="actions" style="margin-top:16px;">
       <button type="button" id="btn-play" style="background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;">Jouer</button>
       <button type="button" id="btn-logout" style="background:#c0392b;">Déconnexion</button>
@@ -78,7 +218,7 @@
 </main>
 <script src="/js/translations.js"></script>
 <script src="/js/header.js"></script>
-<script src="/js/online.js?v=20260717i"></script>
+<script src="/js/online.js?v=20260720a"></script>
 <script>
 VGBHeader.injectHeader('login');
 if (typeof initTranslation === 'function') initTranslation();
@@ -86,19 +226,173 @@ if (typeof initTranslation === 'function') initTranslation();
 const msg = document.getElementById('msg');
 const authCard = document.getElementById('auth-card');
 const profileCard = document.getElementById('profile-card');
+const pageContainer = document.getElementById('page-container');
 
-function showProfile() {
+function formatReplayDate(value) {
+  if (!value) return '';
+  try {
+    return new Date(value).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch (e) {
+    return '';
+  }
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function resultBadge(result) {
+  if (result === 'W') return '<span class="replay-badge win" title="Victoire">✓</span>';
+  return '<span class="replay-badge loss" title="Défaite">✕</span>';
+}
+
+function renderReplayList(listEl, replays, options) {
+  if (!listEl) return;
+  const items = Array.isArray(replays) ? replays : [];
+  if (!items.length) {
+    listEl.innerHTML = '<li><p class="replay-empty">' + (options.emptyText || 'Aucun replay') + '</p></li>';
+    return;
+  }
+  listEl.innerHTML = items.map(function (replay) {
+    const meta = replay.meta || {};
+    const title = replay.type === 'favorite'
+      ? (replay.name || meta.opponent || 'Replay favori')
+      : ('vs ' + (meta.opponent || 'Adversaire'));
+    const date = formatReplayDate(meta.savedAt || replay.createdAt);
+    const grid = meta.gridSize || 9;
+    const moves = meta.moveCount ? (' — ' + meta.moveCount + ' coups') : '';
+    const actions = ['<button type="button" class="replay-view-btn" data-id="' + escapeHtml(replay.id) + '" style="background:#111;border:1px solid #fff;">Voir</button>'];
+    if (options.allowFavorite) {
+      actions.push('<button type="button" class="replay-fav-btn" data-id="' + escapeHtml(replay.id) + '" style="background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;">★</button>');
+    }
+    if (options.allowDelete) {
+      actions.push('<button type="button" class="replay-del-btn" data-id="' + escapeHtml(replay.id) + '" style="background:#c0392b;">✕</button>');
+    }
+    return '<li class="replay-item">' +
+      resultBadge(meta.result) +
+      '<div class="replay-item-main">' +
+        '<div class="replay-item-title">' + escapeHtml(title) + '</div>' +
+        '<div class="replay-item-meta">' + escapeHtml(date) + ' — ' + grid + '×' + grid + escapeHtml(moves) + '</div>' +
+      '</div>' +
+      '<div class="replay-actions">' + actions.join('') + '</div>' +
+    '</li>';
+  }).join('');
+}
+
+async function loadReplays() {
+  const autoSection = document.getElementById('replay-auto-section');
+  const favSection = document.getElementById('replay-fav-section');
+  const autoList = document.getElementById('replay-auto-list');
+  const favList = document.getElementById('replay-fav-list');
+  const autoCount = document.getElementById('replay-auto-count');
+  const favCount = document.getElementById('replay-fav-count');
+
+  if (!VGBOnline.user || VGBOnline.mode !== 'next') {
+    if (autoSection) autoSection.hidden = true;
+    if (favSection) favSection.hidden = true;
+    return;
+  }
+
+  try {
+    const data = await VGBOnline.listReplays();
+    const auto = data.auto || [];
+    const favorites = data.favorites || [];
+    const limits = data.limits || { auto: 5, favorite: 10 };
+
+    if (autoSection) autoSection.hidden = false;
+    if (favSection) favSection.hidden = false;
+    if (autoCount) autoCount.textContent = '(' + auto.length + '/' + limits.auto + ')';
+    if (favCount) favCount.textContent = '(' + favorites.length + '/' + limits.favorite + ')';
+
+    renderReplayList(autoList, auto, {
+      emptyText: 'Jouez une partie pour remplir l’historique automatique.',
+      allowFavorite: favorites.length < limits.favorite
+    });
+    renderReplayList(favList, favorites, {
+      emptyText: 'Aucun favori — sauvegardez un replay depuis la fin de partie.',
+      allowDelete: true
+    });
+  } catch (e) {
+    if (autoSection) autoSection.hidden = true;
+    if (favSection) favSection.hidden = true;
+  }
+}
+
+function bindReplayActions() {
+  document.addEventListener('click', async function (e) {
+    const viewBtn = e.target.closest('.replay-view-btn');
+    if (viewBtn) {
+      location.href = '/replay.html?id=' + encodeURIComponent(viewBtn.dataset.id);
+      return;
+    }
+    const favBtn = e.target.closest('.replay-fav-btn');
+    if (favBtn) {
+      try {
+        await VGBOnline.saveFavoriteReplay(null, { fromReplayId: favBtn.dataset.id });
+        await loadReplays();
+      } catch (err) {
+        alert(err.message || 'Impossible d’ajouter aux favoris');
+      }
+      return;
+    }
+    const delBtn = e.target.closest('.replay-del-btn');
+    if (delBtn) {
+      if (!confirm('Supprimer ce replay favori ?')) return;
+      try {
+        await VGBOnline.deleteReplay(delBtn.dataset.id);
+        await loadReplays();
+      } catch (err) {
+        alert(err.message || 'Suppression impossible');
+      }
+    }
+  });
+}
+
+bindReplayActions();
+
+function renderMatchHistory(results) {
+  const el = document.getElementById('match-history');
+  if (!el) return;
+  const slots = Array.isArray(results) ? results.slice(0, 5) : [];
+  while (slots.length < 5) slots.push(null);
+  el.innerHTML = '<span class="match-history-label">Forme</span>' + slots.map(function (r) {
+    if (r === 'W') return '<span class="match-history-dot win" title="Victoire">✓</span>';
+    if (r === 'L') return '<span class="match-history-dot loss" title="Défaite">✕</span>';
+    return '<span class="match-history-dot empty" title="Pas encore joué"></span>';
+  }).join('');
+}
+
+async function showProfile() {
   authCard.style.display = 'none';
   profileCard.style.display = 'block';
+  if (pageContainer) pageContainer.classList.add('profile-wide');
   document.getElementById('profile-name').textContent = 'Connecté : ' + VGBOnline.user.username;
   document.getElementById('profile-elo').textContent = 'Elo ' + VGBOnline.user.elo +
-    ` — ${VGBOnline.user.wins}V / ${VGBOnline.user.losses}D / ${VGBOnline.user.draws}N`;
+    ' — ' + VGBOnline.user.wins + 'V · ' + VGBOnline.user.losses + ' déf.';
+  const recent = (VGBOnline.user.recentResults || []).filter(function (r) { return r === 'W' || r === 'L'; });
+  renderMatchHistory(recent);
+  try {
+    const hist = await VGBOnline.fetchHistory();
+    if (hist && hist.results) {
+      VGBOnline.user.recentResults = hist.results;
+      renderMatchHistory(hist.results.filter(function (r) { return r === 'W' || r === 'L'; }));
+    }
+  } catch (e) {}
+  await loadReplays();
   if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
 }
 
 function showAuth() {
   authCard.style.display = 'block';
   profileCard.style.display = 'none';
+  if (pageContainer) pageContainer.classList.remove('profile-wide');
   if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
 }
 
@@ -109,7 +403,7 @@ async function doAuth(register) {
   try {
     if (register) await VGBOnline.register(username, password);
     else await VGBOnline.login(username, password);
-    showProfile();
+    await showProfile();
   } catch (e) {
     msg.textContent = e.message || 'Erreur';
   }
@@ -126,7 +420,7 @@ document.getElementById('btn-play').onclick = () => { location.href = '/play.htm
 (async function init() {
   try {
     const user = await VGBOnline.refreshMe();
-    if (user) showProfile();
+    if (user) await showProfile();
   } catch (e) {
     VGBOnline.clearSession();
   }

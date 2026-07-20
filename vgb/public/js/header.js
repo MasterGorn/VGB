@@ -119,6 +119,8 @@
         '<div class="footer-inner">' +
           '<a href="/credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
           '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<a href="/replay.html" class="footer-link'+(active==='replay'?' active':'')+'">Replays</a>' +
+          '<span class="footer-sep" aria-hidden="true">·</span>' +
           '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
         '</div>' +
       '</footer>'

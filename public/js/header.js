@@ -1,5 +1,5 @@
 (function(){
-  var LOGIN_HREF = 'login.html';
+  var LOGIN_HREF = '/login.html';
 
   function escapeHtml(str) {
     return String(str == null ? '' : str)
@@ -47,16 +47,15 @@
             '<span class="nav-toggle-bar" aria-hidden="true"></span>' +
           '</button>' +
           '<nav class="site-nav" id="site-nav-panel">' +
-            '<a href="index.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
-            '<a href="classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
-            '<a href="deck.html" class="nav-link'+(active==='deck'?' active':'')+'">Mes decks</a>' +
-            '<a href="pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
-            '<a href="objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
-            '<a href="regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
+            '<a href="/play.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
+            '<a href="/classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
+            '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
+            '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
+            '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
             renderAuthLink('nav-link-mobile-only', active) +
           '</nav>' +
-          '<a href="index.html" aria-label="Accueil" class="logo-link">' +
-            '<img src="public/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
+          '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
+            '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
             renderAuthLink('nav-link-desktop-only', active) +
@@ -118,7 +117,9 @@
     return (
       '<footer class="site-footer">' +
         '<div class="footer-inner">' +
-          '<a href="credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
+          '<a href="/credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
+          '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<a href="/replay.html" class="footer-link'+(active==='replay'?' active':'')+'">Replays</a>' +
           '<span class="footer-sep" aria-hidden="true">·</span>' +
           '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
         '</div>' +
@@ -161,6 +162,7 @@
     injectFooter(active);
     refreshAuth();
 
+    // Rafraîchir depuis l'API si disponible (Elo à jour)
     if (typeof VGBOnline !== 'undefined' && typeof VGBOnline.refreshMe === 'function') {
       VGBOnline.refreshMe().then(function() {
         refreshAuth();
