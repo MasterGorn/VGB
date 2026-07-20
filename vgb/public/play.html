@@ -26,6 +26,12 @@
   gap: 0;
   max-width: none;
   width: 100%;
+  justify-content: center;
+}
+
+/* Plateau Phaser : masqué tant que la partie n'a pas commencé */
+.game-container:not(.game-active) .board-column {
+  display: none;
 }
 
 .game-root {
@@ -54,12 +60,13 @@
 }
 
 .game-container.game-active .sidebar {
-  display: none;
+  display: flex;
+  margin-top: 12px;
 }
 
 @media (min-width: 1100px) {
   .game-container.game-active .sidebar {
-    display: flex;
+    margin-top: 0;
   }
 }
 
@@ -472,6 +479,57 @@
   box-shadow: var(--shadow-light);
 }
 
+.commands-panel {
+  margin-top: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-light);
+}
+
+.commands-title {
+  font: var(--font-size-lg) Arial, sans-serif;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.commands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commands-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.commands-key {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .rules-title {
   font: var(--font-size-lg) Arial, sans-serif;
   margin-bottom: var(--spacing-sm);
@@ -558,8 +616,13 @@
 }
 
 .tagline {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  padding: var(--spacing-lg) var(--spacing-md);
+  padding: 10px var(--spacing-md);
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
@@ -583,7 +646,8 @@
 
 .tagline h1 {
   margin: 0;
-  font: clamp(18px, 4.5vw, 28px) Arial, sans-serif;
+  padding: 0;
+  font: clamp(16px, 3.8vw, 24px) / 1.25 Arial, sans-serif;
   font-weight: bold;
   text-shadow: var(--shadow-text);
   background: var(--accent-gold);
@@ -642,20 +706,37 @@
   }
 }
 
-/* Desktop large : plateau + sidebar côte à côte */
+/* Desktop large : setup/plateau + sidebar à droite */
 @media (min-width: 1100px) {
   .game-container {
     flex-direction: row;
     align-items: flex-start;
+    justify-content: center;
     gap: var(--spacing-md);
   }
 
+  .game-container.game-active {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .game-container:not(.game-active) #game-setup {
+    flex: 1 1 auto;
+    max-width: min(720px, calc(100% - 300px));
+  }
+
   .board-column {
-    flex: 1;
+    flex: 0 1 900px;
     max-width: min(900px, calc(100% - 320px));
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .game-container.game-active .board-column {
+    display: flex;
   }
 
   .game-root {
@@ -674,12 +755,16 @@
     flex-shrink: 0;
   }
 
-  .rules-panel {
+  .ads-panel {
+    order: 1;
+  }
+
+  .commands-panel {
     order: 2;
   }
 
-  .ads-panel {
-    order: 1;
+  .rules-panel {
+    order: 3;
   }
 }
 
@@ -1183,6 +1268,19 @@ body.end-game-open {
   </div>
   </div>
   <div class="sidebar">
+    <div id="commands-panel" class="commands-panel">
+      <div class="commands-title">Commandes</div>
+      <ul class="commands-list">
+        <li>
+          <kbd class="commands-key">S</kbd>
+          <span>Capacité secondaire de la pièce Unique sélectionnée</span>
+        </li>
+        <li>
+          <kbd class="commands-key">P</kbd>
+          <span>Pause / reprise (partie locale uniquement)</span>
+        </li>
+      </ul>
+    </div>
     <div id="rules-panel" class="rules-panel">
       <div class="rules-title" data-t="pieces-in-play">Pièces en jeu</div>
       <div id="rules-list" class="rules-list"></div>
@@ -1197,10 +1295,11 @@ body.end-game-open {
   </div>
 </div>
 <script src="/js/header.js"></script>
-<script src="/data/pieces.js?v=20260717c"></script>
+<script src="/data/pieces.js?v=20260720u"></script>
 <script src="/data/items.js"></script>
-<script src="/js/translations.js?v=20260717c"></script>
+<script src="/js/translations.js?v=20260720u"></script>
 <script src="/js/chess-roles.js?v=20260717c"></script>
+<script src="/js/unique-abilities.js?v=20260720u"></script>
 <script src="/js/ai.js"></script>
 <script src="/js/online.js"></script>
 <script>
@@ -1263,6 +1362,7 @@ let highlightOverlays = [];
 let secondaryMode = false; // Mode fonctionnalité secondaire activé
 let secondaryModeUsed = false; // Fonctionnalité secondaire utilisée ce tour
 let secondaryModeSprite = null; // Sprite "S" pour indiquer le mode secondaire
+let gamePaused = false; // Pause locale (timers + interactions)
 let turnText;
 let moveCount = 0;
 let moveLog = [];
@@ -1466,6 +1566,14 @@ function preload() {
   this.load.image('link', 'link.png');
   this.load.image('zelda', 'zelda.png');
   this.load.image('bowser', 'bowser.png');
+  this.load.image('pikachu', 'pikachu.png');
+  this.load.image('larry-koopa', 'larry-koopa.png');
+  this.load.image('morton-koopa', 'morton-koopa-jr.png');
+  this.load.image('wendy-koopa', 'wendy-o-koopa.png');
+  this.load.image('iggy-koopa', 'iggy-koopa.png');
+  this.load.image('roy-koopa', 'roy-koopa.png');
+  this.load.image('lemmy-koopa', 'lemmy-koopa.png');
+  this.load.image('ludwig-koopa', 'ludwig-von-koopa.png');
   this.load.image('ganondorf', 'ganondorf.png');
   this.load.image('samus', 'samus.png');
   this.load.image('pit', 'pit.png');
@@ -1598,6 +1706,7 @@ function preload() {
   // Nouveaux personnages SEGA
   this.load.image('tails', 'tails.png');
   this.load.image('dr-robotnik', 'dr.robotnik.png');
+  this.load.image('eggman-robot', 'eggman-robot-placeholder.png');
   this.load.image('blaze-fielding', 'blaze-fielding.png');
   this.load.image('axel-stone', 'axel-stone.png');
   this.load.image('adam-hunter', 'adam-hunter.png');
@@ -1701,10 +1810,46 @@ function create() {
   
   // Gestion de la touche S pour la fonctionnalité secondaire
   this.input.keyboard.on('keydown-S', () => {
+    if (gamePaused) return;
     if (gameStarted && selectedPiece && selectedPiece.player === currentPlayer && !secondaryModeUsed && !itemUsedThisTurn) {
       toggleSecondaryMode();
     }
   });
+
+  // Pause locale (touche P) — désactivée en ligne
+  this.input.keyboard.on('keydown-P', () => {
+    toggleLocalPause();
+  });
+}
+
+function isLocalMatch() {
+  return typeof VGBOnline === 'undefined' || !VGBOnline.enabled;
+}
+
+function toggleLocalPause() {
+  if (!gameStarted) return;
+  if (!isLocalMatch()) {
+    showInfoMessage('La pause est réservée aux parties locales', 1800);
+    return;
+  }
+  gamePaused = !gamePaused;
+  if (gamePaused) {
+    if (aiTurnTimer) {
+      clearTimeout(aiTurnTimer);
+      aiTurnTimer = null;
+    }
+    aiThinking = false;
+    if (secondaryMode) {
+      secondaryMode = false;
+      hideSecondaryModeIndicator();
+      clearHighlights();
+    }
+    showInfoMessage('Pause — appuyez sur P pour reprendre', 0);
+  } else {
+    hideInfoMessage();
+    showInfoMessage('Reprise', 1200);
+    scheduleAiTurn();
+  }
 }
 
 function showInfoMessage(message, duration = 3000) {
@@ -1748,6 +1893,118 @@ function hideInfoMessage() {
   if (infoBackground) infoBackground.setVisible(false);
 }
 
+function getUniqueAbilityCtx() {
+  const scene = (infoText && infoText.scene) || (selectedPiece && selectedPiece.sprite && selectedPiece.sprite.scene);
+  return {
+    pieces,
+    currentPlayer,
+    moveCount,
+    roundCounter,
+    gridSize: GRID_SIZE,
+    GRID_OFFSET_X,
+    GRID_OFFSET_Y,
+    TILE_SIZE,
+    scene,
+    online: typeof VGBOnline !== 'undefined' && VGBOnline.enabled,
+    mySeat: typeof VGBOnline !== 'undefined' ? VGBOnline.seat : null,
+    showInfo: showInfoMessage,
+    getPieceAt,
+    updatePieces,
+    getPieceMovementData,
+    isBlocked: function (x, y) {
+      if (typeof VGBUniqueAbilities !== 'undefined') {
+        if (VGBUniqueAbilities.isTileBurned(x, y) || VGBUniqueAbilities.isNeutralBlock(x, y)) return true;
+      }
+      if (tetriminos.some(function (t) { return t.x === x && t.y === y; })) return true;
+      return false;
+    },
+    capturePiece: function (victim, attacker, opts) {
+      if (!victim) return;
+      playerLostPieces.push({ playerId: victim.player, piece: Object.assign({}, victim) });
+      cleanupCursorForPiece(victim);
+      removeOcarinaFromPiece(victim);
+      if (victim.sprite) victim.sprite.destroy();
+      if (victim.letterText) victim.letterText.destroy();
+      if (victim.backgroundSprite) victim.backgroundSprite.destroy();
+      pieces = pieces.filter(function (p) { return p !== victim; });
+      if (typeof VGBUniqueAbilities !== 'undefined' && attacker) {
+        VGBUniqueAbilities.onEnemyCaptured(attacker, victim, getUniqueAbilityCtx());
+      }
+      updatePieces();
+    },
+    spawnNeutralOrMinion: function (spec) {
+      const scene = getUniqueAbilityCtx().scene;
+      if (!scene) return null;
+      const textureKey = spec.textureKey || spec.type || spec.nameKey || 'koopaling-placeholder';
+      const key = scene.textures.exists(textureKey) ? textureKey : (scene.textures.exists('koopaling-placeholder') ? 'koopaling-placeholder' : 'bowser');
+      const spr = scene.add.image(
+        GRID_OFFSET_X + spec.x * TILE_SIZE + TILE_SIZE / 2,
+        GRID_OFFSET_Y + spec.y * TILE_SIZE + TILE_SIZE / 2,
+        key
+      );
+      spr.setDisplaySize(TILE_SIZE * 0.75, TILE_SIZE * 0.75);
+      spr.setDepth(1000);
+      const cat = spec.fromCatalog || {};
+      const role = spec.role || cat.role || 'pawn';
+      const roleToLetter = {
+        pawn: 'P',
+        knight: 'C',
+        bishop: 'F',
+        rook: 'T',
+        queen: 'D',
+        king: 'R',
+        unique: 'U'
+      };
+      const letter = roleToLetter[role] || 'P';
+      const letterText = scene.add.text(
+        GRID_OFFSET_X + spec.x * TILE_SIZE + TILE_SIZE * 0.5 + TILE_SIZE * 0.28,
+        GRID_OFFSET_Y + spec.y * TILE_SIZE + TILE_SIZE * 0.5 - TILE_SIZE * 0.28,
+        letter,
+        {
+          font: Math.max(10, Math.floor(TILE_SIZE * 0.25)) + 'px Arial',
+          fill: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 4
+        }
+      ).setOrigin(0.5).setDepth(2200);
+
+      const piece = {
+        x: spec.x,
+        y: spec.y,
+        player: spec.player,
+        name: spec.name || cat.name || 'Minion',
+        type: spec.type || cat.type,
+        role: role,
+        nameKey: spec.nameKey || cat.nameKey || spec.type,
+        image: spec.image || cat.image || null,
+        sprite: spr,
+        letterText: letterText,
+        cost: cat.cost || 2,
+        tier: cat.tier || 1,
+        moves: (cat.moves && cat.moves.slice()) || [[0, 1], [0, -1], [1, 0], [-1, 0]],
+        range: cat.range || 1,
+        summoned: true
+      };
+      // Fond faction
+      try {
+        const factionColors = {
+          'Nintendo': 0xff0000, 'nintendo': 0xff0000,
+          'PlayStation': 0x003791, 'playstation': 0x003791,
+          'SEGA': 0x0066cc, 'sega': 0x0066cc,
+          'Xbox': 0x107c10, 'xbox': 0x107c10
+        };
+        const fac = playerFactions[spec.player] || 'Nintendo';
+        const bg = scene.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, factionColors[fac] || 0x808080, 0.5);
+        bg.setDepth(100);
+        piece.backgroundSprite = bg;
+      } catch (e) {}
+      pieces.push(piece);
+      updatePieces();
+      return piece;
+    }
+  };
+}
+
 function toggleSecondaryMode() {
   if (!selectedPiece) return;
   
@@ -1760,18 +2017,19 @@ function toggleSecondaryMode() {
   secondaryMode = !secondaryMode;
   
   if (secondaryMode) {
-    // Activer le mode secondaire
     showSecondaryModeIndicator();
     showInfoMessage(`Mode secondaire activé pour ${selectedPiece.name}`, 2000);
     clearHighlights();
-    // Afficher les cibles possibles pour la conversion
-    showConversionTargets();
+    if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
+      const targets = VGBUniqueAbilities.getSecondaryTargets(selectedPiece, getUniqueAbilityCtx());
+      highlightPositions(targets, 0xffc107);
+    } else {
+      showConversionTargets();
+    }
   } else {
-    // Désactiver le mode secondaire
     hideSecondaryModeIndicator();
     showInfoMessage(`Mode normal activé pour ${selectedPiece.name}`, 2000);
     clearHighlights();
-    // Afficher les mouvements normaux
     const reachable = getReachablePositions(selectedPiece);
     highlightPositions(reachable);
   }
@@ -2514,12 +2772,23 @@ function startGame(scene) {
   
   gameStarted = true;
   endGameHandled = false;
+  gamePaused = false;
   currentPlayer = 0;
   moveCount = 0;
   moveLog = [];
   lastLoggedMoveCount = -1;
   timersArmed = false;
   onlineLastKnownTurn = null;
+  if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.state) {
+    VGBUniqueAbilities.state.bowserSummoned = {};
+    VGBUniqueAbilities.state.burnedTiles = [];
+    VGBUniqueAbilities.state.neutralUnits = [];
+    VGBUniqueAbilities.state.kirbyMoves = {};
+    VGBUniqueAbilities.state.linkArrowReadyAt = {};
+    VGBUniqueAbilities.state.pikachuReadyAt = {};
+    VGBUniqueAbilities.state.joannaCloak = null;
+    VGBUniqueAbilities.state.ulalaControl = null;
+  }
   aiThinking = false;
   if (aiTurnTimer) {
     clearTimeout(aiTurnTimer);
@@ -3034,10 +3303,10 @@ function updatePieces() {
       pp.cursorSprite.y = GRID_OFFSET_Y + pp.piece.y * TILE_SIZE + TILE_SIZE/2 - 20;
     }
   }
-  // Effet étoile: afficher un overlay dégradé sous les pièces protégées
-  if (starInvincible && starInvincible.playerId >= 0 && scene) {
+  // Effet étoile: afficher un overlay dégradé sous toutes les pièces
+  if (isStarActive() && scene) {
     updateStarOverlays(scene);
-      } else {
+  } else {
     clearStarOverlays();
     for (const p of pieces) if (p.sprite) { p.sprite.clearTint && p.sprite.clearTint(); p.sprite.setAlpha && p.sprite.setAlpha(1); }
   }
@@ -3144,8 +3413,16 @@ function ensureRainbowTileTexture(scene) {
   return key;
 }
 
+function isStarActive() {
+  return !!(starInvincible && starInvincible.untilPlayerTurn && starInvincible.playerId >= 0);
+}
+
+function isPieceStarProtected(/* piece */) {
+  return isStarActive();
+}
+
 function updateStarOverlays(scene) {
-  if (!starInvincible || starInvincible.playerId < 0) { clearStarOverlays(); return; }
+  if (!isStarActive()) { clearStarOverlays(); return; }
   const key = ensureRainbowTileTexture(scene);
   const desired = new Set();
   
@@ -3154,27 +3431,25 @@ function updateStarOverlays(scene) {
   const hue = (starPhase * 50) % 360;
   
   for (const p of pieces) {
-    if (p.player === starInvincible.playerId) {
-      const k = p.x + ',' + p.y;
-      desired.add(k);
-      if (!starTileOverlays.has(k)) {
-        const img = scene.add.image(
-          GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2,
-          GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2,
-          key
-        );
-        img.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
-        img.setDepth(900); // sous la pièce, au-dessus de la case
-        img.setAlpha(0.85);
-        starTileOverlays.set(k, img);
-      } else {
-        const img = starTileOverlays.get(k);
-        img.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
-        img.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
-        img.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
-        // Appliquer l'effet de couleur arc-en-ciel
-        img.setTint(Phaser.Display.Color.HSVToRGB(hue/360, 0.8, 1).color);
-      }
+    const k = p.x + ',' + p.y;
+    desired.add(k);
+    if (!starTileOverlays.has(k)) {
+      const img = scene.add.image(
+        GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2,
+        GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2,
+        key
+      );
+      img.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
+      img.setDepth(900); // sous la pièce, au-dessus de la case
+      img.setAlpha(0.85);
+      starTileOverlays.set(k, img);
+    } else {
+      const img = starTileOverlays.get(k);
+      img.x = GRID_OFFSET_X + p.x*TILE_SIZE + TILE_SIZE/2;
+      img.y = GRID_OFFSET_Y + p.y*TILE_SIZE + TILE_SIZE/2;
+      img.setDisplaySize(TILE_SIZE-2, TILE_SIZE-2);
+      // Appliquer l'effet de couleur arc-en-ciel
+      img.setTint(Phaser.Display.Color.HSVToRGB(hue/360, 0.8, 1).color);
     }
   }
   // supprimer overlays non désirés
@@ -3228,6 +3503,11 @@ function handleClick(scene, pos) {
     return;
   }
 
+  if (gamePaused && !window.__vgbAiMove) {
+    showInfoMessage('Pause — appuyez sur P pour reprendre', 1500);
+    return;
+  }
+
   // Pendant le tour de l'IA, ignorer les clics humains
   if (aiEnabled && currentPlayer === aiSeat && !window.__vgbAiMove) {
     return;
@@ -3250,11 +3530,35 @@ function handleClick(scene, pos) {
   
   // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion
   if (secondaryMode && selectedPiece && clickedPiece && clickedPiece.player !== selectedPiece.player) {
+    if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
+      const ok = VGBUniqueAbilities.applySecondary(selectedPiece, pos, getUniqueAbilityCtx());
+      if (ok) {
+        secondaryModeUsed = true;
+        secondaryMode = false;
+        hideSecondaryModeIndicator();
+        clearHighlights();
+        endTurnAfterConversion();
+        return;
+      }
+    }
     const targets = getConversionTargets(selectedPiece);
     const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
     
     if (isTarget) {
       attemptConversion(clickedPiece);
+      return;
+    }
+  }
+
+  // Mode secondaire Unique : clic sur case (brûlure, invoc, etc.)
+  if (secondaryMode && selectedPiece && typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
+    const ok = VGBUniqueAbilities.applySecondary(selectedPiece, pos, getUniqueAbilityCtx());
+    if (ok) {
+      secondaryModeUsed = true;
+      secondaryMode = false;
+      hideSecondaryModeIndicator();
+      clearHighlights();
+      endTurnAfterConversion();
       return;
     }
   }
@@ -3489,15 +3793,22 @@ function handleClick(scene, pos) {
     // Désélectionner toute pièce adverse
     selectedEnemyPiece = null;
     
-    // Si c'est la même pièce déjà sélectionnée, la désélectionner
+    // Si c'est la même pièce déjà sélectionnée : double-clic Joanna (cloak) ou désélection
     if (selectedPiece && selectedPiece === clickedPiece) {
+      if (typeof VGBUniqueAbilities !== 'undefined' &&
+          VGBUniqueAbilities.handlePieceReselect(clickedPiece, getUniqueAbilityCtx())) {
+        return;
+      }
       selectedPiece = null;
       clearHighlights();
       return;
     }
     
-    // Sinon, sélectionner la nouvelle pièce
+    // Sinon, sélectionner la nouvelle pièce (et mémoriser pour double-clic)
     selectedPiece = clickedPiece;
+    if (typeof VGBUniqueAbilities !== 'undefined') {
+      VGBUniqueAbilities.handlePieceReselect(clickedPiece, getUniqueAbilityCtx());
+    }
     clearHighlights();
     const reachable = getReachablePositions(selectedPiece);
     highlightPositions(reachable);
@@ -3565,13 +3876,27 @@ function handleClick(scene, pos) {
       const target = getPieceAt(pos);
       if (target && target.player !== selectedPiece.player) {
         // Protection étoile: impossible de capturer si la cible est protégée
-        if (starInvincible && starInvincible.playerId === target.player && starInvincible.untilPlayerTurn) {
+        if (isPieceStarProtected(target)) {
           // annuler la capture
           return;
         }
+        // Master Chief: bouclier d'énergie
+        if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.tryAbsorbCapture(target)) {
+          showInfoMessage('Bouclier d\'énergie : capture absorbée !', 2000);
+          clearHighlights();
+          selectedPiece = null;
+          endTurnAfterConversion();
+          return;
+        }
+        // Link: 20% de bloquer
+        if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.tryBlockCapture(target, getUniqueAbilityCtx())) {
+          clearHighlights();
+          selectedPiece = null;
+          endTurnAfterConversion();
+          return;
+        }
         const capturedKing = target.type === 'king';
-        
-        // Vérifier si la pièce cible a un cœur
+        const attackerForAbility = selectedPiece;
         const hasHeart = heartPieces.some(hp => hp.piece === target);
         if (hasHeart) {
           // La pièce a un cœur : elle reste en place mais perd son cœur
@@ -3618,6 +3943,9 @@ function handleClick(scene, pos) {
         if (target.letterText) target.letterText.destroy();
         if (target.backgroundSprite) target.backgroundSprite.destroy();
         pieces = pieces.filter(p => p !== target);
+        if (typeof VGBUniqueAbilities !== 'undefined' && attackerForAbility) {
+          VGBUniqueAbilities.onEnemyCaptured(attackerForAbility, target, getUniqueAbilityCtx());
+        }
         }
         // Vérifier si la pièce trébuche sur une banane
         if (checkBananaTrip(selectedPiece, pos)) {
@@ -3824,6 +4152,11 @@ function getReachablePositions(piece) {
       p.x >= b.startX && p.x <= b.endX && p.y >= b.startY && p.y <= b.endY
     );
   }
+  if (typeof VGBUniqueAbilities !== 'undefined') {
+    positions = positions.filter(function (p) {
+      return !VGBUniqueAbilities.isTileBurned(p.x, p.y) && !VGBUniqueAbilities.isNeutralBlock(p.x, p.y);
+    });
+  }
   return positions;
 }
 
@@ -3875,14 +4208,14 @@ function giveItemToPlayer(playerId, itemKey, chargeTurns) {
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(-100, -100, textureKey).setDisplaySize(24, 24).setVisible(false);
   const entry = { sprite: icon, item: itemKey };
-  if (itemKey === 'lightning') entry.chargeTurns = chargeTurns || 5;
+  if (itemKey === 'lightning') entry.chargeTurns = (typeof chargeTurns === 'number' ? chargeTurns : 4);
   playerItemIcons[playerId].push(entry);
   syncAllHtmlHudItems();
   updatePieces();
 }
 
 function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
-  if (!gameStarted) return;
+  if (!gameStarted || gamePaused) return;
   if (playerId !== currentPlayer) return; // utiliser à son tour
   if (aiEnabled && currentPlayer === aiSeat && !window.__vgbAiMove) return;
   if (itemUsedThisTurn) return; // un seul objet par tour
@@ -3950,7 +4283,7 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
     }
   }
   if (icon.item === 'star') {
-    // Activer invincibilité jusqu'à ce que le joueur rejoue
+    // Invincibilité de toutes les pièces jusqu'au prochain tour du joueur qui l'utilise
     starInvincible = { playerId, untilRound: -1, untilPlayerTurn: true };
     startStarBlink(playerId);
     try {
@@ -4058,28 +4391,49 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
     highlightPieces(pieces, 0xffb3ba); // rose pâle
   }
   if (icon.item === 'sandglass') {
-    // Utiliser la sablière du temps: réduire le temps des adversaires selon la taille du plateau
+    // Sablier : uniquement en 9×9, réduit le chrono de l'adversaire
+    if (GRID_SIZE !== 9) {
+      showInfoMessage('Le Sablier ne fonctionne qu\'en plateau 9×9', 2200);
+      return;
+    }
     if (timerEnabled && playerTimersMs.length > 0) {
-      // Calculer le temps à soustraire (plateau 9×9)
       const timeToSubtract = 60000; // 1 minute
       const timeText = "1 minute";
       
       let affectedPlayers = 0;
       for (let i = 0; i < playerTimersMs.length; i++) {
         if (i !== playerId) {
-          // Réduire le temps de l'adversaire selon la taille du plateau
           playerTimersMs[i] = Math.max(0, playerTimersMs[i] - timeToSubtract);
           affectedPlayers++;
+          if (timerTexts[i]) timerTexts[i].setText(formatMs(playerTimersMs[i]));
+          const hudEl = document.getElementById('hud-timer-' + i);
+          if (hudEl) {
+            hudEl.textContent = formatMs(playerTimersMs[i]);
+            hudEl.classList.toggle('urgent', playerTimersMs[i] < 30000);
+          }
         }
       }
-      const plural = affectedPlayers > 1 ? 's' : '';
-      showInfoMessage(`Sablière du Temps ! -${timeText} pour ${affectedPlayers} adversaire${plural}`, 3000);
+      showInfoMessage(`Sablier ! -${timeText} pour votre adversaire`, 3000);
       // Consommer l'item
       if (playerItemIcons[playerId] && playerItemIcons[playerId].length) {
         const used = playerItemIcons[playerId].splice(idx, 1)[0];
         if (used && used.sprite) used.sprite.destroy();
       }
+      itemUsedThisTurn = true;
       updatePieces();
+      // Fin de tour
+      moveCount++;
+      if (moveCount % 5 === 0) rotateAds();
+      updateAdInfo();
+      if (shouldIncrementRoundCounter()) { roundCounter++; }
+      currentPlayer = getNextActivePlayer();
+      itemUsedThisTurn = false;
+      secondaryMode = false;
+      secondaryModeUsed = false;
+      hideSecondaryModeIndicator();
+      decrementLightningCharges();
+      maybeRespawnCrate(infoText.scene);
+      updateTurnUI();
     } else {
       showInfoMessage(`${t('player')} ${playerId+1}: ${t('timer')} ${t('not-activated')}`, 2000);
     }
@@ -4793,20 +5147,23 @@ function getOriginalMoves(piece) {
 }
 
 function getPieceMovementData(piece) {
+  let base = null;
   if (typeof VGBChess !== 'undefined') {
-    const m = VGBChess.getChessMovement(piece);
-    return m;
-  }
-  const player = players[piece.player];
-  const faction = player ? player.faction : 'nintendo';
+    base = VGBChess.getChessMovement(piece);
+  } else {
+    const player = players[piece.player];
+    const faction = player ? player.faction : 'nintendo';
   
-  if (piece.type === 'king' || piece.role === 'king') {
-    return kings[normalizeFaction(faction)] || { moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 };
+    if (piece.type === 'king' || piece.role === 'king') {
+      base = kings[normalizeFaction(faction)] || { moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 1 };
+    } else if (piece.moves && piece.range) {
+      base = { moves: piece.moves, range: piece.range };
+    }
   }
-  if (piece.moves && piece.range) {
-    return { moves: piece.moves, range: piece.range };
+  if (typeof VGBUniqueAbilities !== 'undefined') {
+    base = VGBUniqueAbilities.modifyMovementData(piece, base);
   }
-  return null;
+  return base;
 }
 
 function getPawnMoves(piece) {
@@ -4835,7 +5192,7 @@ function getPawnMoves(piece) {
     if (isBlocked(cx, cy)) continue;
     const target = getPieceAt({ x: cx, y: cy });
     if (target && target.player !== piece.player) {
-      if (!(starInvincible && starInvincible.playerId === target.player && starInvincible.untilPlayerTurn)) {
+      if (!isPieceStarProtected(target)) {
         moves.push({ x: cx, y: cy });
       }
     }
@@ -5088,7 +5445,7 @@ function detonateBombAt(pos) {
     const victim = getPieceAt({ x: tx, y: ty });
     if (victim) {
       // Vérifier si la pièce est protégée par l'étoile
-      if (starInvincible && starInvincible.playerId === victim.player && starInvincible.untilPlayerTurn) {
+      if (isPieceStarProtected(victim)) {
         continue; // Pièce immunisée, passer à la suivante
       }
       const wasKing = victim.type === 'king';
@@ -5147,7 +5504,11 @@ function rollRandomItem() {
 }
 
 function rollDeterministicItem(seedA, seedB, seedC) {
-  const entries = Object.entries(ITEM_WEIGHTS);
+  let entries = Object.entries(ITEM_WEIGHTS);
+  // Sablier réservé au plateau 9×9
+  if (GRID_SIZE !== 9) {
+    entries = entries.filter(([key]) => key !== 'sandglass');
+  }
   const total = entries.reduce((s, [, w]) => s + (w || 0), 0);
   if (total <= 0) return 'bobomb';
   let h = (((seedA * 1103515245) + 12345) >>> 0);
@@ -5236,6 +5597,12 @@ function checkStarEffect() {
 
 function updateTurnUI() {
   const mid = getKingCenterIndex(GRID_SIZE);
+
+  // Capacités Unique en début de tour
+  if (typeof VGBUniqueAbilities !== 'undefined') {
+    VGBUniqueAbilities.onTurnStart(currentPlayer, getUniqueAbilityCtx());
+    VGBUniqueAbilities.applyCloakVisibility(getUniqueAbilityCtx());
+  }
 
   // Le chrono ne part qu'après le premier coup
   if (moveCount > 0) armGameTimers();
@@ -5351,7 +5718,7 @@ function buildAiApi(onlyPiece) {
     getPieceAt: function (pos) { return getPieceAt(pos); },
     hasHeart: function (p) { return heartPieces.some(function (hp) { return hp.piece === p; }); },
     isStarProtected: function (p) {
-      return !!(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn);
+      return isPieceStarProtected(p);
     }
   };
 }
@@ -5394,7 +5761,7 @@ function executeAiMove() {
 }
 
 function scheduleAiTurn() {
-  if (!aiEnabled || !gameStarted) return;
+  if (!aiEnabled || !gameStarted || gamePaused) return;
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) return;
   if (currentPlayer !== aiSeat) return;
   if (eliminationOrder.includes(aiSeat)) return;
@@ -5453,8 +5820,37 @@ function isWhiteSquare(x, y) {
 }
 
 function applyLightningKill() {
-  // Supprimer toutes les pièces sur cases blanches (y compris celles du lanceur)
-  const victims = pieces.filter(p => isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn));
+  // 8 cases blanches au hasard (style Mario Kart)
+  const whiteSquares = [];
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (isWhiteSquare(x, y)) whiteSquares.push({ x, y });
+    }
+  }
+  for (let i = whiteSquares.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = whiteSquares[i];
+    whiteSquares[i] = whiteSquares[j];
+    whiteSquares[j] = tmp;
+  }
+  const struck = whiteSquares.slice(0, Math.min(8, whiteSquares.length));
+  const struckSet = new Set(struck.map(p => p.x + ',' + p.y));
+
+  const scene = infoText && infoText.scene;
+  if (scene) {
+    for (const pos of struck) {
+      const bolt = scene.add.rectangle(
+        GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE / 2,
+        GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE - 4,
+        TILE_SIZE - 4,
+        0xffff66
+      ).setAlpha(0.55).setDepth(2800);
+      scene.tweens.add({ targets: bolt, alpha: 0, duration: 400, onComplete: () => bolt.destroy() });
+    }
+  }
+
+  const victims = pieces.filter(p => struckSet.has(p.x + ',' + p.y) && !isPieceStarProtected(p));
   let kingDied = false;
   for (const v of victims) {
     // Enregistrer la pièce perdue pour la queue de phoenix
@@ -5463,6 +5859,7 @@ function applyLightningKill() {
     cleanupCursorForPiece(v);
     // Nettoyer l'ocarina si la pièce en avait un
     removeOcarinaFromPiece(v);
+    removeHeartFromPiece(v);
     if (v && v.sprite) v.sprite.destroy();
     if (v && v.letterText) v.letterText.destroy();
     if (v && v.backgroundSprite) v.backgroundSprite.destroy();
@@ -5471,8 +5868,7 @@ function applyLightningKill() {
       if (!eliminationOrder.includes(v.player)) eliminationOrder.push(v.player);
     }
   }
-  // Conserver les pièces protégées par l'étoile même si elles sont sur case blanche
-  pieces = pieces.filter(p => !(isWhiteSquare(p.x, p.y) && !(starInvincible && starInvincible.playerId === p.player && starInvincible.untilPlayerTurn)));
+  pieces = pieces.filter(p => !(struckSet.has(p.x + ',' + p.y) && !isPieceStarProtected(p)));
   updatePieces();
   if (kingDied) {
     const remainingKings = pieces.filter(pp => pp.type === 'king').length;
@@ -5524,7 +5920,7 @@ function formatMs(ms) {
 }
 
 function tickTimer(scene) {
-  if (!gameStarted || !timerEnabled || !timersArmed) return;
+  if (!gameStarted || !timerEnabled || !timersArmed || gamePaused) return;
   if (players.length === 0) return;
   const nowIdx = currentPlayer;
   const syncHudTimer = (i) => {
@@ -6791,8 +7187,6 @@ function startGameFromSelection() {
   }
   const gameContainer = document.querySelector('.game-container');
   if (gameContainer) gameContainer.classList.add('game-active');
-  const tagline = document.querySelector('.tagline');
-  if (tagline) tagline.style.display = 'none';
   
   characterSelectionMode = false;
   createPiecesFromSelection();
@@ -6840,8 +7234,6 @@ function applyOnlineDraftAndStart(state) {
   if (gameSetup) gameSetup.style.display = 'none';
   const gameContainer = document.querySelector('.game-container');
   if (gameContainer) gameContainer.classList.add('game-active');
-  const tagline = document.querySelector('.tagline');
-  if (tagline) tagline.style.display = 'none';
 
   characterSelectionMode = false;
   createPiecesFromSelection();

@@ -42,7 +42,7 @@ const itemsData = [
     description: "star-desc",
     details: "star-details",
     image: "public/images/items/star.png",
-    category: "révélation"
+    category: "invincibilité"
   },
   {
     name: "Tetrimino",
