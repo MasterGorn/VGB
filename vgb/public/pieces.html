@@ -28,6 +28,25 @@
 .piece-image { width: 100%; max-width: 140px; height: auto; border-radius: 8px; margin-bottom: 10px; }
 .piece-name { font-size: 15px; font-weight: bold; margin-bottom: 6px; color: var(--text-primary); }
 .piece-description { color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
+.piece-ability {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  color: #ffe082;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.piece-ability-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ffd700;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
 @media (max-width: 1100px) {
   .pieces-grid { grid-template-columns: repeat(4, 1fr); }
 }
@@ -156,7 +175,7 @@
 
 <script src="/js/translations.js?v=20260717g"></script>
 <script src="/js/header.js"></script>
-<script src="/data/pieces.js?v=20260717g"></script>
+<script src="/data/pieces.js?v=20260720u"></script>
 <script src="/js/chess-roles.js?v=20260717g"></script>
 <script>
 // Les données des pièces sont maintenant importées depuis pieces.js
@@ -221,7 +240,14 @@ function displayPieces(pieces) {
     const descriptionKey = piece.descriptionKey || piece.name.toLowerCase().replace(/\s+/g, '-') + '-desc';
     
     const translatedName = piece.nameKey ? t(nameKey) : piece.name;
-    const translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
+    let translatedDescription = piece.descriptionKey ? t(descriptionKey) : piece.description;
+    const abilityKey = piece.abilityKey || (piece.nameKey ? piece.nameKey + '-ability' : null);
+    let abilityText = piece.abilityDesc || (abilityKey ? t(abilityKey) : '');
+    if (abilityText && abilityText === abilityKey) abilityText = piece.abilityDesc || '';
+    // Éviter de doubler la capacité si déjà dans la description traduite
+    if (abilityText && translatedDescription && translatedDescription.indexOf(abilityText) >= 0) {
+      translatedDescription = translatedDescription.replace(abilityText, '').trim();
+    }
     const roleLabel = getRoleLabel(piece.role);
     const roleIcon = getRoleIcon(piece.role);
     
@@ -229,6 +255,7 @@ function displayPieces(pieces) {
       <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
       <div class="piece-name">${translatedName}</div>
       <div class="piece-description">${translatedDescription}</div>
+      ${abilityText && piece.role === 'unique' ? `<div class="piece-ability"><span class="piece-ability-label">Capacité unique</span>${abilityText}</div>` : ''}
       <div style="margin-top: 12px;">
         <span class="badge ${piece.faction.toLowerCase()}" data-t="${piece.faction.toLowerCase()}">${piece.faction}</span>
         <span class="badge">${t(piece.universeKey || piece.universe)}</span>
