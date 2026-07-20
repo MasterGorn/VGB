@@ -69,6 +69,7 @@ Le script `scripts/vercel-postbuild.mjs` contourne le bug Next 16 + Root Directo
 | `POST /api/elo` | MAJ Elo après partie |
 | `POST /api/match` | File d’attente / matchmaking (`enqueue`, `cancel`, `status`) |
 | `POST /api/game` | Draft, sync état, fin de partie (`get`, `setDraft`, `pushState`, `finish`) |
+| `GET /api/history` | 5 derniers résultats (W/L/D) du joueur connecté |
 | `GET /api/health` | Santé |
 
 ## Notes

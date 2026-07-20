@@ -14,6 +14,11 @@ const userSchema = new Schema(
     wins: { type: Number, default: 0 },
     losses: { type: Number, default: 0 },
     draws: { type: Number, default: 0 },
+    /** Derniers résultats : 'W' | 'L' | 'D' (plus récent en premier), max 10 */
+    recentResults: {
+      type: [{ type: String, enum: ["W", "L", "D"] }],
+      default: [],
+    },
   },
   { timestamps: true }
 );
@@ -28,6 +33,7 @@ export type UserDoc = HydratedDocument<{
   wins: number;
   losses: number;
   draws: number;
+  recentResults: Array<"W" | "L" | "D">;
   createdAt?: Date;
   updatedAt?: Date;
 }>;
@@ -46,5 +52,15 @@ export function publicUser(user: UserDoc) {
     wins: user.wins,
     losses: user.losses,
     draws: user.draws,
+    recentResults: Array.isArray(user.recentResults) ? user.recentResults.slice(0, 10) : [],
   };
+}
+
+/** Ajoute un résultat en tête (max 10). */
+export function pushRecentResult(
+  user: UserDoc,
+  result: "W" | "L" | "D"
+) {
+  const next = [result, ...(user.recentResults || [])].slice(0, 10);
+  user.recentResults = next as UserDoc["recentResults"];
 }

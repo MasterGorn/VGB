@@ -56,6 +56,51 @@
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
+
+  /* Boutons (play, replay, compte…) */
+  --accent-color: #e67e22;
+}
+
+.setup-btn {
+  background: linear-gradient(135deg, var(--accent-color, #e67e22), #f1c40f);
+  color: #111;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-medium);
+  min-height: 44px;
+  font-family: inherit;
+}
+
+.setup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-heavy);
+}
+
+.setup-btn:active {
+  transform: translateY(0);
+}
+
+.setup-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+.setup-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: none;
+}
+
+.setup-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ========================================
@@ -68,6 +113,10 @@
 body {
   margin: 0;
   background: var(--primary-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+  background-color: #004e92; /* fallback sous une éventuelle image de fond */
   font: var(--font-size-base) Arial, sans-serif;
   color: var(--text-primary);
   min-height: 100vh;

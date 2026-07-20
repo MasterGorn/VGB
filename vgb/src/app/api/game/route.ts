@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { eloUpdate, requireUser } from "@/lib/session";
-import User, { publicUser } from "@/models/User";
+import User, { publicUser, pushRecentResult } from "@/models/User";
 import Match from "@/models/Match";
+import Replay from "@/models/Replay";
 import { jsonError, seatOf } from "@/lib/match";
+import {
+  opponentNameFromPayload,
+  resultForSeat,
+  saveAutoReplay,
+  saveAutoReplayForMatchPlayers,
+} from "@/lib/replays";
+import { mergeMoveLogIntoPayload } from "@/models/Replay";
 
 export const dynamic = "force-dynamic";
 
@@ -124,8 +132,20 @@ export async function POST(req: Request) {
     }
 
     if (action === "finish") {
+      const replayPayload = body.replayPayload;
+      const moveLog = Array.isArray(body.moveLog) ? body.moveLog : null;
+
       if (match.status === "finished") {
-        return NextResponse.json({ ok: true, alreadyFinished: true });
+        const existingReplay = await Replay.findOne({
+          userId: user._id,
+          type: "auto",
+          matchId: match.matchKey,
+        });
+        return NextResponse.json({
+          ok: true,
+          alreadyFinished: true,
+          savedReplay: existingReplay ? String(existingReplay._id) : null,
+        });
       }
 
       const winnerSeat = body.winnerSeat;
@@ -143,6 +163,11 @@ export async function POST(req: Request) {
       } else if (winnerSeat === 1 || winnerSeat === "1") {
         score1 = 0;
         winnerId = match.player2Id;
+      } else {
+        return NextResponse.json(
+          { ok: false, error: "Résultat de partie invalide (pas de nul possible)" },
+          { status: 400 }
+        );
       }
 
       const [elo1, elo2] = eloUpdate(p1.elo, p2.elo, score1);
@@ -151,12 +176,13 @@ export async function POST(req: Request) {
       if (score1 === 1) {
         p1.wins += 1;
         p2.losses += 1;
-      } else if (score1 === 0) {
+        pushRecentResult(p1, "W");
+        pushRecentResult(p2, "L");
+      } else {
         p1.losses += 1;
         p2.wins += 1;
-      } else {
-        p1.draws += 1;
-        p2.draws += 1;
+        pushRecentResult(p1, "L");
+        pushRecentResult(p2, "W");
       }
       await p1.save();
       await p2.save();
@@ -173,13 +199,33 @@ export async function POST(req: Request) {
       match.state = nextState;
       await match.save();
 
+      let savedReplay: string | null = null;
+      if (replayPayload && Array.isArray(moveLog) && moveLog.length) {
+        try {
+          const payload = mergeMoveLogIntoPayload(replayPayload, moveLog);
+          await saveAutoReplayForMatchPlayers(match, payload, winnerSeat);
+          const mine = await Replay.findOne({
+            userId: user._id,
+            type: "auto",
+            matchId: match.matchKey,
+          });
+          savedReplay = mine ? String(mine._id) : null;
+        } catch (e) {
+          console.warn("Auto replay save failed", e);
+        }
+      }
+
       return NextResponse.json({
         ok: true,
         elo: {
-          player1: { id: String(p1._id), elo: elo1 },
-          player2: { id: String(p2._id), elo: elo2 },
+          player1: { id: String(p1._id), elo: elo1, recentResults: p1.recentResults },
+          player2: { id: String(p2._id), elo: elo2, recentResults: p2.recentResults },
         },
         winnerId: winnerId ? String(winnerId) : null,
+        you: publicUser(
+          String(user._id) === String(p1._id) ? p1 : p2
+        ),
+        savedReplay,
       });
     }
 

@@ -157,7 +157,18 @@
           wins: data.user.wins,
           losses: data.user.losses,
           draws: data.user.draws,
+          recentResults: [],
         };
+        try {
+          const hist = await this.request("/api/history");
+          if (hist && hist.user) {
+            this.user.elo = hist.user.elo;
+            this.user.wins = hist.user.wins;
+            this.user.losses = hist.user.losses;
+            this.user.draws = hist.user.draws;
+            this.user.recentResults = hist.results || hist.user.recentResults || [];
+          }
+        } catch (e) {}
         this.saveSession();
         return this.user;
       }
@@ -167,6 +178,13 @@
       this.user = data.user;
       this.saveSession();
       return data.user;
+    },
+
+    async fetchHistory() {
+      if (this.mode === "next") {
+        return this.request("/api/history");
+      }
+      return { ok: true, results: (this.user && this.user.recentResults) || [], slots: [] };
     },
 
     async logout() {
@@ -260,6 +278,62 @@
       return this.request(API.deck, { action: "delete", id });
     },
 
+    async listReplays() {
+      if (this.mode !== "next") {
+        return { auto: [], favorites: [], limits: { auto: 5, favorite: 10 } };
+      }
+      return this.request("/api/replays");
+    },
+
+    async getReplay(id) {
+      if (this.mode !== "next") throw new Error("Replays disponibles uniquement en mode en ligne");
+      const data = await this.request("/api/replays?id=" + encodeURIComponent(id));
+      return data.replay;
+    },
+
+    async saveAutoReplay(payload, meta, matchId) {
+      if (this.mode !== "next" || !this.user) return null;
+      const body = {
+        type: "auto",
+        payload,
+        meta: meta || undefined,
+        matchId: matchId || undefined,
+      };
+      if (payload && Array.isArray(payload.moveLog) && payload.moveLog.length) {
+        body.moveLog = payload.moveLog;
+      }
+      const data = await this.request("/api/replays", body);
+      return data.replay;
+    },
+
+    async saveFavoriteReplay(payload, options) {
+      if (this.mode !== "next" || !this.user) {
+        throw new Error("Connectez-vous pour sauvegarder un replay favori");
+      }
+      const body = { type: "favorite" };
+      if (options && options.fromReplayId) {
+        body.fromReplayId = options.fromReplayId;
+        if (options.name) body.name = options.name;
+      } else {
+        body.payload = payload;
+        if (options && options.meta) body.meta = options.meta;
+        if (options && options.name) body.name = options.name;
+      }
+      const data = await this.request("/api/replays", body);
+      return data.replay;
+    },
+
+    async renameReplay(id, name) {
+      if (this.mode !== "next") throw new Error("Replays indisponibles");
+      const data = await this.request("/api/replays/" + id, { name }, "PATCH");
+      return data.replay;
+    },
+
+    async deleteReplay(id) {
+      if (this.mode !== "next") throw new Error("Replays indisponibles");
+      return this.request("/api/replays/" + id, null, "DELETE");
+    },
+
     async setDefaultDeck(id) {
       if (this.mode === "next") {
         return this.request("/api/decks/" + id, { isDefault: true }, "PATCH");
@@ -310,6 +384,36 @@
       }
       const API = phpEndpoints();
       return this.request(API.match, { action: "cancel" });
+    },
+
+    async createPrivate(targetUserId) {
+      if (this.mode !== "next") {
+        throw new Error("Parties privées disponibles uniquement avec l'API Next.js");
+      }
+      const data = await this.request("/api/match", {
+        action: "createPrivate",
+        targetUserId: targetUserId || undefined,
+      });
+      if (data.matched) this.onMatched(data.match);
+      return data;
+    },
+
+    async joinPrivate({ roomCode, hostId }) {
+      if (this.mode !== "next") {
+        throw new Error("Parties privées disponibles uniquement avec l'API Next.js");
+      }
+      const data = await this.request("/api/match", {
+        action: "joinPrivate",
+        roomCode: roomCode || undefined,
+        hostId: hostId || undefined,
+      });
+      if (data.matched) this.onMatched(data.match);
+      return data;
+    },
+
+    async cancelPrivate() {
+      if (this.mode !== "next") return { ok: true };
+      return this.request("/api/match", { action: "cancelPrivate" });
     },
 
     startQueuePoll(gridSize, onUpdate) {
@@ -385,20 +489,32 @@
       return data;
     },
 
-    async finish(winnerSeat) {
+    async finish(winnerSeat, extra) {
       if (!this.match) return;
+      const moveLog = extra && extra.moveLog ? extra.moveLog : undefined;
+      let replayPayload = extra && extra.replayPayload ? extra.replayPayload : undefined;
+      if (replayPayload && moveLog && (!Array.isArray(replayPayload.moveLog) || !replayPayload.moveLog.length)) {
+        replayPayload = Object.assign({}, replayPayload, { moveLog: moveLog.slice() });
+      }
       const payload = {
         action: "finish",
         matchId: this.match.matchId,
         winnerSeat,
+        moveLog,
+        replayPayload,
       };
       const data =
         this.mode === "next"
           ? await this.request("/api/game", payload)
           : await this.request(phpEndpoints().game, payload);
-      try {
-        await this.refreshMe();
-      } catch (e) {}
+      if (data && data.you) {
+        this.user = Object.assign({}, this.user || {}, data.you);
+        this.saveSession();
+      } else {
+        try {
+          await this.refreshMe();
+        } catch (e) {}
+      }
       return data;
     },
 

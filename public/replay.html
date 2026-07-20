@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Video Games Battle — Lecteur de replay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+.replay-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 120px 16px 48px;
+}
+.replay-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--shadow-light);
+}
+.replay-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.replay-toolbar .setup-btn {
+  min-width: 120px;
+  width: auto;
+  max-width: none;
+}
+.replay-meta {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+#replay-board {
+  display: block;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  border-radius: 8px;
+  background: #302e2b;
+}
+.replay-step {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 10px;
+}
+.replay-upload {
+  margin-bottom: 16px;
+}
+.replay-upload input[type="file"] {
+  width: 100%;
+  color: var(--text-secondary);
+}
+.replay-ranking {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.replay-ranking li {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+}
+.replay-hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 540px;
+  margin: 14px auto 0;
+}
+.replay-hud-player {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+}
+.replay-hud-player.active-turn {
+  border-color: rgba(39, 174, 96, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(39, 174, 96, 0.35);
+}
+.replay-hud-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.replay-hud-items {
+  display: flex;
+  gap: 8px;
+  min-height: 40px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.replay-hud-item {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.replay-hud-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.replay-hud-item .hud-charge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #fff;
+  color: #111;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+}
+.replay-hud-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.replay-actions-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 14px;
+}
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<script src="/js/header.js"></script>
+<script src="/js/online.js?v=20260720b"></script>
+<script>VGBHeader.injectHeader('replay');</script>
+
+<main class="replay-page">
+  <h1 style="margin:0 0 8px;color:var(--text-primary);">Lecteur de replay</h1>
+  <p style="color:var(--text-secondary);margin:0 0 20px;">
+    Chargez un fichier <code>.json</code> exporté depuis une partie, ou ouvrez un replay depuis l’écran de fin de partie.
+  </p>
+
+  <div class="replay-card">
+    <div class="replay-upload">
+      <label for="replay-file" style="display:block;margin-bottom:6px;color:var(--text-secondary);font-size:14px;">Fichier replay</label>
+      <input id="replay-file" type="file" accept="application/json,.json" />
+    </div>
+
+    <p class="replay-meta" id="replay-meta">Aucun replay chargé.</p>
+    <ul class="replay-ranking" id="replay-ranking" hidden></ul>
+
+    <canvas id="replay-board" width="540" height="540" aria-label="Plateau replay"></canvas>
+    <div class="replay-hud" id="replay-hud" hidden></div>
+
+    <div class="replay-toolbar" style="margin-top:16px;justify-content:center;">
+      <button type="button" class="setup-btn secondary" id="btn-first">⏮ Début</button>
+      <button type="button" class="setup-btn secondary" id="btn-prev">◀ Préc.</button>
+      <button type="button" class="setup-btn" id="btn-play">▶ Lecture</button>
+      <button type="button" class="setup-btn secondary" id="btn-next">Suiv. ▶</button>
+      <button type="button" class="setup-btn secondary" id="btn-last">Fin ⏭</button>
+    </div>
+    <div class="replay-actions-bar" id="replay-save-bar" hidden>
+      <button type="button" class="setup-btn" id="btn-save-favorite">★ Ajouter aux favoris</button>
+      <a href="/login.html" class="setup-btn secondary" id="btn-account-link" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Mon compte</a>
+    </div>
+    <p class="replay-step" id="replay-step"></p>
+  </div>
+</main>
+
+<script>
+(function () {
+  VGBOnline.loadSession();
+  const canvas = document.getElementById('replay-board');
+  const ctx = canvas.getContext('2d');
+  const metaEl = document.getElementById('replay-meta');
+  const stepEl = document.getElementById('replay-step');
+  const rankingEl = document.getElementById('replay-ranking');
+  const hudEl = document.getElementById('replay-hud');
+  const fileInput = document.getElementById('replay-file');
+  const saveBar = document.getElementById('replay-save-bar');
+  const saveFavoriteBtn = document.getElementById('btn-save-favorite');
+
+  let replay = null;
+  let stepIndex = 0;
+  let playTimer = null;
+  let loadedReplayId = null;
+  let loadedFromAccount = false;
+
+  const PLAYER_COLORS = ['#4fc3f7', '#ff8a65', '#81c784', '#ce93d8'];
+  const imgCache = new Map(); // src => { img, loaded }
+  const CRATE_IMG = '/images/items/box-item-mario-kart.png';
+  const ITEM_IMG = {
+    bobomb: '/images/items/bobomb.png',
+    portals: '/images/items/portals.png',
+    lightning: '/images/items/Lightning.png',
+    star: '/images/items/star.png',
+    tetrimino: '/images/items/tetrimino.png',
+    tornado: '/images/items/tornado.png',
+    banana: '/images/items/banana.png',
+    phoenix: '/images/items/phoenix-down.png',
+    cursor: '/images/items/sims-cursor.png',
+    heart: '/images/items/heart.png',
+    sandglass: '/images/items/hourglass.png',
+    mask: '/images/items/mask-majora.png',
+    ocarina: '/images/items/oracina.png'
+  };
+
+  function itemImageSrc(itemKey) {
+    if (!itemKey) return null;
+    return ITEM_IMG[itemKey] || ('/images/items/' + itemKey + '.png');
+  }
+
+  function ensureImage(src) {
+    if (!src || typeof src !== 'string') return;
+    if (imgCache.has(src)) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+      imgCache.set(src, { img, loaded: true });
+      draw();
+    };
+    img.onerror = function () {
+      imgCache.set(src, { img, loaded: false });
+      draw();
+    };
+
+    imgCache.set(src, { img, loaded: false });
+    img.src = src;
+  }
+
+  function getLoadedImage(src) {
+    const entry = src ? imgCache.get(src) : null;
+    return entry && entry.loaded ? entry.img : null;
+  }
+
+  function extractReplayPayload(entry) {
+    if (!entry) return null;
+    var data = entry.payload != null ? entry.payload : entry;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch (e) { return null; }
+    }
+    if (data && data.payload && typeof data.payload === 'object') {
+      data = data.payload;
+    }
+    if (data && Array.isArray(data.moveLog) && data.moveLog.length) {
+      return data;
+    }
+    return null;
+  }
+
+  function loadReplay(data) {
+    const payload = extractReplayPayload(data) || data;
+    if (!payload || !Array.isArray(payload.moveLog) || !payload.moveLog.length) {
+      throw new Error('Replay invalide — aucun coup enregistré');
+    }
+    replay = payload;
+    stepIndex = 0;
+    renderMeta();
+    updateSaveBar();
+    draw();
+  }
+
+  function updateSaveBar() {
+    if (!saveBar || !saveFavoriteBtn) return;
+    const loggedIn = typeof VGBOnline !== 'undefined' && VGBOnline.user && VGBOnline.mode === 'next';
+    if (!replay || !loggedIn) {
+      saveBar.hidden = true;
+      return;
+    }
+    saveBar.hidden = false;
+    if (loadedFromAccount && loadedReplayId) {
+      saveFavoriteBtn.textContent = '★ Ajouter aux favoris';
+      saveFavoriteBtn.disabled = false;
+    } else {
+      saveFavoriteBtn.textContent = '★ Ajouter aux favoris';
+      saveFavoriteBtn.disabled = false;
+    }
+  }
+
+  async function saveCurrentAsFavorite() {
+    if (!replay) return;
+    if (!(VGBOnline.user && VGBOnline.mode === 'next')) {
+      alert('Connectez-vous pour sauvegarder un replay favori');
+      location.href = '/login.html';
+      return;
+    }
+    try {
+      if (loadedReplayId) {
+        await VGBOnline.saveFavoriteReplay(null, { fromReplayId: loadedReplayId });
+      } else {
+        const players = replay.players || [];
+        const ranking = replay.ranking || [];
+        const opp = players[1] || players[0];
+        await VGBOnline.saveFavoriteReplay(replay, {
+          meta: {
+            opponent: (opp && opp.name) || 'Adversaire',
+            result: 'D',
+            ranking,
+            gridSize: replay.gridSize || 9,
+            moveCount: Array.isArray(replay.moveLog) ? replay.moveLog.length : 0
+          }
+        });
+      }
+      saveFavoriteBtn.textContent = '✓ Ajouté aux favoris';
+      saveFavoriteBtn.disabled = true;
+    } catch (e) {
+      alert(e.message || 'Impossible d’ajouter aux favoris');
+    }
+  }
+
+  function renderMeta() {
+    if (!replay) return;
+    const p1 = replay.players && replay.players[0];
+    const p2 = replay.players && replay.players[1];
+    const names = [p1 && p1.name, p2 && p2.name].filter(Boolean).join(' vs ');
+    metaEl.textContent = (names || 'Partie') + ' — ' + (replay.gridSize || 9) + '×' + (replay.gridSize || 9) +
+      (replay.savedAt ? ' — ' + new Date(replay.savedAt).toLocaleString('fr-FR') : '');
+
+    if (Array.isArray(replay.ranking) && replay.ranking.length) {
+      rankingEl.hidden = false;
+      rankingEl.innerHTML = replay.ranking.map(function (seat, i) {
+        const p = replay.players && replay.players[seat];
+        const label = (p && p.name) || ('Joueur ' + (seat + 1));
+        return '<li>#' + (i + 1) + ' ' + label + '</li>';
+      }).join('');
+    } else {
+      rankingEl.hidden = true;
+    }
+  }
+
+  function currentSnapshot() {
+    if (!replay) return null;
+    return replay.moveLog[stepIndex] || replay.moveLog[replay.moveLog.length - 1];
+  }
+
+  function renderPlayerHud(snap) {
+    if (!hudEl) return;
+    const playerItems = Array.isArray(snap && snap.playerItems) ? snap.playerItems : null;
+    if (!playerItems || !playerItems.length) {
+      hudEl.hidden = true;
+      hudEl.innerHTML = '';
+      return;
+    }
+
+    hudEl.hidden = false;
+    hudEl.innerHTML = playerItems.map(function (items, playerId) {
+      const player = replay.players && replay.players[playerId];
+      const name = (player && player.name) || ('Joueur ' + (playerId + 1));
+      const active = typeof snap.currentPlayer === 'number' && snap.currentPlayer === playerId;
+      const list = Array.isArray(items) ? items : [];
+      const itemsHtml = list.length
+        ? list.map(function (entry) {
+            const src = itemImageSrc(entry.item);
+            if (src) ensureImage(src);
+            const charge = entry.item === 'lightning' && entry.chargeTurns > 0
+              ? '<span class="hud-charge">' + entry.chargeTurns + '</span>'
+              : '';
+            return '<div class="replay-hud-item">' +
+              '<img src="' + src + '" alt="' + entry.item + '">' +
+              charge +
+            '</div>';
+          }).join('')
+        : '<span class="replay-hud-empty">Aucun objet</span>';
+
+      return '<div class="replay-hud-player' + (active ? ' active-turn' : '') + '">' +
+        '<div class="replay-hud-name">' + name + '</div>' +
+        '<div class="replay-hud-items">' + itemsHtml + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function draw() {
+    if (!replay) return;
+    const snap = currentSnapshot();
+    const size = replay.gridSize || 9;
+    const margin = 20;
+    const tile = Math.floor((canvas.width - margin * 2) / size);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#302e2b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const px = margin + x * tile;
+        const py = margin + y * tile;
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#eeeed2' : '#769656';
+        ctx.fillRect(px, py, tile, tile);
+      }
+    }
+
+    if (!snap) return;
+
+    ensureImage(CRATE_IMG);
+    const crateImg = getLoadedImage(CRATE_IMG);
+    if (Array.isArray(snap.itemCrates)) {
+      for (const crate of snap.itemCrates) {
+        const px = margin + crate.x * tile + tile / 2;
+        const py = margin + crate.y * tile + tile / 2;
+        const drawSize = tile * 0.6;
+        ctx.save();
+        ctx.globalAlpha = crate.active ? 1 : 0.25;
+        if (crateImg) {
+          ctx.drawImage(crateImg, px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
+        } else {
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
+        }
+        ctx.restore();
+      }
+    }
+
+    if (!Array.isArray(snap.pieces)) return;
+
+    for (const piece of snap.pieces) {
+      const px = margin + piece.x * tile + tile / 2;
+      const py = margin + piece.y * tile + tile / 2;
+
+      const imgSrc = piece.image;
+      if (imgSrc) ensureImage(imgSrc);
+
+      const loadedImg = getLoadedImage(imgSrc);
+
+      if (loadedImg) {
+        const drawSize = tile * 0.78;
+        ctx.drawImage(loadedImg, px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
+      } else {
+        const color = PLAYER_COLORS[piece.player] || '#fff';
+        ctx.beginPath();
+        ctx.arc(px, py, tile * 0.34, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const label = piece.role
+          ? piece.role.charAt(0).toUpperCase()
+          : (piece.type === 'king' ? 'K' : 'P');
+        ctx.fillStyle = '#111';
+        ctx.font = 'bold ' + Math.max(11, Math.floor(tile * 0.34)) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, px, py);
+      }
+    }
+
+    renderPlayerHud(snap);
+
+    const action = snap.action || 'turn';
+    stepEl.textContent = 'Coup ' + (stepIndex + 1) + ' / ' + replay.moveLog.length +
+      (typeof snap.currentPlayer === 'number' ? ' — Joueur ' + (snap.currentPlayer + 1) : '') +
+      (action !== 'turn' ? ' (' + action + ')' : '');
+  }
+
+  function goTo(index) {
+    if (!replay) return;
+    stepIndex = Math.max(0, Math.min(replay.moveLog.length - 1, index));
+    draw();
+  }
+
+  function stopPlay() {
+    if (playTimer) {
+      clearInterval(playTimer);
+      playTimer = null;
+    }
+    document.getElementById('btn-play').textContent = '▶ Lecture';
+  }
+
+  function togglePlay() {
+    if (!replay) return;
+    if (playTimer) {
+      stopPlay();
+      return;
+    }
+    document.getElementById('btn-play').textContent = '⏸ Pause';
+    playTimer = setInterval(function () {
+      if (stepIndex >= replay.moveLog.length - 1) {
+        stopPlay();
+        return;
+      }
+      goTo(stepIndex + 1);
+    }, 700);
+  }
+
+  fileInput.addEventListener('change', function (e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    loadedReplayId = null;
+    loadedFromAccount = false;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        loadReplay(JSON.parse(reader.result));
+      } catch (err) {
+        alert(err.message || 'Fichier invalide');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('btn-first').addEventListener('click', function () { stopPlay(); goTo(0); });
+  document.getElementById('btn-prev').addEventListener('click', function () { stopPlay(); goTo(stepIndex - 1); });
+  document.getElementById('btn-next').addEventListener('click', function () { stopPlay(); goTo(stepIndex + 1); });
+  document.getElementById('btn-last').addEventListener('click', function () { stopPlay(); goTo(replay ? replay.moveLog.length - 1 : 0); });
+  document.getElementById('btn-play').addEventListener('click', togglePlay);
+  if (saveFavoriteBtn) saveFavoriteBtn.addEventListener('click', saveCurrentAsFavorite);
+
+  try {
+    const params = new URLSearchParams(location.search);
+    const replayId = params.get('id');
+    if (replayId) {
+      loadedReplayId = replayId;
+      loadedFromAccount = true;
+      metaEl.textContent = 'Chargement du replay…';
+      VGBOnline.refreshMe().then(function () {
+        if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+        return VGBOnline.getReplay(replayId);
+      }).then(function (entry) {
+        const payload = extractReplayPayload(entry);
+        if (payload) loadReplay(payload);
+        else throw new Error('Replay invalide — données manquantes');
+      }).catch(function (err) {
+        metaEl.textContent = err.message || 'Impossible de charger le replay';
+      });
+    } else {
+      const cached = sessionStorage.getItem('vgb_replay_view');
+      if (cached) {
+        loadReplay(JSON.parse(cached));
+        sessionStorage.removeItem('vgb_replay_view');
+      }
+      VGBOnline.refreshMe().finally(function () {
+        if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+        updateSaveBar();
+      });
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

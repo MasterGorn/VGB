@@ -563,11 +563,12 @@
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
-  margin: 0 0 var(--spacing-md);
+  margin: 8px 0 var(--spacing-md);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-medium);
   position: relative;
   overflow: hidden;
+  z-index: 1;
 }
 
 .tagline::before {
@@ -727,6 +728,32 @@
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   animation: end-game-slide-up 0.4s ease;
+  position: relative;
+}
+
+.end-game-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.end-game-close:hover {
+  background: rgba(231, 76, 60, 0.35);
+  border-color: rgba(231, 76, 60, 0.6);
 }
 
 .end-game-header {
@@ -863,37 +890,59 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-color);
-  opacity: 0.92;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.18), rgba(231, 76, 60, 0.04));
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .end-game-loser-medal {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-muted);
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.35);
 }
 
 .end-game-loser-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: bold;
   color: var(--text-primary);
   margin: 0 0 4px;
+  opacity: 0.92;
 }
 
 .end-game-loser-meta {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #ffb4a8;
   margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.end-game-loser-meta .faction-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.end-game-loser-meta .end-game-defeat-label {
+  color: #ffb4a8;
+  margin-left: 2px;
 }
 
 .end-game-ranking .rank-name {
@@ -918,8 +967,10 @@
 }
 
 .end-game-elo-delta {
-  font-size: 13px;
-  margin-left: 6px;
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
 }
 
 .end-game-elo-delta.up { color: #2ecc71; }
@@ -927,6 +978,9 @@
 
 .end-game-footer {
   padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .end-game-footer .setup-btn {
@@ -934,8 +988,72 @@
   width: 100%;
 }
 
+.end-game-footer .setup-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+.end-game-footer .setup-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: none;
+}
+
 .end-game-footer .setup-btn:active {
   transform: translateY(0);
+}
+
+/* Historique W/L (style croix / check) */
+.match-history {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  margin: 12px 0 4px;
+}
+
+.match-history-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.match-history-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.match-history-dot.win {
+  background: #2ecc71;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.35);
+}
+
+.match-history-dot.loss {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.match-history-dot.draw {
+  background: #95a5a6;
+  color: #fff;
+}
+
+.match-history-dot.empty {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  color: transparent;
 }
 
 body.end-game-open {
@@ -1010,6 +1128,29 @@ body.end-game-open {
           <p id="online-user-label" style="margin:8px 0;color:#fff;"></p>
           <button type="button" class="setup-btn" id="btn-find-match">Trouver une partie classée (9×9)</button>
           <button type="button" class="setup-btn" id="btn-cancel-match" style="display:none;background:#c0392b;margin-top:8px;">Annuler la recherche</button>
+          <div class="private-match-box" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);">
+            <p style="margin:0 0 8px;color:var(--text-secondary);font-size:13px;">Partie privée (amis)</p>
+            <p id="online-user-id" style="margin:0 0 10px;font-size:12px;color:var(--text-muted);word-break:break-all;"></p>
+            <div class="row" style="margin-bottom:8px;">
+              <label for="challenge-user-id">Défier un ID (opt.)</label>
+              <input id="challenge-user-id" type="text" maxlength="32" placeholder="ID de l'adversaire" autocomplete="off" />
+            </div>
+            <button type="button" class="setup-btn secondary" id="btn-create-private" style="width:100%;margin-bottom:8px;">Créer une partie privée</button>
+            <div id="private-room-info" style="display:none;margin-bottom:10px;padding:10px;border-radius:8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);">
+              <p style="margin:0 0 4px;font-size:12px;color:var(--text-secondary);">Code de la partie :</p>
+              <p id="private-room-code" style="margin:0;font-size:20px;font-weight:bold;letter-spacing:0.15em;color:#ffd700;"></p>
+              <button type="button" class="mode-btn" id="btn-cancel-private" style="margin-top:8px;">Annuler la partie privée</button>
+            </div>
+            <div class="row" style="margin-bottom:8px;">
+              <label for="join-room-code">Code partie</label>
+              <input id="join-room-code" type="text" maxlength="8" placeholder="Ex. A1B2C3" autocomplete="off" />
+            </div>
+            <div class="row" style="margin-bottom:8px;">
+              <label for="join-host-id">Ou ID joueur</label>
+              <input id="join-host-id" type="text" maxlength="32" placeholder="ID MongoDB de l'hôte" autocomplete="off" />
+            </div>
+            <button type="button" class="setup-btn" id="btn-join-private" style="width:100%;">Rejoindre la partie</button>
+          </div>
           <p id="match-status" style="margin-top:12px;color:var(--text-secondary);font-size:13px;"></p>
           <button type="button" class="mode-btn" id="btn-logout" style="margin-top:8px;">Se déconnecter</button>
         </div>
@@ -1124,6 +1265,9 @@ let secondaryModeUsed = false; // Fonctionnalité secondaire utilisée ce tour
 let secondaryModeSprite = null; // Sprite "S" pour indiquer le mode secondaire
 let turnText;
 let moveCount = 0;
+let moveLog = [];
+let lastLoggedMoveCount = -1;
+let lastEndGameRanking = [];
 let infoBackground; // Fond blanc pour les messages d'information
 let isEndGameMessage = false; // Flag pour empêcher le masquage du message de fin
 let endGameOverlayEl = null;
@@ -2369,8 +2513,11 @@ function startGame(scene) {
   };
   
   gameStarted = true;
+  endGameHandled = false;
   currentPlayer = 0;
   moveCount = 0;
+  moveLog = [];
+  lastLoggedMoveCount = -1;
   timersArmed = false;
   onlineLastKnownTurn = null;
   aiThinking = false;
@@ -2438,6 +2585,19 @@ function startGame(scene) {
     if (kp.ocarinaSprite) kp.ocarinaSprite.destroy();
   }
   knightPieces = [];
+
+  // reset inventaires objets (ne pas conserver entre les parties)
+  for (let i = 0; i < playerItemIcons.length; i++) {
+    const entries = playerItemIcons[i] || [];
+    for (const e of entries) {
+      if (e && e.sprite) e.sprite.destroy();
+      if (e && e.counterText) e.counterText.destroy();
+    }
+  }
+  playerItemIcons = [];
+  for (let i = 0; i < playerCount; i++) playerItemIcons[i] = [];
+  syncAllHtmlHudItems();
+
   infoText.setText("");
   // cacher widget d'option timer s'il existe côté Phaser (supprimé - obsolète)
   // cacher l'UI de draft (supprimé - obsolète)
@@ -2788,6 +2948,7 @@ function startGame(scene) {
   // Plus besoin d'icône - le nom du joueur sera mis en évidence
   updateTurnUI();
   updateRulesSidebar();
+  recordReplaySnapshot('start');
 }
 
 function savePreset() {
@@ -3692,27 +3853,29 @@ function endGameWithRanking_legacy_unused(ranking) {
 }
 
 function maybePickupItem(piece) {
-  if (!itemCrates || !itemCrates.length) return;
+  if (!itemCrates || !itemCrates.length) return null;
   for (const c of itemCrates) {
     if (!c.active) continue;
     if (piece.x === c.x && piece.y === c.y) {
-      const item = rollRandomItem();
+      const item = rollDeterministicItem(moveCount + 1, c.x, c.y);
       giveItemToPlayer(piece.player, item);
       c.active = false;
       if (c.sprite) { c.sprite.setAlpha(0.25); }
       c.lastRound = roundCounter;
+      return item;
     }
   }
+  return null;
 }
 
-function giveItemToPlayer(playerId, itemKey) {
+function giveItemToPlayer(playerId, itemKey, chargeTurns) {
   const scene = infoText.scene;
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
   if (playerItemIcons[playerId].length >= 3) return;
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(-100, -100, textureKey).setDisplaySize(24, 24).setVisible(false);
   const entry = { sprite: icon, item: itemKey };
-  if (itemKey === 'lightning') entry.chargeTurns = 5;
+  if (itemKey === 'lightning') entry.chargeTurns = chargeTurns || 5;
   playerItemIcons[playerId].push(entry);
   syncAllHtmlHudItems();
   updatePieces();
@@ -4511,6 +4674,90 @@ function getKnightMoves(piece) {
   return moves;
 }
 
+function getOtherPortalPos(x, y) {
+  if (!portalOrange || !portalBlue) return null;
+  if (portalOrange.x === x && portalOrange.y === y) return { x: portalBlue.x, y: portalBlue.y };
+  if (portalBlue.x === x && portalBlue.y === y) return { x: portalOrange.x, y: portalOrange.y };
+  return null;
+}
+
+function isPortalCell(x, y) {
+  return !!getOtherPortalPos(x, y);
+}
+
+function traceSlidingRay(piece, dx, dy, maxRange, isKnight) {
+  const moves = [];
+  const isTetriminoPos = (x, y) => tetriminos.some(t => t.x === x && t.y === y);
+
+  let x = piece.x;
+  let y = piece.y;
+  let steps = 0;
+  let portalUsed = false;
+
+  while (steps < maxRange) {
+    x += dx;
+    y += dy;
+    steps++;
+
+    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) break;
+
+    if (isTetriminoPos(x, y)) {
+      if (isKnight) continue;
+      break;
+    }
+
+    const exit = getOtherPortalPos(x, y);
+    if (exit && !portalUsed && maxRange > 1) {
+      const portalPiece = getPieceAt({ x, y });
+      if (!portalPiece) {
+        moves.push({ x, y });
+      } else if (portalPiece.player !== piece.player) {
+        moves.push({ x, y });
+        break;
+      } else {
+        break;
+      }
+
+      portalUsed = true;
+      x = exit.x;
+      y = exit.y;
+
+      while (steps < maxRange) {
+        x += dx;
+        y += dy;
+        steps++;
+
+        if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) break;
+        if (isTetriminoPos(x, y)) break;
+
+        const targetPiece = getPieceAt({ x, y });
+        if (!targetPiece) {
+          moves.push({ x, y });
+        } else if (targetPiece.player !== piece.player) {
+          moves.push({ x, y });
+          break;
+        } else {
+          break;
+        }
+      }
+      break;
+    }
+
+    const targetPiece = getPieceAt({ x, y });
+    if (!targetPiece) {
+      moves.push({ x, y });
+      if (isKnight) break;
+    } else if (targetPiece.player !== piece.player) {
+      moves.push({ x, y });
+      break;
+    } else {
+      break;
+    }
+  }
+
+  return moves;
+}
+
 function getOriginalMoves(piece) {
   // Pions : règles d'échecs
   if (piece.role === 'pawn' || piece.type === 'pawn') {
@@ -4534,50 +4781,14 @@ function getOriginalMoves(piece) {
     if (pieceData.special === 'pawn') return getPawnMoves(piece);
     return getBasicKingMoves(piece);
   }
-  
-  // Fonction pour vérifier si une position contient un tetrimino
-  const isTetriminoPos = (x, y) => {
-    return tetriminos.some(t => t.x === x && t.y === y);
-  };
-  
-  // Appliquer chaque direction de mouvement
+
+  const isKnight = piece.role === 'knight' || pieceData.special === 'knight';
+
   for (const [dx, dy] of moveDirections) {
-    // Parcourir dans cette direction jusqu'à la portée maximale
-    for (let distance = 1; distance <= range; distance++) {
-      const newX = piece.x + dx * distance;
-      const newY = piece.y + dy * distance;
-      
-      // Vérifier limites de grille
-      if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) break;
-      
-      // Vérifier si la case contient un tetrimino (mur)
-      if (isTetriminoPos(newX, newY)) {
-        // Les cavaliers peuvent sauter par-dessus les tetriminos
-        const isKnightMove = (piece.role === 'knight' || pieceData.special === 'knight' ||
-          (range === 1 && ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dx) === 1 && Math.abs(dy) === 2))));
-        
-        if (isKnightMove) {
-          continue;
-        } else {
-          break;
-        }
-      }
-      
-      const targetPiece = getPieceAt({x: newX, y: newY});
-      
-      if (!targetPiece) {
-        moves.push({x: newX, y: newY});
-        // Cavalier : un seul saut
-        if (piece.role === 'knight' || pieceData.special === 'knight') break;
-      } else if (targetPiece.player !== piece.player) {
-        moves.push({x: newX, y: newY});
-        break;
-      } else {
-        break;
-      }
-    }
+    const rayMoves = traceSlidingRay(piece, dx, dy, range, isKnight);
+    for (const m of rayMoves) moves.push(m);
   }
-  
+
   return moves;
 }
 
@@ -4932,16 +5143,21 @@ function maybeRespawnCrate(scene) {
 }
 
 function rollRandomItem() {
-  // Tirage pondéré selon ITEM_WEIGHTS
+  return rollDeterministicItem(moveCount, 0, 0);
+}
+
+function rollDeterministicItem(seedA, seedB, seedC) {
   const entries = Object.entries(ITEM_WEIGHTS);
-  const total = entries.reduce((s, [,w]) => s + (w||0), 0);
+  const total = entries.reduce((s, [, w]) => s + (w || 0), 0);
   if (total <= 0) return 'bobomb';
-  let r = Math.random() * total;
+  let h = (((seedA * 1103515245) + 12345) >>> 0);
+  h = (((h + seedB * 2654435761) >>> 0) + seedC) >>> 0;
+  let r = (h % 10000) / 10000 * total;
   for (const [key, weight] of entries) {
     r -= weight;
     if (r <= 0) return key;
   }
-  return entries[entries.length-1][0];
+  return entries[entries.length - 1][0];
 }
 
 function clearHighlights() {
@@ -5023,6 +5239,10 @@ function updateTurnUI() {
 
   // Le chrono ne part qu'après le premier coup
   if (moveCount > 0) armGameTimers();
+  if (gameStarted && moveCount > lastLoggedMoveCount) {
+    recordReplaySnapshot('turn');
+    lastLoggedMoveCount = moveCount;
+  }
   
   // Vérifier si le joueur actuel est éliminé et passer au suivant si nécessaire
   if (eliminationOrder.includes(currentPlayer)) {
@@ -5378,7 +5598,11 @@ function tickTimer(scene) {
   }
 }
 
+let endGameHandled = false;
+
 function endGameWithRanking(ranking) {
+  if (endGameHandled) return;
+  endGameHandled = true;
   gameStarted = false;
   aiThinking = false;
   if (aiTurnTimer) {
@@ -5388,23 +5612,64 @@ function endGameWithRanking(ranking) {
   clearHighlights();
   hideInfoMessage();
   isEndGameMessage = true;
+  lastEndGameRanking = (ranking || []).slice();
+  recordReplaySnapshot('end');
 
   const overlayOpts = { ranking: ranking || [] };
 
   if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
     const winnerSeat = ranking && ranking.length ? ranking[0] : null;
-    const finishPromise = VGBOnline.finish(winnerSeat).catch(() => null);
-    VGBOnline.stopPolling();
-    VGBOnline.enabled = false;
+    const onlineMatchId = VGBOnline.match.matchId;
+    const replayPayload = buildReplayPayload();
 
-    showEndGameOverlay(overlayOpts);
+    function finalizeOnlineFinish() {
+      const finishPromise = VGBOnline.finish(winnerSeat, {
+        moveLog: moveLog.slice(),
+        replayPayload
+      }).catch(function (e) {
+        console.warn('finish failed', e);
+        return null;
+      });
+      VGBOnline.stopPolling();
+      VGBOnline.enabled = false;
 
-    finishPromise.then((data) => {
-      if (data && data.elo) {
-        updateEndGameElo(data.elo);
-      }
-    });
+      showEndGameOverlay(overlayOpts);
+
+      finishPromise.then(async function (data) {
+        if (data && data.elo) {
+          updateEndGameElo(data.elo);
+        }
+        if (data && data.you && VGBOnline.user) {
+          VGBOnline.user = Object.assign({}, VGBOnline.user, data.you);
+          if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+        } else if (data && data.alreadyFinished) {
+          try {
+            const me = await VGBOnline.refreshMe();
+            if (me && typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+          } catch (e) {}
+        }
+        if ((!data || !data.savedReplay) && !(data && data.alreadyFinished)) {
+          await persistAccountAutoReplay(onlineMatchId);
+        }
+      });
+    }
+
+    // Pousser l'état final (capture du roi) pour que l'adversaire puisse le rejouer
+    VGBOnline.pushGameState(serializeOnlineBoardState(), currentPlayer)
+      .catch(function () { return null; })
+      .then(finalizeOnlineFinish);
   } else {
+    // Historique local (hors ligne)
+    try {
+      const key = 'vgb_local_results';
+      const prev = JSON.parse(localStorage.getItem(key) || '[]');
+      let result = 'D';
+      if (ranking && ranking.length >= 2) {
+        result = ranking[0] === 0 ? 'W' : 'L';
+      }
+      localStorage.setItem(key, JSON.stringify([result].concat(prev).slice(0, 10)));
+    } catch (e) {}
+    persistAccountAutoReplay(null);
     showEndGameOverlay(overlayOpts);
   }
 
@@ -5439,6 +5704,10 @@ const END_GAME_I18N = {
     'end-game-winner': 'Victoire',
     'end-game-defeated': 'Défaite',
     'end-game-new-game': 'Nouvelle partie',
+    'end-game-save-replay': 'Ajouter aux favoris',
+    'end-game-save-replay-file': 'Télécharger le replay',
+    'end-game-view-replay': 'Voir le replay',
+    'end-game-close': 'Fermer',
     'end-game-elo': 'Elo',
     'end-game-no-result': 'Partie terminée.',
     'end-game-rank-1': '1er',
@@ -5452,6 +5721,10 @@ const END_GAME_I18N = {
     'end-game-winner': 'Victory',
     'end-game-defeated': 'Defeated',
     'end-game-new-game': 'New game',
+    'end-game-save-replay': 'Add to favorites',
+    'end-game-save-replay-file': 'Download replay',
+    'end-game-view-replay': 'View replay',
+    'end-game-close': 'Close',
     'end-game-elo': 'Elo',
     'end-game-no-result': 'Game finished.',
     'end-game-rank-1': '1st',
@@ -5482,6 +5755,7 @@ function ensureEndGameOverlay() {
   overlay.setAttribute('aria-labelledby', 'end-game-title');
   overlay.innerHTML =
     '<div class="end-game-card">' +
+      '<button type="button" class="end-game-close" id="end-game-close-btn" aria-label="Fermer">×</button>' +
       '<div class="end-game-header">' +
         '<div class="end-game-icon" aria-hidden="true">🏆</div>' +
         '<h2 class="end-game-title" id="end-game-title"></h2>' +
@@ -5489,23 +5763,187 @@ function ensureEndGameOverlay() {
       '</div>' +
       '<div class="end-game-body" id="end-game-body"></div>' +
       '<div class="end-game-footer">' +
+        '<button type="button" class="setup-btn secondary" id="end-game-view-replay-btn"></button>' +
+        '<button type="button" class="setup-btn secondary" id="end-game-save-replay-btn"></button>' +
         '<button type="button" class="setup-btn" id="end-game-replay-btn"></button>' +
       '</div>' +
     '</div>';
 
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) return; // pas de fermeture au clic extérieur
-  });
+  const closeBtn = overlay.querySelector('#end-game-close-btn');
+  if (closeBtn) closeBtn.addEventListener('click', () => closeEndGameOverlay());
 
   const replayBtn = overlay.querySelector('#end-game-replay-btn');
   if (replayBtn) {
     replayBtn.addEventListener('click', () => location.reload());
   }
 
+  const saveBtn = overlay.querySelector('#end-game-save-replay-btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => saveGameReplayFavorite());
+  }
+
+  const viewReplayBtn = overlay.querySelector('#end-game-view-replay-btn');
+  if (viewReplayBtn) {
+    viewReplayBtn.addEventListener('click', () => openGameReplayViewer());
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && endGameOverlayEl && !endGameOverlayEl.hidden) {
+      closeEndGameOverlay();
+    }
+  });
+
   endGameOverlayEl = overlay;
   return overlay;
+}
+
+function recordReplaySnapshot(action) {
+  if (!Array.isArray(moveLog)) moveLog = [];
+  moveLog.push({
+    n: moveLog.length + 1,
+    at: Date.now(),
+    action: action || 'turn',
+    currentPlayer: currentPlayer,
+    moveCount: moveCount,
+    pieces: (pieces || []).map(function (p) {
+      return {
+        id: p.onlineId || null,
+        x: p.x,
+        y: p.y,
+        player: p.player,
+        role: p.role || null,
+        name: p.name,
+        type: p.type,
+        image: p.image || null
+      };
+    }),
+    itemCrates: (itemCrates || []).map(function (c) {
+      return { x: c.x, y: c.y, active: !!c.active };
+    }),
+    playerItems: (playerItemIcons || []).map(function (arr) {
+      return (arr || []).map(function (e) {
+        return { item: e.item, chargeTurns: e.chargeTurns || 0 };
+      });
+    })
+  });
+}
+
+function buildReplayPayload() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    gridSize: GRID_SIZE,
+    players: (players || []).map(function (p, i) {
+      return {
+        seat: i,
+        name: (p && p.name) || playerNames[i] || ('Joueur ' + (i + 1)),
+        faction: (p && p.faction) || playerFactions[i] || null
+      };
+    }),
+    ranking: lastEndGameRanking.slice(),
+    moveLog: moveLog.slice()
+  };
+}
+
+function getReplayMetaForSave() {
+  const payload = buildReplayPayload();
+  const ranking = lastEndGameRanking.slice();
+  const mySeat = (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.seat != null)
+    ? VGBOnline.seat
+    : ((typeof VGBOnline !== 'undefined' && VGBOnline.seat != null) ? VGBOnline.seat : 0);
+  const result = ranking.length ? (ranking[0] === mySeat ? 'W' : 'L') : 'D';
+  const oppSeat = mySeat === 0 ? 1 : 0;
+  const opp = payload.players && payload.players[oppSeat];
+  return {
+    payload,
+    meta: {
+      opponent: (opp && opp.name) || 'Adversaire',
+      result,
+      ranking,
+      gridSize: GRID_SIZE,
+      moveCount: moveLog.length
+    },
+    mySeat
+  };
+}
+
+async function persistAccountAutoReplay(matchId) {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.user || VGBOnline.mode !== 'next') return null;
+  if (!(moveLog && moveLog.length)) return null;
+  try {
+    const info = getReplayMetaForSave();
+    return await VGBOnline.saveAutoReplay(info.payload, info.meta, matchId || undefined);
+  } catch (e) {
+    console.warn('Auto replay save failed', e);
+    return null;
+  }
+}
+
+function openGameReplayViewer() {
+  try {
+    const payload = buildReplayPayload();
+    sessionStorage.setItem('vgb_replay_view', JSON.stringify(payload));
+    window.location.href = 'replay.html';
+  } catch (e) {
+    alert('Impossible d’ouvrir le replay');
+  }
+}
+
+function downloadGameReplay() {
+  try {
+    const payload = buildReplayPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.href = url;
+    a.download = 'vgb-replay-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showInfoMessage('Replay téléchargé', 2000);
+  } catch (e) {
+    alert('Impossible d’enregistrer le replay');
+  }
+}
+
+async function saveGameReplayFavorite() {
+  if (!(moveLog && moveLog.length)) return;
+  try {
+    const info = getReplayMetaForSave();
+    if (typeof VGBOnline !== 'undefined' && VGBOnline.user && VGBOnline.mode === 'next') {
+      await VGBOnline.saveFavoriteReplay(info.payload, { meta: info.meta });
+      showInfoMessage('Replay ajouté aux favoris', 2500);
+      return;
+    }
+    downloadGameReplay();
+  } catch (e) {
+    alert(e.message || 'Impossible d’enregistrer le replay');
+  }
+}
+
+function closeEndGameOverlay() {
+  const overlay = ensureEndGameOverlay();
+  overlay.hidden = true;
+  document.body.classList.remove('end-game-open');
+  isEndGameMessage = false;
+
+  // Revenir à l’écran de configuration sans recharger
+  const canvas = document.querySelector('.game-root canvas');
+  if (canvas) canvas.classList.remove('game-started');
+  const gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.remove('game-active');
+  const gameSetup = document.getElementById('game-setup');
+  if (gameSetup) gameSetup.style.display = '';
+  const tagline = document.querySelector('.tagline');
+  if (tagline) tagline.style.display = '';
+  const hud0 = document.getElementById('hud-player-0');
+  const hud1 = document.getElementById('hud-player-1');
+  if (hud0) hud0.hidden = true;
+  if (hud1) hud1.hidden = true;
 }
 
 function showEndGameOverlay(opts) {
@@ -5515,9 +5953,24 @@ function showEndGameOverlay(opts) {
   const subtitle = overlay.querySelector('#end-game-subtitle');
   const title = overlay.querySelector('#end-game-title');
   const replayBtn = overlay.querySelector('#end-game-replay-btn');
+  const saveBtn = overlay.querySelector('#end-game-save-replay-btn');
+  const viewReplayBtn = overlay.querySelector('#end-game-view-replay-btn');
 
   if (title) title.textContent = endGameT('end-game-title');
   if (replayBtn) replayBtn.textContent = endGameT('end-game-new-game');
+  if (saveBtn) {
+    const loggedIn = typeof VGBOnline !== 'undefined' && VGBOnline.user && VGBOnline.mode === 'next';
+    saveBtn.textContent = loggedIn
+      ? endGameT('end-game-save-replay')
+      : endGameT('end-game-save-replay-file');
+    saveBtn.disabled = !(moveLog && moveLog.length);
+    saveBtn.style.opacity = moveLog && moveLog.length ? '1' : '0.5';
+  }
+  if (viewReplayBtn) {
+    viewReplayBtn.textContent = endGameT('end-game-view-replay');
+    viewReplayBtn.disabled = !(moveLog && moveLog.length);
+    viewReplayBtn.style.opacity = moveLog && moveLog.length ? '1' : '0.5';
+  }
   if (subtitle) {
     subtitle.textContent = ranking.length <= 2
       ? endGameT('end-game-subtitle-duel')
@@ -5559,7 +6012,7 @@ function showEndGameOverlay(opts) {
   overlay.hidden = false;
   document.body.classList.add('end-game-open');
 
-  const btn = overlay.querySelector('#end-game-replay-btn');
+  const btn = overlay.querySelector('#end-game-close-btn');
   if (btn) btn.focus();
 }
 
@@ -5587,7 +6040,7 @@ function buildEndGameLoserBlock(info) {
       '<p class="end-game-loser-name">' + escapeHtml(info.name) + '</p>' +
       '<p class="end-game-loser-meta">' +
         '<span class="faction-tag ' + escapeHtml(info.factionClass) + '">' + escapeHtml(info.faction) + '</span>' +
-        '<span>' + endGameT('end-game-defeated') + '</span>' +
+        '<span class="end-game-defeat-label">' + endGameT('end-game-defeated') + '</span>' +
       '</p>' +
     '</div>';
   return block;
@@ -5618,9 +6071,11 @@ function updateEndGameElo(eloData) {
   if (prevElo != null && !isNaN(prevElo)) {
     const delta = mine - prevElo;
     if (delta !== 0) {
-      const sign = delta > 0 ? '+' : '';
+      const sign = delta > 0 ? '+' : '−';
       const cls = delta > 0 ? 'up' : 'down';
-      deltaHtml = '<span class="end-game-elo-delta ' + cls + '">(' + sign + delta + ')</span>';
+      const pts = Math.abs(delta);
+      const word = pts === 1 ? 'point' : 'points';
+      deltaHtml = '<span class="end-game-elo-delta ' + cls + '">' + sign + ' ' + pts + ' ' + word + ' Elo</span>';
     }
   }
 
@@ -6428,8 +6883,118 @@ function serializeOnlineBoardState() {
     timersArmed,
     eliminationOrder: eliminationOrder.slice(),
     playerNames: playerNames.slice(0, playerCount),
-    playerFactions: playerFactions.slice(0, playerCount)
+    playerFactions: playerFactions.slice(0, playerCount),
+    itemCrates: (itemCrates || []).map(c => ({ x: c.x, y: c.y, active: c.active, lastRound: c.lastRound })),
+    playerItems: (playerItemIcons || []).map(arr =>
+      (arr || []).map(e => ({ item: e.item, chargeTurns: e.chargeTurns || 0 }))
+    ),
+    portals: {
+      orange: portalOrange ? { x: portalOrange.x, y: portalOrange.y } : null,
+      blue: portalBlue ? { x: portalBlue.x, y: portalBlue.y } : null
+    },
+    tetriminos: (tetriminos || []).map(t => ({ x: t.x, y: t.y })),
+    bananas: (bananas || []).map(b => ({ x: b.x, y: b.y }))
   };
+}
+
+function applyRemoteItemsState(state) {
+  if (!state) return;
+  const scene = infoText && infoText.scene;
+  if (!scene) return;
+
+  if (Array.isArray(state.itemCrates)) {
+    for (const rc of state.itemCrates) {
+      const local = itemCrates.find(c => c.x === rc.x && c.y === rc.y);
+      if (local) {
+        local.active = rc.active;
+        local.lastRound = rc.lastRound;
+        if (local.sprite) local.sprite.setAlpha(rc.active ? 1 : 0.25);
+      }
+    }
+  }
+
+  if (Array.isArray(state.playerItems)) {
+    for (let pid = 0; pid < state.playerItems.length; pid++) {
+      const remote = state.playerItems[pid] || [];
+      const local = playerItemIcons[pid] || [];
+      if (remote.length > local.length) {
+        for (let i = local.length; i < remote.length; i++) {
+          giveItemToPlayer(pid, remote[i].item, remote[i].chargeTurns || 0);
+        }
+      } else if (remote.length < local.length) {
+        while ((playerItemIcons[pid] || []).length > remote.length) {
+          const removed = playerItemIcons[pid].pop();
+          if (removed && removed.sprite) removed.sprite.destroy();
+          if (removed && removed.counterText) removed.counterText.destroy();
+        }
+        syncAllHtmlHudItems();
+      }
+      for (let i = 0; i < remote.length; i++) {
+        const le = (playerItemIcons[pid] || [])[i];
+        if (le && remote[i].chargeTurns != null) le.chargeTurns = remote[i].chargeTurns;
+      }
+    }
+  }
+
+  if (state.portals) {
+    if (state.portals.orange) {
+      if (!portalOrange || portalOrange.x !== state.portals.orange.x || portalOrange.y !== state.portals.orange.y) {
+        placePortal('orange', state.portals.orange);
+      }
+    } else if (portalOrange && portalOrange.sprite) {
+      portalOrange.sprite.destroy();
+      portalOrange = null;
+    }
+    if (state.portals.blue) {
+      if (!portalBlue || portalBlue.x !== state.portals.blue.x || portalBlue.y !== state.portals.blue.y) {
+        placePortal('blue', state.portals.blue);
+      }
+    } else if (portalBlue && portalBlue.sprite) {
+      portalBlue.sprite.destroy();
+      portalBlue = null;
+    }
+  }
+
+  if (Array.isArray(state.tetriminos)) {
+    const remoteKeys = state.tetriminos.map(t => t.x + ',' + t.y);
+    for (let i = tetriminos.length - 1; i >= 0; i--) {
+      const t = tetriminos[i];
+      const key = t.x + ',' + t.y;
+      if (!remoteKeys.includes(key)) {
+        if (t.sprite) t.sprite.destroy();
+        tetriminos.splice(i, 1);
+      }
+    }
+    for (const rt of state.tetriminos) {
+      if (!tetriminos.some(t => t.x === rt.x && t.y === rt.y)) {
+        const rect = scene.add.rectangle(
+          GRID_OFFSET_X + rt.x * TILE_SIZE + TILE_SIZE / 2,
+          GRID_OFFSET_Y + rt.y * TILE_SIZE + TILE_SIZE / 2,
+          TILE_SIZE - 2,
+          TILE_SIZE - 2,
+          0x9c27b0
+        );
+        rect.setDepth(100);
+        tetriminos.push({ x: rt.x, y: rt.y, sprite: rect });
+      }
+    }
+  }
+
+  if (Array.isArray(state.bananas)) {
+    const remoteKeys = state.bananas.map(b => b.x + ',' + b.y);
+    for (let i = bananas.length - 1; i >= 0; i--) {
+      const b = bananas[i];
+      if (!remoteKeys.includes(b.x + ',' + b.y)) {
+        if (b.sprite) b.sprite.destroy();
+        bananas.splice(i, 1);
+      }
+    }
+    for (const rb of state.bananas) {
+      if (!bananas.some(b => b.x === rb.x && b.y === rb.y)) {
+        placeBanana(rb);
+      }
+    }
+  }
 }
 
 function applyRemoteBoardState(state) {
@@ -6457,10 +7022,21 @@ function applyRemoteBoardState(state) {
     // Retirer pièces absentes côté remote
     for (let i = pieces.length - 1; i >= 0; i--) {
       const p = pieces[i];
-      const stillThere = state.pieces.some(rp =>
-        (rp.onlineId && p.onlineId && rp.onlineId === p.onlineId) ||
-        (rp.player === p.player && rp.type === p.type && rp.name === p.name)
-      );
+      const stillThere = state.pieces.some(rp => {
+        // Priorité : identification stricte par onlineId (si présent)
+        if (p.onlineId && rp.onlineId) return rp.onlineId === p.onlineId;
+
+        // Sinon : éviter les faux positifs avec des pièces dupliquées (même type/nom).
+        // On impose aussi position + role.
+        return (
+          rp.player === p.player &&
+          rp.type === p.type &&
+          rp.role === p.role &&
+          rp.name === p.name &&
+          rp.x === p.x &&
+          rp.y === p.y
+        );
+      });
       if (!stillThere) {
         cleanupCursorForPiece(p);
         if (p.sprite) p.sprite.destroy();
@@ -6476,6 +7052,7 @@ function applyRemoteBoardState(state) {
     if (Array.isArray(state.eliminationOrder)) eliminationOrder = state.eliminationOrder.slice();
     // Critique : aligner le suivi de tour sinon le 2e joueur ne pousse plus son état
     onlineLastKnownTurn = currentPlayer;
+    applyRemoteItemsState(state);
     updatePieces();
     updateTurnUI();
   } finally {
@@ -6509,8 +7086,28 @@ function maybePushOnlineState() {
 function onOnlineRemoteUpdate(data) {
   if (!data) return;
   if (data.status === 'finished') {
-    showInfoMessage('Partie en ligne terminée', 4000);
     VGBOnline.stopPolling();
+    if (!endGameHandled && gameStarted) {
+      const state = data.state || {};
+      const ws = state.winnerSeat;
+      let ranking = [];
+      if (ws === 0 || ws === '0') ranking = [0, 1];
+      else if (ws === 1 || ws === '1') ranking = [1, 0];
+      else if (data.winnerId && typeof VGBOnline !== 'undefined' && VGBOnline.match) {
+        const myId = VGBOnline.user && VGBOnline.user.id;
+        const won = myId && String(data.winnerId) === String(myId);
+        const mySeat = VGBOnline.seat != null ? VGBOnline.seat : 0;
+        ranking = won ? [mySeat, mySeat === 0 ? 1 : 0] : [mySeat === 0 ? 1 : 0, mySeat];
+      }
+      if (ranking.length) {
+        if (data.state && Array.isArray(data.state.pieces)) {
+          applyRemoteBoardState(data.state);
+        }
+        endGameWithRanking(ranking);
+        return;
+      }
+    }
+    showInfoMessage('Partie en ligne terminée', 4000);
     return;
   }
   if (data.state && Array.isArray(data.state.pieces)) {
@@ -6575,8 +7172,14 @@ function createPiecesFromSelection() {
     if (play) play.style.display = 'block';
     const badge = document.getElementById('online-elo-badge');
     const label = document.getElementById('online-user-label');
+    const idEl = document.getElementById('online-user-id');
     if (badge && VGBOnline.user) badge.textContent = `Elo ${VGBOnline.user.elo}`;
     if (label && VGBOnline.user) label.textContent = `Connecté : ${VGBOnline.user.username}`;
+    if (idEl && VGBOnline.user) {
+      idEl.textContent = VGBOnline.user.id
+        ? `Votre ID (à partager) : ${VGBOnline.user.id}`
+        : '';
+    }
   }
 
   function showLoggedOut() {
@@ -6655,13 +7258,90 @@ function createPiecesFromSelection() {
     btnCancel.style.display = 'none';
   });
 
+  const btnCreatePrivate = document.getElementById('btn-create-private');
+  const btnJoinPrivate = document.getElementById('btn-join-private');
+  const btnCancelPrivate = document.getElementById('btn-cancel-private');
+  const privateRoomInfo = document.getElementById('private-room-info');
+  const privateRoomCode = document.getElementById('private-room-code');
+  let privatePollTimer = null;
+
+  function stopPrivatePoll() {
+    if (privatePollTimer) {
+      clearInterval(privatePollTimer);
+      privatePollTimer = null;
+    }
+  }
+
+  function showPrivateRoom(code) {
+    if (privateRoomInfo) privateRoomInfo.style.display = 'block';
+    if (privateRoomCode) privateRoomCode.textContent = code || '';
+  }
+
+  function hidePrivateRoom() {
+    if (privateRoomInfo) privateRoomInfo.style.display = 'none';
+    if (privateRoomCode) privateRoomCode.textContent = '';
+    stopPrivatePoll();
+  }
+
+  if (btnCreatePrivate) btnCreatePrivate.addEventListener('click', async () => {
+    const challengeEl = document.getElementById('challenge-user-id');
+    const targetId = challengeEl ? challengeEl.value.trim() : '';
+    try {
+      const data = await VGBOnline.createPrivate(targetId || undefined);
+      if (data.matched) return;
+      if (data.privateRoom && data.privateRoom.roomCode) {
+        showPrivateRoom(data.privateRoom.roomCode);
+        statusEl.textContent = 'Partie privée créée — partagez le code à votre adversaire.';
+        stopPrivatePoll();
+        privatePollTimer = setInterval(async () => {
+          try {
+            const st = await VGBOnline.request('/api/match', { action: 'status' });
+            if (st.matched && st.match) {
+              stopPrivatePoll();
+              hidePrivateRoom();
+              VGBOnline.onMatched(st.match);
+            }
+          } catch (e) {}
+        }, 2000);
+      }
+    } catch (e) {
+      statusEl.textContent = e.message || 'Erreur';
+    }
+  });
+
+  if (btnCancelPrivate) btnCancelPrivate.addEventListener('click', async () => {
+    await VGBOnline.cancelPrivate();
+    hidePrivateRoom();
+    statusEl.textContent = 'Partie privée annulée';
+  });
+
+  if (btnJoinPrivate) btnJoinPrivate.addEventListener('click', async () => {
+    const codeEl = document.getElementById('join-room-code');
+    const hostEl = document.getElementById('join-host-id');
+    const roomCode = codeEl ? codeEl.value.trim().toUpperCase() : '';
+    const hostId = hostEl ? hostEl.value.trim() : '';
+    if (!roomCode && !hostId) {
+      statusEl.textContent = 'Entrez un code de partie ou l’ID de l’hôte';
+      return;
+    }
+    try {
+      statusEl.textContent = 'Connexion à la partie privée…';
+      await VGBOnline.joinPrivate({ roomCode: roomCode || undefined, hostId: hostId || undefined });
+    } catch (e) {
+      statusEl.textContent = e.message || 'Impossible de rejoindre';
+    }
+  });
+
   window.VGBOnline_onMatched = function (match) {
+    stopPrivatePoll();
+    hidePrivateRoom();
     statusEl.textContent = `Adversaire trouvé : ${match.opponent ? match.opponent.username : '???'} (Elo ${match.opponent ? match.opponent.elo : '—'})`;
     btnFind.style.display = 'block';
     if (btnCancel) btnCancel.style.display = 'none';
 
     // Lancer la sélection 2 joueurs, sièges verrouillés
     onlineGameStartedOnce = false;
+    endGameHandled = false;
     gameStarted = false;
     computeBoardLayout();
     playerCount = 2;
