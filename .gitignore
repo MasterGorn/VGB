@@ -52,9 +52,8 @@ api/data/*.sqlite-journal
 *.backup
 *.orig
 
-# Fichiers de documentation générée
-docs/_build/
-site/
+# Fichiers de documentation générée (MkDocs à la racine uniquement)
+/site/
 
 # Fichiers de serveur local
 server.js
