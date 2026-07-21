@@ -46,14 +46,17 @@ L’API Next (auth Atlas, Elo) tourne en arrière-plan ; le design reste celui d
 
 ## Vercel
 
-1. Importer le dépôt GitHub
+1. Importer le dépôt GitHub **MasterGorn/VGB**
 2. **Root Directory** = `vgb`
 3. Variables d’environnement (Production + Preview) :
    - `MONGODB_URI`
    - `NEXTAUTH_SECRET`
    - `NEXTAUTH_URL` = URL HTTPS du déploiement (sans `/` final)
    - `NEXT_PUBLIC_APP_URL` = même URL
-4. Chaque push de branche → build preview (comme Liengo)
+4. **Deployment Protection** : pour un jeu public (classement, matchmaking), désactiver la protection SSO sur **Production**  
+   (Settings → Deployment Protection → Standard Protection = Off, ou « Only Preview Deployments »).  
+   Sinon `/api/*` renvoie la page de login Vercel (HTML) et le front affiche « réponse non JSON ».
+5. Chaque push de branche → build preview
 
 Le script `scripts/vercel-postbuild.mjs` contourne le bug Next 16 + Root Directory.
 
