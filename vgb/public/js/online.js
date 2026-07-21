@@ -5,6 +5,11 @@
 (function (global) {
   function preferNext() {
     try {
+      const host = (typeof location !== "undefined" && location.hostname) || "";
+      // Sur Vercel / hors localhost : toujours Next (ignore un ancien forçage PHP local)
+      if (host && host !== "localhost" && host !== "127.0.0.1") {
+        return true;
+      }
       const force = localStorage.getItem("vgb_api_mode");
       if (force === "php") return false;
       if (force === "next") return true;
