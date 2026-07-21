@@ -72,7 +72,10 @@
     async request(url, body, method) {
       const opts = {
         method: method || (body ? "POST" : "GET"),
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         credentials: "include",
       };
       if (this.mode === "php" && this.token && this.token !== "session") {
@@ -90,12 +93,44 @@
       }
 
       const raw = await res.text();
+      const ctype = (res.headers.get("content-type") || "").toLowerCase();
+      const looksHtml =
+        ctype.includes("text/html") ||
+        /^\s*<!DOCTYPE/i.test(raw) ||
+        /<html[\s>]/i.test(raw);
+      const looksVercelLogin =
+        looksHtml &&
+        (/log in to vercel/i.test(raw) ||
+          /vercel\.com\/login/i.test(raw) ||
+          /sso-api/i.test(String(res.url || "")));
+      const looksNotFound =
+        res.status === 404 ||
+        /\bNOT_FOUND\b/.test(raw) ||
+        /The page could not be found/i.test(raw);
+
       let data;
       try {
         data = raw ? JSON.parse(raw) : {};
       } catch (e) {
+        if (looksVercelLogin) {
+          throw new Error(
+            "Protection Vercel (SSO) active : dans le projet Vercel → Settings → Deployment Protection, désactivez la protection sur Production (ou passez en « Only Preview »)."
+          );
+        }
+        if (looksNotFound) {
+          throw new Error(
+            "API introuvable (404). Vérifiez Root Directory = vgb, puis Redeploy."
+          );
+        }
+        if (looksHtml) {
+          throw new Error(
+            "L'API a renvoyé une page HTML au lieu de JSON. Souvent : Deployment Protection Vercel, ou MONGODB_URI manquant."
+          );
+        }
         throw new Error(
-          "Réponse non JSON. Vérifiez que l'app Next.js tourne (Root Directory = vgb sur Vercel)."
+          "Réponse non JSON (HTTP " +
+            res.status +
+            "). Vérifiez Root Directory = vgb et les variables d'environnement sur Vercel."
         );
       }
       if (!res.ok || data.ok === false) {
