@@ -195,7 +195,7 @@
     if (!document.querySelector('link[rel="apple-touch-icon"]')) {
       var touch = document.createElement('link');
       touch.rel = 'apple-touch-icon';
-      touch.href = '/icons/apple-touch-icon.png';
+      touch.href = '/images/site/logo-video-games-battle-256.png';
       document.head.appendChild(touch);
     }
 

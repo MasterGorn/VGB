@@ -251,6 +251,9 @@
   width: 100%;
   max-width: 360px;
   min-height: 48px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .draft-btn:hover, .setup-btn:hover {
@@ -269,6 +272,10 @@
   background: linear-gradient(135deg, #5dade2, #3498db);
   transform: translateY(-2px);
   box-shadow: var(--shadow-large);
+}
+
+#resume-saved-game {
+  margin-bottom: 10px;
 }
 
 .setup-btn.danger {
@@ -1328,7 +1335,7 @@ body.end-game-open {
             </div>
           </div>
         </div>
-        <button type="button" id="resume-saved-game" class="setup-btn secondary" style="display:none;margin-bottom:10px;">Reprendre la partie sauvegardée</button>
+        <button type="button" id="resume-saved-game" class="setup-btn secondary" style="display:none;">Reprendre la partie sauvegardée</button>
         <button id="start-character-selection" class="setup-btn" data-t="start-game">Composer les armées</button>
       </div>
 
