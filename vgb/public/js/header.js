@@ -195,8 +195,16 @@
     if (!document.querySelector('link[rel="apple-touch-icon"]')) {
       var touch = document.createElement('link');
       touch.rel = 'apple-touch-icon';
-      touch.href = '/images/site/logo-video-games-battle-256.png';
+      touch.href = '/icons/apple-touch-icon.png';
       document.head.appendChild(touch);
+    }
+
+    if (!document.querySelector('link[rel="icon"]')) {
+      var favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.type = 'image/webp';
+      favicon.href = '/images/site/logo-video-games-battle-256.webp';
+      document.head.appendChild(favicon);
     }
 
     if ('serviceWorker' in navigator) {

@@ -11,8 +11,14 @@
   "lang": "fr",
   "icons": [
     {
-      "src": "/images/site/logo-video-games-battle-256.png",
-      "sizes": "256x256",
+      "src": "/images/site/logo-video-games-battle-256.webp",
+      "sizes": "1024x1024",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/logo-pwa-1024.png",
+      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
     },
