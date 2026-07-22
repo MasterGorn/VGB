@@ -31,7 +31,7 @@ const itemsData = [
     weight: 1,
     description: "lightning-desc",
     details: "lightning-details",
-    image: "/images/items/lightning.png",
+    image: "/images/items/Lightning.png",
     category: "destruction"
   },
   {

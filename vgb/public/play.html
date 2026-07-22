@@ -530,6 +530,45 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.mobile-pause-btn {
+  display: none;
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 5500;
+  min-width: 88px;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  border-radius: 10px;
+  background: rgba(0, 4, 40, 0.92);
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 15px;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-pause-btn.is-paused {
+  background: rgba(192, 57, 43, 0.92);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.game-container.game-active .mobile-pause-btn {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .game-container.game-active .mobile-pause-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .rules-title {
   font: var(--font-size-lg) Arial, sans-serif;
   margin-bottom: var(--spacing-sm);
@@ -1148,6 +1187,7 @@ body.end-game-open {
 </head>
 <body>
 <div id="header-root"></div>
+<button type="button" id="btn-mobile-pause" class="mobile-pause-btn" aria-label="Pause">Pause</button>
 
 <!-- Accroche principale -->
 <div class="tagline">
@@ -1272,12 +1312,12 @@ body.end-game-open {
       <div class="commands-title">Commandes</div>
       <ul class="commands-list">
         <li>
-          <kbd class="commands-key">S</kbd>
-          <span>Capacité secondaire de la pièce Unique sélectionnée</span>
+          <kbd class="commands-key">A</kbd>
+          <span>Action — capacité secondaire de la Unique (double-clic sur mobile)</span>
         </li>
         <li>
-          <kbd class="commands-key">P</kbd>
-          <span>Pause / reprise (partie locale uniquement)</span>
+          <kbd class="commands-key">S</kbd>
+          <span>Start/Stop — pause / reprise (partie locale uniquement)</span>
         </li>
       </ul>
     </div>
@@ -1808,22 +1848,38 @@ function create() {
     });
   }
   
-  // Gestion de la touche S pour la fonctionnalité secondaire
-  this.input.keyboard.on('keydown-S', () => {
+  // Touche A : Action (capacité secondaire Unique)
+  this.input.keyboard.on('keydown-A', () => {
     if (gamePaused) return;
     if (gameStarted && selectedPiece && selectedPiece.player === currentPlayer && !secondaryModeUsed && !itemUsedThisTurn) {
       toggleSecondaryMode();
     }
   });
 
-  // Pause locale (touche P) — désactivée en ligne
-  this.input.keyboard.on('keydown-P', () => {
+  // Touche S : Start/Stop (pause locale)
+  this.input.keyboard.on('keydown-S', () => {
     toggleLocalPause();
   });
+
+  const mobilePauseBtn = document.getElementById('btn-mobile-pause');
+  if (mobilePauseBtn) {
+    mobilePauseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleLocalPause();
+    });
+  }
 }
 
 function isLocalMatch() {
   return typeof VGBOnline === 'undefined' || !VGBOnline.enabled;
+}
+
+function syncMobilePauseButton() {
+  const btn = document.getElementById('btn-mobile-pause');
+  if (!btn) return;
+  btn.textContent = gamePaused ? 'Reprendre' : 'Pause';
+  btn.classList.toggle('is-paused', !!gamePaused);
+  btn.setAttribute('aria-label', gamePaused ? 'Reprendre' : 'Pause');
 }
 
 function toggleLocalPause() {
@@ -1833,6 +1889,7 @@ function toggleLocalPause() {
     return;
   }
   gamePaused = !gamePaused;
+  syncMobilePauseButton();
   if (gamePaused) {
     if (aiTurnTimer) {
       clearTimeout(aiTurnTimer);
@@ -1844,7 +1901,7 @@ function toggleLocalPause() {
       hideSecondaryModeIndicator();
       clearHighlights();
     }
-    showInfoMessage('Pause — appuyez sur P pour reprendre', 0);
+    showInfoMessage('Pause — S ou bouton pour reprendre', 0);
   } else {
     hideInfoMessage();
     showInfoMessage('Reprise', 1200);
@@ -2040,7 +2097,7 @@ function showSecondaryModeIndicator() {
   
   // Créer l'indicateur "S" en bas à gauche de la pièce
   const scene = selectedPiece.sprite.scene;
-  secondaryModeSprite = scene.add.text(0, 0, "S", {
+  secondaryModeSprite = scene.add.text(0, 0, "A", {
     font: "bold 16px Arial",
     fill: "#ff0000",
     stroke: "#ffffff",
@@ -2773,6 +2830,7 @@ function startGame(scene) {
   gameStarted = true;
   endGameHandled = false;
   gamePaused = false;
+  syncMobilePauseButton();
   currentPlayer = 0;
   moveCount = 0;
   moveLog = [];
@@ -3504,7 +3562,7 @@ function handleClick(scene, pos) {
   }
 
   if (gamePaused && !window.__vgbAiMove) {
-    showInfoMessage('Pause — appuyez sur P pour reprendre', 1500);
+    showInfoMessage('Pause — S ou bouton pour reprendre', 1500);
     return;
   }
 
@@ -3793,8 +3851,14 @@ function handleClick(scene, pos) {
     // Désélectionner toute pièce adverse
     selectedEnemyPiece = null;
     
-    // Si c'est la même pièce déjà sélectionnée : double-clic Joanna (cloak) ou désélection
+    // Si c'est la même pièce déjà sélectionnée : Action (double-clic), Joanna, ou désélection
     if (selectedPiece && selectedPiece === clickedPiece) {
+      if (typeof VGBUniqueAbilities !== 'undefined' &&
+          VGBUniqueAbilities.canUseSecondary(clickedPiece) &&
+          !secondaryModeUsed && !itemUsedThisTurn) {
+        toggleSecondaryMode();
+        return;
+      }
       if (typeof VGBUniqueAbilities !== 'undefined' &&
           VGBUniqueAbilities.handlePieceReselect(clickedPiece, getUniqueAbilityCtx())) {
         return;
