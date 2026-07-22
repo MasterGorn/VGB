@@ -48,15 +48,24 @@ L’API Next (auth Atlas, Elo) tourne en arrière-plan ; le design reste celui d
 
 1. Importer le dépôt GitHub **MasterGorn/VGB**
 2. **Root Directory** = `vgb`
-3. Variables d’environnement (Production + Preview) :
+3. **Framework Preset** = **Next.js** (obligatoire)
+4. **Output Directory** = **laisser vide** (ne jamais mettre `public` / `vgb/public` — sinon les pages HTML marchent mais **toutes les routes `/api/*` renvoient 404**)
+5. Variables d’environnement (Production + Preview) :
    - `MONGODB_URI`
-   - `NEXTAUTH_SECRET`
-   - `NEXTAUTH_URL` = URL HTTPS du déploiement (sans `/` final)
-   - `NEXT_PUBLIC_APP_URL` = même URL
-4. **Deployment Protection** : pour un jeu public (classement, matchmaking), désactiver la protection SSO sur **Production**  
-   (Settings → Deployment Protection → Standard Protection = Off, ou « Only Preview Deployments »).  
-   Sinon `/api/*` renvoie la page de login Vercel (HTML) et le front affiche « réponse non JSON ».
-5. Chaque push de branche → build preview
+   - `NEXTAUTH_SECRET` (obligatoire en prod, sinon NextAuth peut échouer)
+   - `NEXTAUTH_URL` = `https://www.videogamesbattle.com` (sans `/` final)
+   - `NEXT_PUBLIC_APP_URL` = `https://www.videogamesbattle.com`
+6. **Deployment Protection** : désactiver sur Production (Settings → Deployment Protection → Vercel Authentication OFF, ou « Only Preview »)
+7. Après changement de config build : **Redeploy** le déploiement Production
+
+### Si `/api/auth/session` ou `/api/health` → 404
+
+Le site est servi en **statique** (HTML/CSS/images OK) sans fonctions Next.js. Checklist :
+- Root Directory = `vgb`
+- Framework = Next.js
+- Output Directory **vide**
+- Build logs doivent contenir `Compiled successfully` / routes API, pas seulement une copie de fichiers
+- Le fichier `vgb/vercel.json` force le framework Next.js
 
 Le script `scripts/vercel-postbuild.mjs` contourne le bug Next 16 + Root Directory.
 

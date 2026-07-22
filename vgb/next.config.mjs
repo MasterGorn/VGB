@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const DEFAULT_PRODUCTION_ORIGIN = "https://vgb.vercel.app";
+const DEFAULT_PRODUCTION_ORIGIN = "https://www.videogamesbattle.com";
 const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
 
 function trimEnv(name) {

@@ -155,8 +155,24 @@
 
     async login(username, password) {
       if (this.mode === "next") {
-        const csrfRes = await fetch("/api/auth/csrf", { credentials: "include" });
-        const csrf = await csrfRes.json();
+        const csrfRes = await fetch("/api/auth/csrf", {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        const csrfRaw = await csrfRes.text();
+        let csrf;
+        try {
+          csrf = csrfRaw ? JSON.parse(csrfRaw) : {};
+        } catch (e) {
+          throw new Error(
+            "API NextAuth introuvable (HTTP " +
+              csrfRes.status +
+              "). Sur Vercel : Root Directory = vgb, Framework = Next.js, Output Directory vide, puis Redeploy."
+          );
+        }
+        if (!csrfRes.ok || !csrf.csrfToken) {
+          throw new Error(csrf.error || "Impossible d'obtenir le jeton CSRF");
+        }
         const body = new URLSearchParams({
           csrfToken: csrf.csrfToken,
           username,
@@ -183,9 +199,19 @@
 
     async refreshMe() {
       if (this.mode === "next") {
-        const res = await fetch("/api/auth/session", { credentials: "include" });
-        const data = await res.json();
-        if (!data?.user?.name) {
+        const res = await fetch("/api/auth/session", {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        const raw = await res.text();
+        let data;
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          this.clearSession();
+          return null;
+        }
+        if (!res.ok || !data?.user?.name) {
           this.clearSession();
           return null;
         }
