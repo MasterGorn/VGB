@@ -258,6 +258,85 @@
   box-shadow: var(--shadow-large);
 }
 
+.setup-btn.secondary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  border: none;
+  box-shadow: var(--shadow-medium);
+}
+
+.setup-btn.secondary:hover {
+  background: linear-gradient(135deg, #5dade2, #3498db);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-large);
+}
+
+.setup-btn.danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+}
+
+.timer-options {
+  text-align: left;
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+}
+.timer-options > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.timer-options input[type="checkbox"] {
+  accent-color: #f1c40f;
+  width: 18px;
+  height: 18px;
+}
+.timer-minutes-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.timer-minutes-row.hidden {
+  display: none;
+}
+.timer-minutes-row .timer-field {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.timer-minutes-row label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.timer-minutes-row input[type="number"] {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  font-size: 14px;
+  min-height: 40px;
+  width: 100%;
+}
+.local-save-btn {
+  display: none;
+  margin-top: 12px;
+  max-width: 100%;
+  font-size: 14px;
+  padding: 10px 16px;
+}
+.game-container.game-active .local-save-btn.is-local {
+  display: block;
+}
+
 .game-setup {
   background: var(--primary-bg);
   padding: 24px 12px;
@@ -345,15 +424,21 @@
 .mode-btn {
   flex: 1 1 140px;
   padding: 12px 16px;
-  border: 2px solid var(--border-color);
+  border: 2px solid #c9a227;
   border-radius: var(--border-radius);
-  background: var(--secondary-bg);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #5d4e37, #3d3429);
+  color: #f5e6c8;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   min-height: 48px;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.mode-btn:hover {
+  border-color: #ffd700;
+  color: #fff;
+  background: linear-gradient(135deg, #6e5c40, #4a3f30);
 }
 
 .local-opponent-options {
@@ -1113,15 +1198,15 @@
 }
 
 .end-game-footer .setup-btn.secondary {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  box-shadow: none;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border: none;
+  color: #fff;
+  box-shadow: var(--shadow-medium);
 }
 
 .end-game-footer .setup-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: none;
+  background: linear-gradient(135deg, #5dade2, #3498db);
+  transform: translateY(-2px);
 }
 
 .end-game-footer .setup-btn:active {
@@ -1227,6 +1312,23 @@ body.end-game-open {
             </select>
           </div>
         </div>
+        <div class="timer-options" id="timer-options">
+          <label>
+            <input type="checkbox" id="timer-enabled" checked>
+            Chronomètre activé
+          </label>
+          <div class="timer-minutes-row" id="timer-minutes-row">
+            <div class="timer-field">
+              <label for="timer-p0">Temps Joueur 1 (min)</label>
+              <input type="number" id="timer-p0" min="1" max="90" value="5" step="1">
+            </div>
+            <div class="timer-field">
+              <label for="timer-p1">Temps Joueur 2 (min)</label>
+              <input type="number" id="timer-p1" min="1" max="90" value="5" step="1">
+            </div>
+          </div>
+        </div>
+        <button type="button" id="resume-saved-game" class="setup-btn secondary" style="display:none;margin-bottom:10px;">Reprendre la partie sauvegardée</button>
         <button id="start-character-selection" class="setup-btn" data-t="start-game">Composer les armées</button>
       </div>
 
@@ -1320,6 +1422,7 @@ body.end-game-open {
           <span>Start/Stop — pause / reprise (partie locale uniquement)</span>
         </li>
       </ul>
+      <button type="button" id="btn-save-game" class="setup-btn local-save-btn">Sauvegarder la partie</button>
     </div>
     <div id="rules-panel" class="rules-panel">
       <div class="rules-title" data-t="pieces-in-play">Pièces en jeu</div>
@@ -1425,6 +1528,9 @@ let gridSizeUIElems = [];
 let timerEnabled = true;
 let timersArmed = false; // true après le 1er coup joué
 let timerOptionEl = null;
+let pendingTimerConfig = { enabled: true, minutes: [5, 5] };
+let pendingResumeSave = null;
+const LOCAL_SAVE_KEY = 'vgb_local_save';
 // Items & caisses
 let itemCrates = []; // [{ x, y, sprite, active, lastRound }]
 let playerItemIcons = []; // par joueur: tableau d'icônes [{ sprite, item }]
@@ -1844,9 +1950,22 @@ function create() {
   const startCharacterSelectionBtn = document.getElementById('start-character-selection');
   if (startCharacterSelectionBtn) {
     startCharacterSelectionBtn.addEventListener('click', () => {
+      readTimerOptionsFromUI();
       startCharacterSelection();
     });
   }
+
+  const resumeSavedBtn = document.getElementById('resume-saved-game');
+  if (resumeSavedBtn) {
+    resumeSavedBtn.addEventListener('click', () => resumeSavedGame());
+  }
+  const saveGameBtn = document.getElementById('btn-save-game');
+  if (saveGameBtn) {
+    saveGameBtn.addEventListener('click', () => saveLocalGame());
+  }
+  initTimerOptionsUI();
+  refreshResumeButton();
+  syncLocalSaveButton();
   
   // Touche A : Action (capacité secondaire Unique)
   this.input.keyboard.on('keydown-A', () => {
@@ -1872,6 +1991,205 @@ function create() {
 
 function isLocalMatch() {
   return typeof VGBOnline === 'undefined' || !VGBOnline.enabled;
+}
+
+function syncLocalSaveButton() {
+  const btn = document.getElementById('btn-save-game');
+  if (!btn) return;
+  const show = gameStarted && isLocalMatch() && !endGameHandled;
+  btn.classList.toggle('is-local', !!show);
+}
+
+function readTimerOptionsFromUI() {
+  const en = document.getElementById('timer-enabled');
+  const enabled = !en || en.checked;
+  const m0 = Math.max(1, Math.min(90, parseInt((document.getElementById('timer-p0') || {}).value, 10) || 5));
+  const m1 = Math.max(1, Math.min(90, parseInt((document.getElementById('timer-p1') || {}).value, 10) || 5));
+  pendingTimerConfig = { enabled, minutes: [m0, m1] };
+  timerEnabled = enabled;
+  return pendingTimerConfig;
+}
+
+function syncTimerMinutesVisibility() {
+  const en = document.getElementById('timer-enabled');
+  const row = document.getElementById('timer-minutes-row');
+  if (!row) return;
+  const on = !en || en.checked;
+  row.classList.toggle('hidden', !on);
+}
+
+function initTimerOptionsUI() {
+  const en = document.getElementById('timer-enabled');
+  if (en) {
+    en.addEventListener('change', syncTimerMinutesVisibility);
+  }
+  syncTimerMinutesVisibility();
+}
+
+function formatTimerHud(ms) {
+  if (!timerEnabled) return '∞';
+  return formatMs(ms || 0);
+}
+
+function refreshResumeButton() {
+  const btn = document.getElementById('resume-saved-game');
+  if (!btn) return;
+  const save = loadLocalSave();
+  const ok = !!(save && Array.isArray(save.pieces) && save.pieces.length);
+  btn.style.display = ok ? 'block' : 'none';
+  if (ok && save.savedAt) {
+    try {
+      const d = new Date(save.savedAt);
+      btn.textContent = 'Reprendre la partie sauvegardée (' + d.toLocaleString('fr-FR') + ')';
+    } catch (e) {
+      btn.textContent = 'Reprendre la partie sauvegardée';
+    }
+  }
+}
+
+function loadLocalSave() {
+  try {
+    const raw = localStorage.getItem(LOCAL_SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearLocalSave() {
+  try { localStorage.removeItem(LOCAL_SAVE_KEY); } catch (e) {}
+  refreshResumeButton();
+}
+
+function serializeLocalSave() {
+  const board = serializeOnlineBoardState();
+  return Object.assign({}, board, {
+    version: 1,
+    savedAt: Date.now(),
+    timerEnabled: !!timerEnabled,
+    playerTimersMs: (playerTimersMs || []).slice(),
+    aiEnabled: !!aiEnabled,
+    aiSeat: typeof aiSeat === 'number' ? aiSeat : 1,
+    aiDifficulty: aiDifficulty || 'medium',
+    armies: (playerArmies || []).slice(0, playerCount).map(army =>
+      (army || []).map(p => ({
+        name: p.name,
+        type: p.type,
+        role: p.role,
+        faction: p.faction,
+        cost: p.cost,
+        tier: p.tier,
+        range: p.range,
+        moves: p.moves,
+        image: p.image,
+        nameKey: p.nameKey
+      }))
+    )
+  });
+}
+
+function saveLocalGame() {
+  if (!gameStarted || endGameHandled) return;
+  if (!isLocalMatch()) {
+    showInfoMessage('La sauvegarde est réservée aux parties locales', 2000);
+    return;
+  }
+  try {
+    localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(serializeLocalSave()));
+    showInfoMessage('Partie sauvegardée — vous pourrez la reprendre plus tard', 2500);
+    refreshResumeButton();
+  } catch (e) {
+    alert('Impossible de sauvegarder la partie (stockage plein ou indisponible).');
+  }
+}
+
+function armiesFromSavePieces(save) {
+  const armies = [[], []];
+  if (Array.isArray(save.armies) && save.armies.length >= 2) {
+    return save.armies.slice(0, 2).map(a => (a || []).slice());
+  }
+  for (const p of save.pieces || []) {
+    if (!p || (p.role === 'king' || p.type === 'king')) continue;
+    const seat = p.player;
+    if (seat !== 0 && seat !== 1) continue;
+    armies[seat].push({
+      name: p.name,
+      type: p.type,
+      role: p.role || p.type,
+      faction: p.faction,
+      cost: p.cost,
+      tier: p.tier,
+      range: p.range,
+      moves: p.moves,
+      image: p.image,
+      nameKey: p.nameKey || p.type
+    });
+  }
+  return armies;
+}
+
+function hideSetupAndShowBoard() {
+  const selectionContainer = document.getElementById('character-selection-container');
+  if (selectionContainer) selectionContainer.remove();
+  const gameSetup = document.getElementById('game-setup');
+  if (gameSetup) gameSetup.style.display = 'none';
+  const gameContainer = document.querySelector('.game-container');
+  if (gameContainer) gameContainer.classList.add('game-active');
+  characterSelectionMode = false;
+}
+
+function resumeSavedGame() {
+  const save = loadLocalSave();
+  if (!save || !Array.isArray(save.pieces) || !save.pieces.length) {
+    alert('Aucune partie sauvegardée.');
+    refreshResumeButton();
+    return;
+  }
+  if (typeof VGBOnline !== 'undefined') {
+    VGBOnline.enabled = false;
+  }
+  pendingResumeSave = save;
+  timerEnabled = save.timerEnabled !== false;
+  const mins = (save.playerTimersMs || [300000, 300000]).map(ms =>
+    Math.max(1, Math.min(90, Math.round((Number(ms) || 300000) / 60000)))
+  );
+  pendingTimerConfig = { enabled: timerEnabled, minutes: [mins[0] || 5, mins[1] || 5] };
+  const en = document.getElementById('timer-enabled');
+  if (en) en.checked = timerEnabled;
+  const t0 = document.getElementById('timer-p0');
+  const t1 = document.getElementById('timer-p1');
+  if (t0) t0.value = String(pendingTimerConfig.minutes[0]);
+  if (t1) t1.value = String(pendingTimerConfig.minutes[1]);
+  syncTimerMinutesVisibility();
+
+  playerCount = 2;
+  playerNames = (save.playerNames && save.playerNames.length)
+    ? save.playerNames.slice(0, 2)
+    : ['Joueur 1', 'Joueur 2'];
+  playerFactions = (save.playerFactions && save.playerFactions.length)
+    ? save.playerFactions.slice(0, 2)
+    : ['Nintendo', 'PlayStation'];
+  playerArmies = armiesFromSavePieces(save);
+  aiEnabled = !!save.aiEnabled;
+  aiSeat = typeof save.aiSeat === 'number' ? save.aiSeat : 1;
+  aiDifficulty = save.aiDifficulty || 'medium';
+
+  hideSetupAndShowBoard();
+  createPiecesFromSelection();
+  setTimeout(() => updateRulesSidebar(), 200);
+  setTimeout(() => {
+    const canvas = document.querySelector('.game-root canvas');
+    if (canvas) {
+      try { canvas.focus(); } catch (e) {}
+    }
+    if (typeof game !== 'undefined' && game.scale) {
+      try { game.scale.refresh(); } catch (e) {}
+    }
+    const scene = game && game.scene && game.scene.scenes && game.scene.scenes[0];
+    if (scene) startGame(scene);
+    syncLocalSaveButton();
+  }, 200);
 }
 
 function syncMobilePauseButton() {
@@ -3254,9 +3572,19 @@ function startGame(scene) {
     .setDepth(2000);
   scene.time.delayedCall(2000, () => { startText.destroy(); });
 
-  // Timers: init par taille
-  const baseMinutes = 5;
-  playerTimersMs = players.map(() => baseMinutes * 60 * 1000);
+  // Timers: config setup (ou reprise)
+  if (pendingResumeSave && Array.isArray(pendingResumeSave.playerTimersMs) && pendingResumeSave.playerTimersMs.length) {
+    timerEnabled = pendingResumeSave.timerEnabled !== false;
+    playerTimersMs = pendingResumeSave.playerTimersMs.slice(0, players.length);
+    while (playerTimersMs.length < players.length) playerTimersMs.push(5 * 60 * 1000);
+  } else {
+    timerEnabled = pendingTimerConfig ? !!pendingTimerConfig.enabled : timerEnabled;
+    const mins = (pendingTimerConfig && pendingTimerConfig.minutes) || [5, 5];
+    playerTimersMs = players.map((_, i) => {
+      const m = Math.max(1, Math.min(90, Number(mins[i]) || Number(mins[0]) || 5));
+      return m * 60 * 1000;
+    });
+  }
 
   // HUD HTML (noms, faction, timer) — hors canvas
   setupHtmlHud();
@@ -3268,8 +3596,23 @@ function startGame(scene) {
   playerNameTexts = [];
 
   if (timerEvent) timerEvent.remove(false);
+  timerEvent = null;
   if (timerEnabled) {
     timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
+  }
+
+  // Reprise d'une sauvegarde locale : réappliquer l'état du plateau
+  if (pendingResumeSave) {
+    const save = pendingResumeSave;
+    pendingResumeSave = null;
+    applyRemoteBoardState(save);
+    if (Array.isArray(save.playerTimersMs)) {
+      playerTimersMs = save.playerTimersMs.slice(0, players.length);
+    }
+    setupHtmlHud();
+    syncLocalSaveButton();
+  } else {
+    syncLocalSaveButton();
   }
 
   // Plus besoin d'icône - le nom du joueur sera mis en évidence
@@ -5990,8 +6333,8 @@ function tickTimer(scene) {
   const syncHudTimer = (i) => {
     const el = document.getElementById('hud-timer-' + i);
     if (!el) return;
-    el.textContent = formatMs(playerTimersMs[i] || 0);
-    el.classList.toggle('urgent', (playerTimersMs[i] || 0) < 30000);
+    el.textContent = formatTimerHud(playerTimersMs[i] || 0);
+    el.classList.toggle('urgent', timerEnabled && (playerTimersMs[i] || 0) < 30000);
   };
   playerTimersMs[nowIdx] = Math.max(0, playerTimersMs[nowIdx] - 250);
   syncHudTimer(nowIdx);
@@ -6069,6 +6412,8 @@ function endGameWithRanking(ranking) {
     clearTimeout(aiTurnTimer);
     aiTurnTimer = null;
   }
+  if (isLocalMatch()) clearLocalSave();
+  syncLocalSaveButton();
   clearHighlights();
   hideInfoMessage();
   isEndGameMessage = true;
@@ -6603,8 +6948,8 @@ function setupHtmlHud() {
     if (nameEl) nameEl.textContent = name;
     if (facEl) facEl.textContent = '(' + getFactionDisplayName(faction) + ')';
     if (timEl) {
-      timEl.textContent = formatMs(playerTimersMs[i] || 0);
-      timEl.classList.toggle('urgent', (playerTimersMs[i] || 0) < 30000);
+      timEl.textContent = formatTimerHud(playerTimersMs[i] || 0);
+      timEl.classList.toggle('urgent', timerEnabled && (playerTimersMs[i] || 0) < 30000);
     }
     syncHtmlHudItems(i);
   }
@@ -7235,6 +7580,8 @@ function startGameFromSelection() {
     return;
   }
 
+  readTimerOptionsFromUI();
+
   // Récupérer et mettre à jour la taille du plateau sélectionnée
   computeBoardLayout();
   
@@ -7457,19 +7804,24 @@ function applyRemoteBoardState(state) {
   if (!state || !Array.isArray(state.pieces)) return;
   window.__vgbApplyingRemote = true;
   try {
+    const usedLocals = new Set();
     // Appliquer positions (priorité onlineId pour les skins en double)
     for (const rp of state.pieces) {
       let local = null;
       if (rp.onlineId) {
-        local = pieces.find(p => p.onlineId === rp.onlineId);
+        local = pieces.find(p => !usedLocals.has(p) && p.onlineId === rp.onlineId);
       }
       if (!local) {
-        local = pieces.find(p => p.player === rp.player && p.type === rp.type && p.name === rp.name && p.x === rp.x && p.y === rp.y);
+        local = pieces.find(p => !usedLocals.has(p) && p.player === rp.player && p.type === rp.type && p.name === rp.name && p.x === rp.x && p.y === rp.y);
       }
       if (!local) {
-        local = pieces.find(p => p.player === rp.player && p.name === rp.name && p.role === rp.role);
+        local = pieces.find(p => !usedLocals.has(p) && p.player === rp.player && p.name === rp.name && p.role === rp.role);
+      }
+      if (!local) {
+        local = pieces.find(p => !usedLocals.has(p) && p.player === rp.player && p.type === rp.type && p.role === rp.role);
       }
       if (local) {
+        usedLocals.add(local);
         local.x = rp.x;
         local.y = rp.y;
         if (rp.onlineId && !local.onlineId) local.onlineId = rp.onlineId;
