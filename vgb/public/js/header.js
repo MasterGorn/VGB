@@ -199,6 +199,14 @@
       document.head.appendChild(touch);
     }
 
+    if (!document.querySelector('link[rel="icon"]')) {
+      var favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.type = 'image/webp';
+      favicon.href = '/images/site/logo-video-games-battle-256.webp';
+      document.head.appendChild(favicon);
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
