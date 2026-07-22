@@ -2177,19 +2177,24 @@ function resumeSavedGame() {
 
   hideSetupAndShowBoard();
   createPiecesFromSelection();
-  setTimeout(() => updateRulesSidebar(), 200);
-  setTimeout(() => {
-    const canvas = document.querySelector('.game-root canvas');
-    if (canvas) {
-      try { canvas.focus(); } catch (e) {}
-    }
-    if (typeof game !== 'undefined' && game.scale) {
-      try { game.scale.refresh(); } catch (e) {}
-    }
-    const scene = game && game.scene && game.scene.scenes && game.scene.scenes[0];
-    if (scene) startGame(scene);
-    syncLocalSaveButton();
-  }, 200);
+
+  // Comme startGameFromSelection / online : afficher le canvas (sinon display:none → cadre gris vide)
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const canvas = document.querySelector('.game-root canvas');
+      if (canvas) {
+        canvas.classList.add('game-started');
+        try { canvas.focus(); } catch (e) {}
+      }
+      if (typeof game !== 'undefined' && game.scale) {
+        try { game.scale.refresh(); } catch (e) {}
+      }
+      const scene = game && game.scene && game.scene.scenes && game.scene.scenes[0];
+      if (scene) startGame(scene);
+      syncLocalSaveButton();
+      updateRulesSidebar();
+    }, 200);
+  });
 }
 
 function syncMobilePauseButton() {
@@ -3136,6 +3141,13 @@ function startGame(scene) {
   // Initialiser les poids des objets
   initItemWeights();
   computeBoardLayout();
+
+  // En ligne : chronomètre fixe 5 min (options locales uniquement)
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    pendingResumeSave = null;
+    timerEnabled = true;
+    pendingTimerConfig = { enabled: true, minutes: [5, 5] };
+  }
   
   // Couleurs des éditeurs pour les backgrounds des pièces (opacité 50%)
   const factionColors = {

@@ -154,7 +154,60 @@
     });
   }
 
+  function ensurePwaInstall() {
+    if (typeof document === 'undefined') return;
+
+    if (!document.querySelector('link[rel="manifest"]')) {
+      var manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = '/manifest.webmanifest';
+      document.head.appendChild(manifest);
+    }
+
+    if (!document.querySelector('meta[name="theme-color"]')) {
+      var theme = document.createElement('meta');
+      theme.name = 'theme-color';
+      theme.content = '#1a1a1a';
+      document.head.appendChild(theme);
+    }
+
+    if (!document.querySelector('meta[name="mobile-web-app-capable"]')) {
+      var mwa = document.createElement('meta');
+      mwa.name = 'mobile-web-app-capable';
+      mwa.content = 'yes';
+      document.head.appendChild(mwa);
+    }
+
+    if (!document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
+      var apple = document.createElement('meta');
+      apple.name = 'apple-mobile-web-app-capable';
+      apple.content = 'yes';
+      document.head.appendChild(apple);
+    }
+
+    if (!document.querySelector('meta[name="apple-mobile-web-app-title"]')) {
+      var appleTitle = document.createElement('meta');
+      appleTitle.name = 'apple-mobile-web-app-title';
+      appleTitle.content = 'VGB';
+      document.head.appendChild(appleTitle);
+    }
+
+    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+      var touch = document.createElement('link');
+      touch.rel = 'apple-touch-icon';
+      touch.href = '/icons/apple-touch-icon.png';
+      document.head.appendChild(touch);
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      });
+    }
+  }
+
   function injectHeader(active) {
+    ensurePwaInstall();
     var placeholder = document.getElementById('header-root');
     if (!placeholder) return;
     placeholder.outerHTML = renderHeader(active);
