@@ -29,7 +29,9 @@
     min-height: 48px;
   }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  button {
+  /* Ne pas cibler tous les button : le burger / langue du header seraient cassés */
+  .actions > button,
+  .replay-actions > button {
     flex: 1;
     font-size: 15px;
     font-weight: bold;
@@ -39,6 +41,12 @@
     cursor: pointer;
     min-height: 48px;
     color: #fff;
+  }
+  .replay-actions > button {
+    flex: none;
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
   }
   #btn-login { background: #111; border: 1px solid #fff; }
   #btn-register { background: linear-gradient(135deg, #2ecc71, #27ae60); }
@@ -163,13 +171,6 @@
     display: flex;
     gap: 6px;
     flex-shrink: 0;
-  }
-  .replay-actions button {
-    flex: none;
-    min-height: 36px;
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 8px;
   }
   .replay-empty {
     font-size: 13px;
