@@ -72,6 +72,7 @@ function vgb_db(): PDO {
       user_id INTEGER NOT NULL,
       name TEXT NOT NULL DEFAULT 'Mon deck',
       faction TEXT NOT NULL,
+      game_mode TEXT NOT NULL DEFAULT 'vgb',
       slots_json TEXT NOT NULL,
       is_default INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),

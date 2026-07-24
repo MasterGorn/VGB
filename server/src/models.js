@@ -27,6 +27,7 @@ const deckSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   name: { type: String, default: 'Mon deck', maxlength: 40 },
   faction: { type: String, required: true, enum: ['Nintendo', 'PlayStation', 'SEGA', 'Xbox'] },
+  gameMode: { type: String, enum: ['vgb', 'classic'], default: 'vgb', index: true },
   slots: { type: [deckSlotSchema], required: true },
   isDefault: { type: Boolean, default: false },
   updatedAt: { type: Date, default: Date.now },

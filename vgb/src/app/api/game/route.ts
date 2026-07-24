@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { eloUpdate, requireUser } from "@/lib/session";
-import User, { publicUser, pushRecentResult } from "@/models/User";
+import User, { publicUser, pushRecentResult, isClassicGrid } from "@/models/User";
 import Match from "@/models/Match";
 import Replay from "@/models/Replay";
 import { jsonError, seatOf } from "@/lib/match";
@@ -157,32 +157,68 @@ export async function POST(req: Request) {
 
       let score1 = 0.5;
       let winnerId: typeof match.winnerId = null;
+      let isDraw = false;
       if (winnerSeat === 0 || winnerSeat === "0") {
         score1 = 1;
         winnerId = match.player1Id;
       } else if (winnerSeat === 1 || winnerSeat === "1") {
         score1 = 0;
         winnerId = match.player2Id;
+      } else if (
+        winnerSeat == null ||
+        winnerSeat === "draw" ||
+        body.result === "stalemate"
+      ) {
+        score1 = 0.5;
+        isDraw = true;
       } else {
         return NextResponse.json(
-          { ok: false, error: "Résultat de partie invalide (pas de nul possible)" },
+          { ok: false, error: "Résultat de partie invalide" },
           { status: 400 }
         );
       }
 
-      const [elo1, elo2] = eloUpdate(p1.elo, p2.elo, score1);
-      p1.elo = elo1;
-      p2.elo = elo2;
-      if (score1 === 1) {
-        p1.wins += 1;
-        p2.losses += 1;
-        pushRecentResult(p1, "W");
-        pushRecentResult(p2, "L");
+      const classic = isClassicGrid(match.gridSize) || (match as { gameMode?: string }).gameMode === "classic";
+      const eloA = classic ? (p1.eloClassic ?? 1000) : p1.elo;
+      const eloB = classic ? (p2.eloClassic ?? 1000) : p2.elo;
+      const [elo1, elo2] = eloUpdate(eloA, eloB, score1);
+      if (classic) {
+        p1.eloClassic = elo1;
+        p2.eloClassic = elo2;
       } else {
-        p1.losses += 1;
-        p2.wins += 1;
-        pushRecentResult(p1, "L");
-        pushRecentResult(p2, "W");
+        p1.elo = elo1;
+        p2.elo = elo2;
+      }
+      if (isDraw) {
+        if (classic) {
+          p1.drawsClassic = (p1.drawsClassic || 0) + 1;
+          p2.drawsClassic = (p2.drawsClassic || 0) + 1;
+        } else {
+          p1.draws += 1;
+          p2.draws += 1;
+        }
+        pushRecentResult(p1, "D", classic ? "classic" : "vgb");
+        pushRecentResult(p2, "D", classic ? "classic" : "vgb");
+      } else if (score1 === 1) {
+        if (classic) {
+          p1.winsClassic = (p1.winsClassic || 0) + 1;
+          p2.lossesClassic = (p2.lossesClassic || 0) + 1;
+        } else {
+          p1.wins += 1;
+          p2.losses += 1;
+        }
+        pushRecentResult(p1, "W", classic ? "classic" : "vgb");
+        pushRecentResult(p2, "L", classic ? "classic" : "vgb");
+      } else {
+        if (classic) {
+          p1.lossesClassic = (p1.lossesClassic || 0) + 1;
+          p2.winsClassic = (p2.winsClassic || 0) + 1;
+        } else {
+          p1.losses += 1;
+          p2.wins += 1;
+        }
+        pushRecentResult(p1, "L", classic ? "classic" : "vgb");
+        pushRecentResult(p2, "W", classic ? "classic" : "vgb");
       }
       await p1.save();
       await p2.save();
@@ -191,6 +227,7 @@ export async function POST(req: Request) {
         ...state,
         finished: true,
         winnerSeat,
+        gameMode: classic ? "classic" : "vgb",
         elo: { player1: elo1, player2: elo2 },
         version: Number(state.version || 0) + 1,
       };

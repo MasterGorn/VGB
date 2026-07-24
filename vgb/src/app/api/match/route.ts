@@ -19,7 +19,12 @@ function shortRoomCode() {
   return newMatchKey().slice(0, 6).toUpperCase();
 }
 
-async function createMatchFromPair(player1Id: string, player2Id: string, gridSize: number) {
+async function createMatchFromPair(
+  player1Id: string,
+  player2Id: string,
+  gridSize: number,
+  gameMode: "vgb" | "classic" = "vgb"
+) {
   await MatchQueue.deleteOne({ userId: player1Id });
   await MatchQueue.deleteOne({ userId: player2Id });
   await PrivateRoom.deleteOne({ hostId: player1Id });
@@ -29,6 +34,7 @@ async function createMatchFromPair(player1Id: string, player2Id: string, gridSiz
     player1Id,
     player2Id,
     gridSize,
+    gameMode,
     status: "draft",
     currentSeat: 0,
     state: initialDraftState(),
@@ -43,7 +49,9 @@ export async function POST(req: Request) {
     const action = String(body.action || "");
 
     if (action === "enqueue") {
-      const gridSize = 9;
+      const rawMode = String(body.gameMode || body.mode || "vgb");
+      const gameMode: "vgb" | "classic" = rawMode === "classic" ? "classic" : "vgb";
+      const gridSize = gameMode === "classic" ? 8 : 9;
       const existing = await findActiveMatchForUser(user._id);
       if (existing) {
         return NextResponse.json({
@@ -56,6 +64,7 @@ export async function POST(req: Request) {
       const waiting = await MatchQueue.findOneAndDelete({
         userId: { $ne: user._id },
         gridSize,
+        gameMode,
       }).sort({ joinedAt: 1 });
 
       if (waiting) {
@@ -65,6 +74,7 @@ export async function POST(req: Request) {
           player1Id: waiting.userId,
           player2Id: user._id,
           gridSize,
+          gameMode,
           status: "draft",
           currentSeat: 0,
           state: initialDraftState(),
@@ -78,7 +88,7 @@ export async function POST(req: Request) {
 
       await MatchQueue.findOneAndUpdate(
         { userId: user._id },
-        { $set: { gridSize, joinedAt: new Date() } },
+        { $set: { gridSize, gameMode, joinedAt: new Date() } },
         { upsert: true, new: true }
       );
       return NextResponse.json({
@@ -86,6 +96,7 @@ export async function POST(req: Request) {
         matched: false,
         queued: true,
         gridSize,
+        gameMode,
       });
     }
 
@@ -116,7 +127,9 @@ export async function POST(req: Request) {
     }
 
     if (action === "createPrivate") {
-      const gridSize = 9;
+      const rawMode = String(body.gameMode || body.mode || "vgb");
+      const gameMode: "vgb" | "classic" = rawMode === "classic" ? "classic" : "vgb";
+      const gridSize = gameMode === "classic" ? 8 : 9;
       const targetUserId = body.targetUserId ? String(body.targetUserId).trim() : null;
 
       const existing = await findActiveMatchForUser(user._id);
@@ -153,6 +166,7 @@ export async function POST(req: Request) {
           $set: {
             roomCode,
             gridSize,
+            gameMode,
             targetUserId: targetUserId || null,
             createdAt: new Date(),
           },
@@ -166,12 +180,13 @@ export async function POST(req: Request) {
           roomCode: room.roomCode,
           hostId: String(user._id),
           targetUserId: room.targetUserId ? String(room.targetUserId) : null,
+          gridSize,
+          gameMode,
         },
       });
     }
 
     if (action === "joinPrivate") {
-      const gridSize = 9;
       const roomCode = body.roomCode ? String(body.roomCode).trim().toUpperCase() : "";
       const hostId = body.hostId ? String(body.hostId).trim() : "";
 
@@ -201,7 +216,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: "Cette partie est réservée à un autre joueur" }, { status: 403 });
       }
 
-      const match = await createMatchFromPair(String(room.hostId), String(user._id), room.gridSize || gridSize);
+      const roomMode: "vgb" | "classic" =
+        room.gameMode === "classic" || room.gridSize === 8 ? "classic" : "vgb";
+      const roomGrid = roomMode === "classic" ? 8 : 9;
+      const match = await createMatchFromPair(
+        String(room.hostId),
+        String(user._id),
+        room.gridSize || roomGrid,
+        roomMode
+      );
       return NextResponse.json({
         ok: true,
         matched: true,

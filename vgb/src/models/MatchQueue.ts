@@ -4,6 +4,7 @@ const matchQueueSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     gridSize: { type: Number, default: 9 },
+    gameMode: { type: String, enum: ["vgb", "classic"], default: "vgb", index: true },
     joinedAt: { type: Date, default: Date.now, index: true },
   },
   { timestamps: false }
@@ -12,6 +13,7 @@ const matchQueueSchema = new Schema(
 export type MatchQueueDoc = HydratedDocument<{
   userId: Types.ObjectId;
   gridSize: number;
+  gameMode: "vgb" | "classic";
   joinedAt: Date;
 }>;
 

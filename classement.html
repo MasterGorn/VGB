@@ -10,7 +10,7 @@
 <style>
   .page { max-width: 720px; margin: 0 auto; padding: 120px 16px 40px; }
   h1 { color: #ffd700; font-size: clamp(24px, 5vw, 36px); margin: 0 0 8px; }
-  .sub { color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+  .sub { color: rgba(255,255,255,0.7); margin-bottom: 16px; }
   .table-wrap {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
@@ -36,6 +36,27 @@
     min-height: 48px;
     line-height: 24px;
   }
+  .lb-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 16px;
+    flex-wrap: wrap;
+  }
+  .lb-tabs button {
+    flex: 1 1 160px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,215,0,0.35);
+    background: rgba(0,0,0,0.25);
+    color: #f5e6c8;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .lb-tabs button.active {
+    background: linear-gradient(135deg, #e67e22, #f1c40f);
+    color: #111;
+    border-color: transparent;
+  }
   @media (max-width: 480px) {
     th:nth-child(4), td:nth-child(4) { display: none; }
   }
@@ -45,7 +66,11 @@
 <div id="header-root"></div>
 <main class="page">
   <h1 class="page-title">🏆 <span class="title-text">Classement Elo</span> 🏆</h1>
-  <p class="sub">Classement des parties en ligne 1v1. Elo de départ : 1000.</p>
+  <p class="sub" id="lb-sub">Classement des parties en ligne 1v1. Elo de départ : 1000.</p>
+  <div class="lb-tabs" role="tablist">
+    <button type="button" class="active" id="tab-vgb" data-mode="vgb">Video Games Battle (9×9)</button>
+    <button type="button" id="tab-classic" data-mode="classic">Échecs traditionnels (8×8)</button>
+  </div>
   <div class="table-wrap">
     <table>
       <thead>
@@ -62,7 +87,7 @@
     </table>
   </div>
   <div class="cta">
-    <a href="index.html">Jouer en ligne</a>
+    <a href="play.html">Jouer en ligne</a>
   </div>
 </main>
 <script src="/js/translations.js"></script>
@@ -74,27 +99,45 @@ if (typeof initTranslation === 'function') initTranslation();
 
 (async function () {
   const body = document.getElementById('lb-body');
-  try {
-    const rows = await VGBOnline.fetchLeaderboard(50);
-    if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="4" class="muted">Aucun joueur classé pour l’instant.</td></tr>';
-      return;
+  const sub = document.getElementById('lb-sub');
+  let currentMode = 'vgb';
+
+  async function load(mode) {
+    currentMode = mode === 'classic' ? 'classic' : 'vgb';
+    document.getElementById('tab-vgb').classList.toggle('active', currentMode === 'vgb');
+    document.getElementById('tab-classic').classList.toggle('active', currentMode === 'classic');
+    if (sub) {
+      sub.textContent = currentMode === 'classic'
+        ? 'Classement Échecs traditionnels (8×8). Elo de départ : 1000.'
+        : 'Classement Video Games Battle (9×9). Elo de départ : 1000.';
     }
-    body.innerHTML = rows.map(r =>
-      `<tr>
-        <td class="rank">${r.rank}</td>
-        <td>${r.username}</td>
-        <td class="elo">${r.elo}</td>
-        <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
-      </tr>`
-    ).join('');
-  } catch (e) {
-    const detail = (e && e.message) ? String(e.message) : "";
-    const hint = detail
-      ? detail
-      : "Vérifiez MONGODB_URI sur Vercel, ou désactivez la protection de déploiement.";
-    body.innerHTML = '<tr><td colspan="4" class="muted">Impossible de charger le classement. ' + hint.replace(/</g, "&lt;") + "</td></tr>";
+    body.innerHTML = '<tr><td colspan="4" class="muted">Chargement…</td></tr>';
+    try {
+      const rows = await VGBOnline.fetchLeaderboard(50, currentMode);
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="4" class="muted">Aucun joueur classé pour l’instant.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(r =>
+        `<tr>
+          <td class="rank">${r.rank}</td>
+          <td>${r.username}</td>
+          <td class="elo">${r.elo}</td>
+          <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
+        </tr>`
+      ).join('');
+    } catch (e) {
+      const detail = (e && e.message) ? String(e.message) : "";
+      const hint = detail
+        ? detail
+        : "Vérifiez MONGODB_URI sur Vercel, ou désactivez la protection de déploiement.";
+      body.innerHTML = '<tr><td colspan="4" class="muted">Impossible de charger le classement. ' + hint.replace(/</g, "&lt;") + "</td></tr>";
+    }
   }
+
+  document.getElementById('tab-vgb').addEventListener('click', () => load('vgb'));
+  document.getElementById('tab-classic').addEventListener('click', () => load('classic'));
+  load('vgb');
 })();
 </script>
 </body>

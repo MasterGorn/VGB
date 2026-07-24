@@ -8,6 +8,8 @@ const matchSchema = new Schema(
     player1Id: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     player2Id: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     gridSize: { type: Number, default: 9 },
+    /** 'vgb' = 9×9 objets+unique, 'classic' = 8×8 échecs traditionnels */
+    gameMode: { type: String, enum: ["vgb", "classic"], default: "vgb", index: true },
     status: {
       type: String,
       enum: ["draft", "playing", "finished"],
@@ -30,6 +32,7 @@ export type MatchDoc = HydratedDocument<{
   player1Id: Types.ObjectId;
   player2Id: Types.ObjectId;
   gridSize: number;
+  gameMode: "vgb" | "classic";
   status: MatchStatus;
   currentSeat: number;
   winnerId: Types.ObjectId | null;

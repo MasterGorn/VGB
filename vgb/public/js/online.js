@@ -275,13 +275,14 @@
       this.enabled = false;
     },
 
-    async fetchLeaderboard(limit = 10) {
+    async fetchLeaderboard(limit = 10, mode = "vgb") {
+      const q = "?limit=" + limit + "&mode=" + (mode === "classic" ? "classic" : "vgb");
       if (this.mode === "next") {
-        const data = await this.request("/api/leaderboard?limit=" + limit);
+        const data = await this.request("/api/leaderboard" + q);
         return data.leaderboard || [];
       }
       const API = phpEndpoints();
-      const data = await this.request(API.leaderboard + "?limit=" + limit);
+      const data = await this.request(API.leaderboard + q);
       return data.leaderboard || [];
     },
 
@@ -306,12 +307,13 @@
       return data.deck;
     },
 
-    async saveDeck({ id, name, faction, slots, isDefault }) {
+    async saveDeck({ id, name, faction, slots, isDefault, gameMode }) {
+      const mode = gameMode === "classic" ? "classic" : "vgb";
       if (this.mode === "next") {
         if (id) {
           const data = await this.request(
             "/api/decks/" + id,
-            { name, faction, slots, isDefault: !!isDefault },
+            { name, faction, slots, isDefault: !!isDefault, gameMode: mode },
             "PATCH"
           );
           return data.deck;
@@ -321,6 +323,7 @@
           faction,
           slots,
           isDefault: !!isDefault,
+          gameMode: mode,
         });
         return data.deck;
       }
@@ -332,6 +335,7 @@
         faction,
         slots,
         isDefault: !!isDefault,
+        gameMode: mode,
       });
       return data.deck;
     },
@@ -431,14 +435,16 @@
         .filter(Boolean);
     },
 
-    async enqueue(gridSize) {
+    async enqueue(gridSize, gameMode) {
+      const mode = gameMode === "classic" ? "classic" : "vgb";
+      const size = mode === "classic" ? 8 : (gridSize || 9);
       if (this.mode === "next") {
-        const data = await this.request("/api/match", { action: "enqueue", gridSize });
+        const data = await this.request("/api/match", { action: "enqueue", gridSize: size, gameMode: mode });
         if (data.matched) this.onMatched(data.match);
         return data;
       }
       const API = phpEndpoints();
-      const data = await this.request(API.match, { action: "enqueue", gridSize });
+      const data = await this.request(API.match, { action: "enqueue", gridSize: size, gameMode: mode });
       if (data.matched) this.onMatched(data.match);
       return data;
     },
@@ -452,13 +458,15 @@
       return this.request(API.match, { action: "cancel" });
     },
 
-    async createPrivate(targetUserId) {
+    async createPrivate(targetUserId, gameMode) {
       if (this.mode !== "next") {
         throw new Error("Parties privées disponibles uniquement avec l'API Next.js");
       }
+      const mode = gameMode === "classic" ? "classic" : "vgb";
       const data = await this.request("/api/match", {
         action: "createPrivate",
         targetUserId: targetUserId || undefined,
+        gameMode: mode,
       });
       if (data.matched) this.onMatched(data.match);
       return data;
@@ -606,7 +614,7 @@
         } catch (e) {
           console.warn("Poll erreur", e);
         }
-      }, 1200);
+      }, 700);
     },
 
     stopPolling() {

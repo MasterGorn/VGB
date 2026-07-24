@@ -59,13 +59,14 @@ export async function POST(req: Request) {
     if (!["Nintendo", "PlayStation", "SEGA", "Xbox"].includes(faction)) {
       return NextResponse.json({ ok: false, error: "Faction invalide" }, { status: 400 });
     }
-    const slots = validateSlots(body.slots);
+    const slots = validateSlots(body.slots, body.gameMode === "classic" ? "classic" : "vgb");
+    const gameMode = body.gameMode === "classic" ? "classic" : "vgb";
     let isDefault = !!body.isDefault;
 
     const count = await Deck.countDocuments({ userId: user._id });
-    if (count >= 5) {
+    if (count >= 16) {
       return NextResponse.json(
-        { ok: false, error: "Maximum 5 decks par compte" },
+        { ok: false, error: "Maximum 16 decks par compte" },
         { status: 400 }
       );
     }
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
       userId: user._id,
       name,
       faction,
+      gameMode,
       slots,
       isDefault,
     });
