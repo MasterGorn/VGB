@@ -1,6 +1,6 @@
 import mongoose, { Schema, type HydratedDocument, type Model } from "mongoose";
 
-export const ROLE_LIMITS = {
+export const ROLE_LIMITS_VGB = {
   pawn: 9,
   knight: 2,
   bishop: 2,
@@ -9,7 +9,19 @@ export const ROLE_LIMITS = {
   unique: 1,
 } as const;
 
-export type ChessRole = keyof typeof ROLE_LIMITS;
+export const ROLE_LIMITS_CLASSIC = {
+  pawn: 8,
+  knight: 2,
+  bishop: 2,
+  rook: 2,
+  queen: 1,
+} as const;
+
+/** @deprecated use ROLE_LIMITS_VGB */
+export const ROLE_LIMITS = ROLE_LIMITS_VGB;
+
+export type ChessRole = keyof typeof ROLE_LIMITS_VGB;
+export type GameMode = "vgb" | "classic";
 
 const slotSchema = new Schema(
   {
@@ -28,6 +40,12 @@ const deckSchema = new Schema(
       required: true,
       enum: ["Nintendo", "PlayStation", "SEGA", "Xbox"],
     },
+    gameMode: {
+      type: String,
+      enum: ["vgb", "classic"],
+      default: "vgb",
+      index: true,
+    },
     slots: { type: [slotSchema], required: true },
     isDefault: { type: Boolean, default: false },
   },
@@ -40,6 +58,7 @@ export type DeckDoc = HydratedDocument<{
   userId: mongoose.Types.ObjectId;
   name: string;
   faction: "Nintendo" | "PlayStation" | "SEGA" | "Xbox";
+  gameMode: GameMode;
   slots: DeckSlot[];
   isDefault: boolean;
   createdAt?: Date;
@@ -52,12 +71,17 @@ const Deck =
 
 export default Deck;
 
-export function validateSlots(slots: unknown): DeckSlot[] {
+export function roleLimitsForMode(mode: GameMode = "vgb") {
+  return mode === "classic" ? ROLE_LIMITS_CLASSIC : ROLE_LIMITS_VGB;
+}
+
+export function validateSlots(slots: unknown, mode: GameMode = "vgb"): DeckSlot[] {
   if (!Array.isArray(slots)) {
     throw Object.assign(new Error("slots invalides"), { status: 400 });
   }
+  const limits = roleLimitsForMode(mode);
   const counts: Record<string, number> = Object.fromEntries(
-    Object.keys(ROLE_LIMITS).map((r) => [r, 0])
+    Object.keys(limits).map((r) => [r, 0])
   );
   const clean: DeckSlot[] = [];
   for (const slot of slots) {
@@ -67,8 +91,8 @@ export function validateSlots(slots: unknown): DeckSlot[] {
         (slot as { nameKey?: string }).nameKey ||
         ""
     ).trim();
-    if (!(role in ROLE_LIMITS)) {
-      throw Object.assign(new Error("Rôle inconnu: " + role), { status: 400 });
+    if (!(role in limits)) {
+      throw Object.assign(new Error("Rôle inconnu pour ce mode: " + role), { status: 400 });
     }
     if (!pieceKey || pieceKey.length > 64 || !/^[a-zA-Z0-9_\-]+$/.test(pieceKey)) {
       throw Object.assign(new Error("pieceKey invalide"), { status: 400 });
@@ -76,7 +100,7 @@ export function validateSlots(slots: unknown): DeckSlot[] {
     counts[role] += 1;
     clean.push({ role, pieceKey });
   }
-  for (const [role, limit] of Object.entries(ROLE_LIMITS)) {
+  for (const [role, limit] of Object.entries(limits)) {
     if (counts[role] !== limit) {
       throw Object.assign(
         new Error(`Quota ${role} incorrect (${counts[role]}/${limit})`),
@@ -92,6 +116,7 @@ export function publicDeck(deck: DeckDoc) {
     id: String(deck._id),
     name: deck.name,
     faction: deck.faction,
+    gameMode: (deck.gameMode === "classic" ? "classic" : "vgb") as GameMode,
     slots: deck.slots,
     isDefault: !!deck.isDefault,
     updatedAt: deck.updatedAt,

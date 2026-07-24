@@ -5,6 +5,7 @@ const privateRoomSchema = new Schema(
     hostId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     roomCode: { type: String, required: true, unique: true, index: true },
     gridSize: { type: Number, default: 9 },
+    gameMode: { type: String, enum: ["vgb", "classic"], default: "vgb" },
     /** Si défini, seul cet utilisateur peut rejoindre */
     targetUserId: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     createdAt: { type: Date, default: Date.now, index: true },
@@ -16,6 +17,7 @@ export type PrivateRoomDoc = HydratedDocument<{
   hostId: Types.ObjectId;
   roomCode: string;
   gridSize: number;
+  gameMode: "vgb" | "classic";
   targetUserId: Types.ObjectId | null;
   createdAt: Date;
 }>;

@@ -6887,7 +6887,10 @@ function buildRoleTabs() {
   const bar = document.getElementById('role-tabs');
   if (!bar) return;
   bar.innerHTML = '';
-  const roles = ['pawn','knight','bishop','rook','queen','unique'];
+  const roles = Object.keys(VGBChess.ROLE_LIMITS);
+  if (!roles.includes(window._draftRole)) {
+    window._draftRole = 'pawn';
+  }
   roles.forEach(role => {
     const btn = document.createElement('button');
     btn.type = 'button';

@@ -24,6 +24,7 @@ export async function matchPayload(match: MatchDoc, userId: string) {
     matchId: match.matchKey,
     seat,
     gridSize: match.gridSize,
+    gameMode: (match as { gameMode?: string }).gameMode || (match.gridSize === 8 ? "classic" : "vgb"),
     status: match.status,
     currentSeat: match.currentSeat,
     state: match.state || null,

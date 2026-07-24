@@ -32,8 +32,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
       }
       deck.faction = faction as typeof deck.faction;
     }
+    if (body.gameMode === "classic" || body.gameMode === "vgb") {
+      deck.gameMode = body.gameMode;
+    }
     if (body.slots != null) {
-      deck.set("slots", validateSlots(body.slots));
+      const mode = (body.gameMode === "classic" || deck.gameMode === "classic") ? "classic" : "vgb";
+      deck.set("slots", validateSlots(body.slots, mode));
     }
     if (body.isDefault === true) {
       await Deck.updateMany({ userId: user._id }, { $set: { isDefault: false } });

@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { User, Token, Deck } = require('./models');
 
-const ROLE_LIMITS = {
+const ROLE_LIMITS_VGB = {
   pawn: 9,
   knight: 2,
   bishop: 2,
@@ -10,6 +10,16 @@ const ROLE_LIMITS = {
   queen: 1,
   unique: 1,
 };
+
+const ROLE_LIMITS_CLASSIC = {
+  pawn: 8,
+  knight: 2,
+  bishop: 2,
+  rook: 2,
+  queen: 1,
+};
+
+const ROLE_LIMITS = ROLE_LIMITS_VGB;
 
 const ELO_DEFAULT = Number(process.env.ELO_DEFAULT || 1000);
 const ELO_K = Number(process.env.ELO_K || 32);
@@ -30,6 +40,7 @@ function publicDeck(deck) {
     id: String(deck._id),
     name: deck.name,
     faction: deck.faction,
+    gameMode: deck.gameMode === 'classic' ? 'classic' : 'vgb',
     slots: deck.slots,
     isDefault: !!deck.isDefault,
     updatedAt: deck.updatedAt,
@@ -41,19 +52,24 @@ function newToken() {
   return crypto.randomBytes(24).toString('hex');
 }
 
-function validateSlots(slots) {
+function roleLimitsForMode(mode) {
+  return mode === 'classic' ? ROLE_LIMITS_CLASSIC : ROLE_LIMITS_VGB;
+}
+
+function validateSlots(slots, mode = 'vgb') {
   if (!Array.isArray(slots)) {
     const err = new Error('slots invalides');
     err.status = 400;
     throw err;
   }
-  const counts = Object.fromEntries(Object.keys(ROLE_LIMITS).map((r) => [r, 0]));
+  const limits = roleLimitsForMode(mode);
+  const counts = Object.fromEntries(Object.keys(limits).map((r) => [r, 0]));
   const clean = [];
   for (const slot of slots) {
     const role = String(slot.role || '');
     const pieceKey = String(slot.pieceKey || slot.nameKey || '').trim();
-    if (!ROLE_LIMITS[role]) {
-      const err = new Error('Rôle inconnu: ' + role);
+    if (!limits[role]) {
+      const err = new Error('Rôle inconnu pour ce mode: ' + role);
       err.status = 400;
       throw err;
     }
@@ -65,7 +81,7 @@ function validateSlots(slots) {
     counts[role] += 1;
     clean.push({ role, pieceKey });
   }
-  for (const [role, limit] of Object.entries(ROLE_LIMITS)) {
+  for (const [role, limit] of Object.entries(limits)) {
     if (counts[role] !== limit) {
       const err = new Error(`Quota ${role} incorrect (${counts[role]}/${limit})`);
       err.status = 400;
@@ -217,7 +233,8 @@ function registerDeckRoutes(app) {
         if (!['Nintendo', 'PlayStation', 'SEGA', 'Xbox'].includes(faction)) {
           return res.status(400).json({ ok: false, error: 'Faction invalide' });
         }
-        const slots = validateSlots(req.body.slots || []);
+        const gameMode = req.body.gameMode === 'classic' ? 'classic' : 'vgb';
+        const slots = validateSlots(req.body.slots || [], gameMode);
         let isDefault = !!req.body.isDefault;
         const id = req.body.id;
 
@@ -231,15 +248,16 @@ function registerDeckRoutes(app) {
           if (!deck) return res.status(404).json({ ok: false, error: 'Deck introuvable' });
           deck.name = name;
           deck.faction = faction;
+          deck.gameMode = gameMode;
           deck.slots = slots;
           deck.isDefault = isDefault;
           deck.updatedAt = new Date();
           await deck.save();
         } else {
           const count = await Deck.countDocuments({ userId });
-          if (count >= 5) return res.status(400).json({ ok: false, error: 'Maximum 5 decks par compte' });
+          if (count >= 16) return res.status(400).json({ ok: false, error: 'Maximum 16 decks par compte' });
           if (count === 0) isDefault = true;
-          deck = await Deck.create({ userId, name, faction, slots, isDefault });
+          deck = await Deck.create({ userId, name, faction, gameMode, slots, isDefault });
         }
         return res.json({ ok: true, deck: publicDeck(deck) });
       }

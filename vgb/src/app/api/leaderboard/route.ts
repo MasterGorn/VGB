@@ -9,6 +9,28 @@ export async function GET(req: Request) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const limit = Math.max(1, Math.min(100, Number(searchParams.get("limit") || 20)));
+    const mode = searchParams.get("mode") === "classic" ? "classic" : "vgb";
+
+    if (mode === "classic") {
+      const users = await User.find({})
+        .sort({ eloClassic: -1, winsClassic: -1, username: 1 })
+        .limit(limit)
+        .lean();
+
+      const leaderboard = users.map((u, i) => ({
+        rank: i + 1,
+        id: String(u._id),
+        username: u.username,
+        elo: u.eloClassic ?? 1000,
+        wins: u.winsClassic ?? 0,
+        losses: u.lossesClassic ?? 0,
+        draws: u.drawsClassic ?? 0,
+        mode: "classic" as const,
+      }));
+
+      return NextResponse.json({ ok: true, mode, leaderboard });
+    }
+
     const users = await User.find({})
       .sort({ elo: -1, wins: -1, username: 1 })
       .limit(limit)
@@ -22,9 +44,10 @@ export async function GET(req: Request) {
       wins: u.wins,
       losses: u.losses,
       draws: u.draws,
+      mode: "vgb" as const,
     }));
 
-    return NextResponse.json({ ok: true, leaderboard });
+    return NextResponse.json({ ok: true, mode, leaderboard });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : "Erreur" },
