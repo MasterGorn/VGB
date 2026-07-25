@@ -29,6 +29,11 @@ const userSchema = new Schema(
       type: [{ type: String, enum: ["W", "L", "D"] }],
       default: [],
     },
+    /** Séries de victoires (VGB / classic) */
+    winStreak: { type: Number, default: 0 },
+    bestWinStreak: { type: Number, default: 0 },
+    winStreakClassic: { type: Number, default: 0 },
+    bestWinStreakClassic: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -50,6 +55,10 @@ export type UserDoc = HydratedDocument<{
   drawsClassic: number;
   recentResults: Array<"W" | "L" | "D">;
   recentResultsClassic: Array<"W" | "L" | "D">;
+  winStreak: number;
+  bestWinStreak: number;
+  winStreakClassic: number;
+  bestWinStreakClassic: number;
   createdAt?: Date;
   updatedAt?: Date;
 }>;
@@ -72,11 +81,41 @@ export function publicUser(user: UserDoc) {
     winsClassic: user.winsClassic ?? 0,
     lossesClassic: user.lossesClassic ?? 0,
     drawsClassic: user.drawsClassic ?? 0,
+    winStreak: user.winStreak ?? 0,
+    bestWinStreak: user.bestWinStreak ?? 0,
+    winStreakClassic: user.winStreakClassic ?? 0,
+    bestWinStreakClassic: user.bestWinStreakClassic ?? 0,
     recentResults: Array.isArray(user.recentResults) ? user.recentResults.slice(0, 10) : [],
     recentResultsClassic: Array.isArray(user.recentResultsClassic)
       ? user.recentResultsClassic.slice(0, 10)
       : [],
   };
+}
+
+/** Met à jour la série de victoires après un résultat. */
+export function applyWinStreak(
+  user: UserDoc,
+  result: "W" | "L" | "D",
+  mode: "vgb" | "classic" = "vgb"
+) {
+  if (mode === "classic") {
+    if (result === "W") {
+      user.winStreakClassic = (user.winStreakClassic || 0) + 1;
+      user.bestWinStreakClassic = Math.max(
+        user.bestWinStreakClassic || 0,
+        user.winStreakClassic
+      );
+    } else {
+      user.winStreakClassic = 0;
+    }
+    return;
+  }
+  if (result === "W") {
+    user.winStreak = (user.winStreak || 0) + 1;
+    user.bestWinStreak = Math.max(user.bestWinStreak || 0, user.winStreak);
+  } else {
+    user.winStreak = 0;
+  }
 }
 
 /** Ajoute un résultat en tête (max 10). */

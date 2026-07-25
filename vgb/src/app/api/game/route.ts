@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { eloUpdate, requireUser } from "@/lib/session";
-import User, { publicUser, pushRecentResult, isClassicGrid } from "@/models/User";
+import User, { publicUser, pushRecentResult, applyWinStreak, isClassicGrid } from "@/models/User";
 import Match from "@/models/Match";
 import Replay from "@/models/Replay";
 import { jsonError, seatOf } from "@/lib/match";
@@ -199,6 +199,8 @@ export async function POST(req: Request) {
         }
         pushRecentResult(p1, "D", classic ? "classic" : "vgb");
         pushRecentResult(p2, "D", classic ? "classic" : "vgb");
+        applyWinStreak(p1, "D", classic ? "classic" : "vgb");
+        applyWinStreak(p2, "D", classic ? "classic" : "vgb");
       } else if (score1 === 1) {
         if (classic) {
           p1.winsClassic = (p1.winsClassic || 0) + 1;
@@ -209,6 +211,8 @@ export async function POST(req: Request) {
         }
         pushRecentResult(p1, "W", classic ? "classic" : "vgb");
         pushRecentResult(p2, "L", classic ? "classic" : "vgb");
+        applyWinStreak(p1, "W", classic ? "classic" : "vgb");
+        applyWinStreak(p2, "L", classic ? "classic" : "vgb");
       } else {
         if (classic) {
           p1.lossesClassic = (p1.lossesClassic || 0) + 1;
@@ -219,6 +223,8 @@ export async function POST(req: Request) {
         }
         pushRecentResult(p1, "L", classic ? "classic" : "vgb");
         pushRecentResult(p2, "W", classic ? "classic" : "vgb");
+        applyWinStreak(p1, "L", classic ? "classic" : "vgb");
+        applyWinStreak(p2, "W", classic ? "classic" : "vgb");
       }
       await p1.save();
       await p2.save();

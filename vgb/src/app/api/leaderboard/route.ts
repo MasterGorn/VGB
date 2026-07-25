@@ -25,6 +25,8 @@ export async function GET(req: Request) {
         wins: u.winsClassic ?? 0,
         losses: u.lossesClassic ?? 0,
         draws: u.drawsClassic ?? 0,
+        winStreak: u.winStreakClassic ?? 0,
+        bestWinStreak: u.bestWinStreakClassic ?? 0,
         mode: "classic" as const,
       }));
 
@@ -44,6 +46,8 @@ export async function GET(req: Request) {
       wins: u.wins,
       losses: u.losses,
       draws: u.draws,
+      winStreak: u.winStreak ?? 0,
+      bestWinStreak: u.bestWinStreak ?? 0,
       mode: "vgb" as const,
     }));
 
