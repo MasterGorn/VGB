@@ -6,7 +6,7 @@ const translations = {
   fr: {
     // Interface principale
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Plateau',
+    'page-title': 'Video Games Battle',
     'tagline': 'Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !',
     'select-players': 'Nombre de joueurs',
     'select-board-size': 'Taille du plateau',
@@ -816,7 +816,7 @@ const translations = {
   en: {
     // Main interface
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Board',
+    'page-title': 'Video Games Battle',
     'tagline': 'Forget classic chess, here video game heroes make the rules!',
     'select-players': 'Number of players',
     'select-board-size': 'Board size',
@@ -1625,7 +1625,7 @@ const translations = {
   es: {
     // Interfaz principal
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Tablero',
+    'page-title': 'Video Games Battle',
     'tagline': '¡Olvida el ajedrez clásico, aquí los héroes de videojuegos hacen las reglas!',
     'select-players': 'Número de jugadores',
     'select-board-size': 'Tamaño del tablero',
@@ -2002,7 +2002,7 @@ const translations = {
   de: {
     // Hauptinterface
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Brett',
+    'page-title': 'Video Games Battle',
     'tagline': 'Vergessen Sie klassisches Schach, hier machen Videospielhelden die Regeln!',
     'select-players': 'Anzahl der Spieler',
     'select-board-size': 'Brettgröße',
@@ -2294,7 +2294,7 @@ const translations = {
   pt: {
     // Interface principal
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Tabuleiro',
+    'page-title': 'Video Games Battle',
     'tagline': 'Esqueça o xadrez clássico, aqui os heróis dos videogames fazem as regras!',
     'select-players': 'Número de jogadores',
     'select-board-size': 'Tamanho do tabuleiro',
@@ -2586,7 +2586,7 @@ const translations = {
   it: {
     // Interfaccia principale
     'game-title': 'Video Games Battle',
-    'page-title': 'Chesstendo - Draft + Scacchiera',
+    'page-title': 'Video Games Battle',
     'tagline': 'Dimentica gli scacchi classici, qui gli eroi dei videogiochi fanno le regole!',
     'select-players': 'Numero di giocatori',
     'select-board-size': 'Dimensione della scacchiera',

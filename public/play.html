@@ -808,6 +808,101 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+.quick-chat-details {
+  margin: 14px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.quick-chat-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.quick-chat-summary::-webkit-details-marker {
+  display: none;
+}
+
+.quick-chat-summary::after {
+  content: '▸';
+  color: #ffd700;
+  font-size: 12px;
+  transition: transform 0.15s ease;
+}
+
+.quick-chat-details[open] .quick-chat-summary::after {
+  transform: rotate(90deg);
+}
+
+.quick-chat-summary-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.quick-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 10px 10px;
+  list-style: none;
+}
+
+.quick-chat-list li {
+  margin: 0;
+  padding: 0;
+}
+
+.quick-chat-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.quick-chat-btn:hover,
+.quick-chat-btn:focus-visible {
+  border-color: rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.1);
+  color: #fff;
+  outline: none;
+}
+
+.quick-chat-btn .commands-key {
+  min-width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
 .mobile-pause-btn {
   display: none;
   position: fixed;
@@ -1767,6 +1862,13 @@ body.end-game-open {
           <span>Start/Stop — pause / reprise (partie locale uniquement)</span>
         </li>
       </ul>
+      <details class="quick-chat-details" id="quick-chat-details">
+        <summary class="quick-chat-summary">
+          <span>Messages</span>
+          <span class="quick-chat-summary-keys"><kbd class="commands-key">1</kbd>–<kbd class="commands-key">9</kbd></span>
+        </summary>
+        <ul class="quick-chat-list" id="quick-chat-list"></ul>
+      </details>
       <button type="button" id="btn-save-game" class="setup-btn local-save-btn">Sauvegarder la partie</button>
     </div>
     <div id="items-ref-panel" class="items-ref-panel" hidden>
@@ -1789,7 +1891,7 @@ body.end-game-open {
 <script src="/js/header.js"></script>
 <script src="/data/pieces.js?v=20260720u"></script>
 <script src="/data/items.js"></script>
-<script src="/js/translations.js?v=20260720u"></script>
+<script src="/js/translations.js?v=20260725a"></script>
 <script src="/js/chess-roles.js?v=20260724c"></script>
 <script src="/js/unique-abilities.js?v=20260720u"></script>
 <script src="/js/ai.js"></script>
@@ -1832,6 +1934,20 @@ let lastMoveOverlays = [];
 let onlineLivePushTimer = null;
 let onlineTimerSyncAcc = 0;
 let remoteItemHint = null;
+let lastQuickChat = null;
+let lastSeenQuickChatId = null;
+
+const QUICK_CHAT_MESSAGES = [
+  'Good Game',
+  'Cheh',
+  'Pause ?',
+  'On reprend',
+  "J'abandonne",
+  'Merci',
+  'Bonjour',
+  'Une revanche !',
+  'Bonne chance !'
+];
 
 function applyGameMode(modeId) {
   gameMode = (modeId === 'classic') ? 'classic' : 'vgb';
@@ -2033,6 +2149,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initTranslation();
   setTimeout(function() {
     if (typeof buildItemsRefPanel === 'function') buildItemsRefPanel();
+    if (typeof initQuickChatUi === 'function') initQuickChatUi();
   }, 50);
 });
 // Timers
@@ -2420,6 +2537,8 @@ function create() {
       toggleLocalPause();
     });
   }
+
+  initQuickChatUi();
 }
 
 function isLocalMatch() {
@@ -3836,6 +3955,8 @@ function startGame(scene) {
   gameStarted = true;
   endGameHandled = false;
   lastEndGameReason = null;
+  lastQuickChat = null;
+  lastSeenQuickChatId = null;
   gamePaused = false;
   syncMobilePauseButton();
   currentPlayer = 0;
@@ -5986,7 +6107,7 @@ function pushOnlineStateLive(reason) {
   if (onlinePushBusy || window.__vgbApplyingRemote) return;
   // Pendant mon tour (ou après action), pousser l'état sans attendre la fin de tour
   const myTurn = VGBOnline.isMyTurn(currentPlayer) || reason === 'turn-end';
-  if (!myTurn && reason !== 'force') return;
+  if (!myTurn && reason !== 'force' && reason !== 'quick-chat') return;
   armGameTimers();
   onlinePushBusy = true;
   const state = serializeOnlineBoardState();
@@ -5994,6 +6115,83 @@ function pushOnlineStateLive(reason) {
     onlinePushBusy = false;
   });
 }
+
+function showQuickChatToast(chat) {
+  if (!chat || !chat.text) return;
+  const name = chat.fromName || (
+    typeof chat.from === 'number'
+      ? (playerNames[chat.from] || ('Joueur ' + (chat.from + 1)))
+      : 'Joueur'
+  );
+  showInfoMessage(name + ' : ' + chat.text, 2800);
+}
+
+function sendQuickChat(index) {
+  if (!gameStarted || endGameHandled || gamePaused) return;
+  const text = QUICK_CHAT_MESSAGES[index];
+  if (!text) return;
+  const seat = (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match)
+    ? VGBOnline.seat
+    : currentPlayer;
+  const name = (players[seat] && players[seat].name)
+    || playerNames[seat]
+    || ('Joueur ' + (seat + 1));
+  lastQuickChat = {
+    id: Date.now() + '-' + seat + '-' + Math.random().toString(36).slice(2, 7),
+    text: text,
+    from: seat,
+    fromName: name,
+    at: Date.now()
+  };
+  lastSeenQuickChatId = lastQuickChat.id;
+  showQuickChatToast(lastQuickChat);
+  pushOnlineStateLive('quick-chat');
+}
+
+function initQuickChatUi() {
+  const list = document.getElementById('quick-chat-list');
+  if (!list || list.dataset.ready === '1') return;
+  list.dataset.ready = '1';
+  list.innerHTML = '';
+  QUICK_CHAT_MESSAGES.forEach(function(text, idx) {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-chat-btn';
+    btn.innerHTML = '<kbd class="commands-key">' + (idx + 1) + '</kbd><span></span>';
+    btn.querySelector('span').textContent = text;
+    btn.addEventListener('click', function() {
+      sendQuickChat(idx);
+    });
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+function quickChatIndexFromKeyboardEvent(e) {
+  // Touches physiques de la rangée chiffres (AZERTY Mac : sans Shift)
+  const code = e.code || '';
+  const digitMatch = /^Digit([1-9])$/.exec(code);
+  if (digitMatch) return parseInt(digitMatch[1], 10) - 1;
+  const numpadMatch = /^Numpad([1-9])$/.exec(code);
+  if (numpadMatch) return parseInt(numpadMatch[1], 10) - 1;
+  return -1;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (!gameStarted || endGameHandled) return;
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) {
+    return;
+  }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // Ne pas exiger Shift : sur AZERTY Mac, Digit1 sans Shift envoie "&" mais code reste Digit1
+  const idx = quickChatIndexFromKeyboardEvent(e);
+  if (idx >= 0) {
+    e.preventDefault();
+    sendQuickChat(idx);
+  }
+});
 
 function startOnlineLiveSync() {
   stopOnlineLiveSync();
@@ -8797,7 +8995,8 @@ function serializeOnlineBoardState() {
       blue: portalBlue ? { x: portalBlue.x, y: portalBlue.y } : null
     },
     tetriminos: (tetriminos || []).map(t => ({ x: t.x, y: t.y })),
-    bananas: (bananas || []).map(b => ({ x: b.x, y: b.y }))
+    bananas: (bananas || []).map(b => ({ x: b.x, y: b.y })),
+    quickChat: lastQuickChat || null
   };
 }
 
@@ -8986,6 +9185,13 @@ function applyRemoteBoardState(state) {
       remoteItemHint = state.itemAction;
     } else {
       remoteItemHint = null;
+    }
+    if (state.quickChat && state.quickChat.id && state.quickChat.id !== lastSeenQuickChatId) {
+      lastSeenQuickChatId = state.quickChat.id;
+      lastQuickChat = state.quickChat;
+      if (typeof state.quickChat.from !== 'number' || state.quickChat.from !== VGBOnline.seat) {
+        showQuickChatToast(state.quickChat);
+      }
     }
     // Critique : aligner le suivi de tour sinon le 2e joueur ne pousse plus son état
     onlineLastKnownTurn = currentPlayer;

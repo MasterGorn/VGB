@@ -188,7 +188,7 @@
     if (!document.querySelector('meta[name="apple-mobile-web-app-title"]')) {
       var appleTitle = document.createElement('meta');
       appleTitle.name = 'apple-mobile-web-app-title';
-      appleTitle.content = 'VGB';
+      appleTitle.content = 'Video Games Battle';
       document.head.appendChild(appleTitle);
     }
 
