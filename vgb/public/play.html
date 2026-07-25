@@ -4449,34 +4449,111 @@ function loadPresetAndStart(scene) {
   } catch(e) { return false; }
 }
 
+function syncPieceAccessoryPositions(p) {
+  if (!p || !p.sprite) return;
+  const sx = p.sprite.x;
+  const sy = p.sprite.y;
+  if (p.letterText) {
+    const ox = TILE_SIZE * 0.28;
+    const oy = -TILE_SIZE * 0.28;
+    p.letterText.x = sx + ox;
+    p.letterText.y = sy + oy;
+  }
+  if (p.backgroundSprite) {
+    p.backgroundSprite.x = sx;
+    p.backgroundSprite.y = sy;
+  }
+}
+
+function stopPieceMoveTween(p) {
+  if (!p || !p._moveTween) return;
+  try { p._moveTween.stop(); } catch (e) {}
+  p._moveTween = null;
+}
+
+/** Anime le sprite vers le centre de case (style chess.com). */
+function animatePieceSpriteTo(p, targetX, targetY, duration) {
+  if (!p || !p.sprite) return;
+  const scene = p.sprite.scene || (infoText && infoText.scene);
+  if (!scene || !scene.tweens) {
+    p.sprite.x = targetX;
+    p.sprite.y = targetY;
+    syncPieceAccessoryPositions(p);
+    return;
+  }
+
+  stopPieceMoveTween(p);
+
+  const targets = [p.sprite];
+  if (p.backgroundSprite) targets.push(p.backgroundSprite);
+
+  if (typeof p.sprite.setDepth === 'function') p.sprite.setDepth(2200);
+  if (p.backgroundSprite && typeof p.backgroundSprite.setDepth === 'function') {
+    p.backgroundSprite.setDepth(2100);
+  }
+  if (p.letterText && typeof p.letterText.setDepth === 'function') {
+    p.letterText.setDepth(2300);
+  }
+
+  p._moveTween = scene.tweens.add({
+    targets: targets,
+    x: targetX,
+    y: targetY,
+    duration: duration,
+    ease: 'Cubic.easeOut',
+    onUpdate: function() {
+      syncPieceAccessoryPositions(p);
+    },
+    onComplete: function() {
+      p._moveTween = null;
+      if (p.sprite && typeof p.sprite.setDepth === 'function') p.sprite.setDepth(1000);
+      if (p.backgroundSprite && typeof p.backgroundSprite.setDepth === 'function') {
+        p.backgroundSprite.setDepth(100);
+      }
+      if (p.letterText && typeof p.letterText.setDepth === 'function') {
+        p.letterText.setDepth(1100);
+      }
+      syncPieceAccessoryPositions(p);
+    }
+  });
+}
+
 function updatePieces() {
   for (let p of pieces) {
+    if (!p || !p.sprite) continue;
     const c = cellCenter(p.x, p.y);
-    p.sprite.x = c.x;
-    p.sprite.y = c.y;
 
-    // Lettre de rôle (visualisation) en haut à droite
-    if (p.letterText) {
-      const ox = TILE_SIZE * 0.28;
-      const oy = -TILE_SIZE * 0.28;
-      p.letterText.x = p.sprite.x + ox;
-      p.letterText.y = p.sprite.y + oy;
-    }
-    
-    // Positionner le background coloré s'il existe
-    if (p.backgroundSprite) {
-      p.backgroundSprite.x = c.x;
-      p.backgroundSprite.y = c.y;
-    }
-    
-    // ajuster la taille pour remplir la case moins une marge de bordure
-    const targetSize = TILE_SIZE; // utiliser toute la case
+    const targetSize = TILE_SIZE;
     p.sprite.setDisplaySize(targetSize, targetSize);
-    // Forcer une mise à l'échelle entière pour éviter tout flou sous-pixel
     p.sprite.setOrigin(0.5, 0.5);
-    // s'assurer que les pièces restent au-dessus des overlays
-    if (typeof p.sprite.setDepth === 'function') p.sprite.setDepth(1000);
-    if (p.sprite.texture && p.sprite.texture.setFilter) p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    if (p.sprite.texture && p.sprite.texture.setFilter) {
+      p.sprite.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+
+    const dist = Math.hypot(p.sprite.x - c.x, p.sprite.y - c.y);
+
+    // Premier placement ou déjà sur la case : snap
+    if (!p._visualReady || dist < 2.5) {
+      stopPieceMoveTween(p);
+      p.sprite.x = c.x;
+      p.sprite.y = c.y;
+      if (typeof p.sprite.setDepth === 'function') p.sprite.setDepth(1000);
+      syncPieceAccessoryPositions(p);
+      p._visualReady = true;
+      continue;
+    }
+
+    // Téléportations très longues : snap pour rester lisible
+    if (dist > TILE_SIZE * 4.5) {
+      stopPieceMoveTween(p);
+      p.sprite.x = c.x;
+      p.sprite.y = c.y;
+      syncPieceAccessoryPositions(p);
+      continue;
+    }
+
+    const duration = Math.min(260, Math.max(140, Math.round(dist * 0.42)));
+    animatePieceSpriteTo(p, c.x, c.y, duration);
   }
   if (itemCrates && itemCrates.length) {
     for (const c of itemCrates) {
@@ -4507,9 +4584,14 @@ function updatePieces() {
   // Curseurs Sims: positionner les curseurs au-dessus des pièces possédées
   for (const pp of possessedPieces) {
     if (pp.cursorSprite && pp.piece) {
-      const pos = cellCenter(pp.piece.x, pp.piece.y);
-      pp.cursorSprite.x = pos.x + 15;
-      pp.cursorSprite.y = pos.y - 20;
+      if (pp.piece.sprite) {
+        pp.cursorSprite.x = pp.piece.sprite.x + 15;
+        pp.cursorSprite.y = pp.piece.sprite.y - 20;
+      } else {
+        const pos = cellCenter(pp.piece.x, pp.piece.y);
+        pp.cursorSprite.x = pos.x + 15;
+        pp.cursorSprite.y = pos.y - 20;
+      }
     }
   }
   refreshLastMoveOverlays(scene);
