@@ -49,6 +49,7 @@
   max-height: none;
   height: auto;
   align-self: stretch;
+  position: relative;
 }
 
 .board-column {
@@ -169,6 +170,12 @@
   font-weight: bold;
   color: var(--text-primary);
 }
+.hud-streak {
+  color: #ff8a3d;
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 .hud-faction {
   font-size: 13px;
@@ -246,6 +253,8 @@
   height: auto !important;
   display: none;
   touch-action: none;
+  position: relative;
+  z-index: 1;
 }
 
 .game-root canvas.game-started {
@@ -1262,6 +1271,182 @@
   border-color: rgba(46, 204, 113, 0.5);
 }
 
+/* —— Intro VS factions —— */
+#vs-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 4, 28, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+#vs-intro-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.vs-intro-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 40px);
+  flex-wrap: wrap;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+.vs-intro-side {
+  min-width: 140px;
+  opacity: 0;
+  transform: translateY(18px) scale(0.92);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.vs-intro-side.left { transform: translateX(-40px) scale(0.92); }
+.vs-intro-side.right { transform: translateX(40px) scale(0.92); }
+#vs-intro-overlay.visible .vs-intro-side {
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+}
+#vs-intro-overlay.visible .vs-intro-side.right {
+  transition-delay: 0.12s;
+}
+.vs-intro-faction {
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffd700;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+.vs-intro-name {
+  margin-top: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+.vs-intro-vs {
+  font-size: clamp(28px, 6vw, 48px);
+  font-weight: 900;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) 0.2s;
+}
+#vs-intro-overlay.visible .vs-intro-vs {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* —— Victoire FX —— */
+#victory-fx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6150;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: min(18vh, 120px);
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%);
+  transition: opacity 0.25s ease;
+}
+#victory-fx-overlay.visible { opacity: 1; }
+.victory-fx-gg {
+  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  font-size: clamp(56px, 14vw, 110px);
+  font-weight: 900;
+  line-height: 1;
+  color: #ffe566;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 24px rgba(255, 200, 40, 0.85),
+    0 4px 0 #c47800,
+    0 10px 28px rgba(0, 0, 0, 0.65);
+  transform: scale(0.35) rotate(-6deg);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.2, 1.55, 0.35, 1), opacity 0.25s ease;
+}
+#victory-fx-overlay.visible .victory-fx-gg {
+  transform: scale(1) rotate(-2deg);
+  opacity: 1;
+}
+.victory-fx-gg span {
+  display: inline-block;
+  animation: gg-pop 0.55s cubic-bezier(0.2, 1.6, 0.35, 1) both;
+}
+@keyframes gg-pop {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* —— Quote perso (bulle au-dessus de la case) —— */
+#piece-quote-bubble {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 40;
+  max-width: 42%;
+  padding: 6px 10px 7px;
+  border-radius: 12px;
+  background: #fffef8;
+  border: 2px solid #2a2a2a;
+  color: #1a1a1a;
+  font-family: Arial, sans-serif;
+  font-size: clamp(11px, 2.4vw, 13px);
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.25;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 6px)) scale(0.9);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  will-change: left, top, opacity;
+}
+#piece-quote-bubble.visible {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 6px)) scale(1);
+}
+#piece-quote-bubble.below {
+  transform: translate(-50%, 8px) scale(0.9);
+}
+#piece-quote-bubble.below.visible {
+  transform: translate(-50%, 8px) scale(1);
+}
+#piece-quote-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  margin-left: -7px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid #fffef8;
+  filter: drop-shadow(0 1px 0 #2a2a2a);
+}
+#piece-quote-bubble.below::after {
+  bottom: auto;
+  top: -8px;
+  border-top: none;
+  border-bottom: 8px solid #fffef8;
+  filter: drop-shadow(0 -1px 0 #2a2a2a);
+}
+#piece-quote-bubble .pq-name { display: none; }
+#piece-quote-bubble .pq-text {
+  display: block;
+  line-height: 1.25;
+}
+
 /* —— Modal decks (charger / sauver) —— */
 #deck-modal-overlay {
   position: fixed;
@@ -1701,6 +1886,22 @@ body.end-game-open {
 <button type="button" id="btn-mobile-pause" class="mobile-pause-btn" aria-label="Pause">Pause</button>
 <div id="game-toast" role="status" aria-live="polite"></div>
 <div id="item-help-popin" role="dialog" aria-modal="false" aria-hidden="true" hidden></div>
+<div id="vs-intro-overlay" aria-hidden="true">
+  <div class="vs-intro-card">
+    <div class="vs-intro-side left">
+      <div class="vs-intro-faction" id="vs-faction-0">Nintendo</div>
+      <div class="vs-intro-name" id="vs-name-0"></div>
+    </div>
+    <div class="vs-intro-vs">VS</div>
+    <div class="vs-intro-side right">
+      <div class="vs-intro-faction" id="vs-faction-1">PlayStation</div>
+      <div class="vs-intro-name" id="vs-name-1"></div>
+    </div>
+  </div>
+</div>
+<div id="victory-fx-overlay" aria-hidden="true">
+  <div class="victory-fx-gg"><span>GG !</span></div>
+</div>
 
 <!-- Accroche principale -->
 <div class="tagline">
@@ -1839,7 +2040,12 @@ body.end-game-open {
     </div>
     <div class="hud-items" id="hud-items-0"></div>
   </div>
-  <div id="game-root" class="game-root"></div>
+  <div id="game-root" class="game-root">
+    <div id="piece-quote-bubble" aria-hidden="true">
+      <span class="pq-name"></span>
+      <span class="pq-text"></span>
+    </div>
+  </div>
   <div id="hud-player-1" class="player-hud hud-bottom" hidden>
     <div class="hud-main">
       <span class="hud-name" id="hud-name-1">Joueur 2</span>
@@ -1892,6 +2098,7 @@ body.end-game-open {
 <script src="/data/pieces.js?v=20260720u"></script>
 <script src="/data/items.js"></script>
 <script src="/js/translations.js?v=20260725a"></script>
+<script src="/js/piece-flavor.js?v=20260725b"></script>
 <script src="/js/chess-roles.js?v=20260724c"></script>
 <script src="/js/unique-abilities.js?v=20260720u"></script>
 <script src="/js/ai.js"></script>
@@ -2019,6 +2226,17 @@ function isLocalPlayersTurn() {
   return true;
 }
 
+/** Quitte clairement le mode online (évite de bloquer le 2e joueur en local). */
+function clearOnlineMatchState() {
+  if (typeof VGBOnline === 'undefined') return;
+  try { VGBOnline.stopPolling(); } catch (e) {}
+  try { VGBOnline.stopQueuePoll(); } catch (e) {}
+  VGBOnline.enabled = false;
+  VGBOnline.match = null;
+  VGBOnline.seat = null;
+  try { stopOnlineLiveSync(); } catch (e) {}
+}
+
 function refreshTurnBanner() {
   const el = document.getElementById('turn-banner');
   if (!el) return;
@@ -2055,6 +2273,8 @@ let moveCount = 0;
 let moveLog = [];
 let lastLoggedMoveCount = -1;
 let lastEndGameRanking = [];
+/** Pièce qui a mis fin à la partie (tueur du roi / dernier coup de mat) */
+let victoryFocusPiece = null;
 let infoBackground; // Fond blanc pour les messages d'information
 let isEndGameMessage = false; // Flag pour empêcher le masquage du message de fin
 let endGameOverlayEl = null;
@@ -3193,12 +3413,13 @@ function endTurnAfterConversion() {
 }
 
 function getNextActivePlayer() {
+  const n = Math.max(2, (players && players.length) || playerCount || 2);
   // Trouver le prochain joueur non éliminé
-  let nextPlayer = (currentPlayer + 1) % players.length;
+  let nextPlayer = (currentPlayer + 1) % n;
   
   // Continuer à chercher tant qu'on trouve un joueur éliminé
   while (eliminationOrder.includes(nextPlayer)) {
-    nextPlayer = (nextPlayer + 1) % players.length;
+    nextPlayer = (nextPlayer + 1) % n;
     
     // Protection contre une boucle infinie si tous les joueurs sont éliminés
     if (nextPlayer === currentPlayer) break;
@@ -3954,7 +4175,9 @@ function startGame(scene) {
   
   gameStarted = true;
   endGameHandled = false;
+  isEndGameMessage = false;
   lastEndGameReason = null;
+  victoryFocusPiece = null;
   lastQuickChat = null;
   lastSeenQuickChatId = null;
   gamePaused = false;
@@ -3965,6 +4188,13 @@ function startGame(scene) {
   lastLoggedMoveCount = -1;
   timersArmed = false;
   onlineLastKnownTurn = null;
+  // Remettre la caméra au neutre (après une cinématique de victoire)
+  try {
+    if (scene && scene.cameras && scene.cameras.main) {
+      scene.cameras.main.setZoom(1);
+      scene.cameras.main.setScroll(0, 0);
+    }
+  } catch (e) {}
   if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.state) {
     VGBUniqueAbilities.state.bowserSummoned = {};
     VGBUniqueAbilities.state.burnedTiles = [];
@@ -4275,6 +4505,7 @@ function startGame(scene) {
       y: kingY,
       player: i,
       name: `Roi ${playerNames[i]}`,
+      nameKey: 'king-' + String(playerFactions[i] || 'nintendo').toLowerCase(),
       image: `/images/${playerFactions[i].toLowerCase()}/characters/king.png`,
       moves: [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]],
       range: 1
@@ -4344,6 +4575,7 @@ function startGame(scene) {
         y: pieceY,
         player: i,
         name: piece.name,
+        nameKey: piece.nameKey || piece.type || imageKey,
         image: piece.image,
         moves: chessMove.moves,
         range: chessMove.range,
@@ -4372,8 +4604,11 @@ function startGame(scene) {
     updateRulesSidebar();
   }, 100);
   
-  // Toast "Début de la partie" (style site)
-  showInfoMessage((t('game-start') || 'Début de partie').toUpperCase() + ' !', 2200, 'toast-start');
+  // Toast "Début de la partie" (sauf si intro VS vient de le faire)
+  if (!window.__vgbSkipStartToast) {
+    showInfoMessage((t('game-start') || 'Début de partie').toUpperCase() + ' !', 2200, 'toast-start');
+  }
+  window.__vgbSkipStartToast = false;
 
   // Timers: config setup (ou reprise)
   if (pendingResumeSave && Array.isArray(pendingResumeSave.playerTimersMs) && pendingResumeSave.playerTimersMs.length) {
@@ -4806,7 +5041,7 @@ function handleClick(scene, pos) {
   }
 
   // Mode en ligne : seul le joueur dont c'est le siège peut jouer
-  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && !VGBOnline.isMyTurn(currentPlayer)) {
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match && !VGBOnline.isMyTurn(currentPlayer)) {
     showInfoMessage("Ce n'est pas votre tour (partie en ligne)", 1500);
     return;
   }
@@ -5107,6 +5342,7 @@ function handleClick(scene, pos) {
     if (typeof VGBUniqueAbilities !== 'undefined') {
       VGBUniqueAbilities.handlePieceReselect(clickedPiece, getUniqueAbilityCtx());
     }
+    maybeShowPieceQuote(selectedPiece);
     clearHighlights();
     const reachable = getReachablePositions(selectedPiece);
     highlightPositions(reachable);
@@ -5267,6 +5503,9 @@ function handleClick(scene, pos) {
         maybePickupItem(selectedPiece);
         updatePieces();
         clearHighlights();
+        if (capturedKing) {
+          victoryFocusPiece = selectedPiece; // le tueur du roi
+        }
         selectedPiece = null;
         selectedEnemyPiece = null;
         // Gestion élimination et condition de fin
@@ -5525,6 +5764,10 @@ function evaluateClassicEndOfTurn() {
   const winner = toMove === 0 ? 1 : 0;
   if (inCheck) {
     lastEndGameReason = 'checkmate';
+    // Dernière pièce ayant joué = celle qui livre le mat
+    if (lastMove && lastMove.to) {
+      victoryFocusPiece = getPieceAt(lastMove.to) || victoryFocusPiece;
+    }
     showInfoMessage('Échec et mat !', 0, 'toast-success');
     endGameWithRanking([winner, toMove]);
   } else {
@@ -7591,6 +7834,286 @@ function tickTimer(scene) {
   }
 }
 
+function formatFactionLabel(faction) {
+  const f = String(faction || 'Nintendo');
+  if (/play/i.test(f)) return 'PlayStation';
+  if (/sega/i.test(f)) return 'SEGA';
+  if (/xbox/i.test(f)) return 'Xbox';
+  if (/square/i.test(f)) return 'Square Enix';
+  return 'Nintendo';
+}
+
+function formatStreakLabel(n) {
+  if (typeof VGBFlavor !== 'undefined' && VGBFlavor.formatWinStreak) {
+    return VGBFlavor.formatWinStreak(n);
+  }
+  const streak = Number(n) || 0;
+  if (streak <= 0) return '';
+  if (streak >= 10) return '🔥 GODLIKE';
+  if (streak >= 7) return '🔥🔥 ×' + streak;
+  return '🔥 ×' + streak;
+}
+
+/** Série affichée pour un siège (online = compte, local = joueur 0). */
+function getPlayerWinStreak(seat) {
+  const classic = gameMode === 'classic';
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    const m = VGBOnline.match;
+    const user = (m.seat === seat) ? m.you : m.opponent;
+    if (!user) return 0;
+    return Number(classic ? (user.winStreakClassic || 0) : (user.winStreak || 0)) || 0;
+  }
+  if (seat === 0) {
+    try {
+      const key = 'vgb_local_win_streak_' + (classic ? 'classic' : 'vgb');
+      return Number(localStorage.getItem(key) || 0) || 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+  return 0;
+}
+
+function nameWithStreak(name, seat) {
+  const label = formatStreakLabel(getPlayerWinStreak(seat));
+  if (!label) return name;
+  return name + ' (' + label + ')';
+}
+
+function positionPieceQuoteBubble(bubble, piece) {
+  if (!bubble || !piece) return;
+  const root = document.getElementById('game-root');
+  if (!root) return;
+
+  // Toujours la case logique (pas le sprite mid-tween)
+  const c = cellCenter(piece.x, piece.y);
+  // Point d'ancrage = milieu du bord haut de la case
+  const anchorX = c.x;
+  const anchorY = c.y - TILE_SIZE * 0.5;
+
+  const leftPct = (anchorX / BOARD_CANVAS) * 100;
+  const topPct = (anchorY / BOARD_CANVAS) * 100;
+
+  bubble.style.left = leftPct + '%';
+  bubble.style.top = topPct + '%';
+
+  // Si trop haut dans le plateau → bulle en dessous
+  const below = topPct < 12;
+  bubble.classList.toggle('below', below);
+}
+
+function maybeShowPieceQuote(piece) {
+  if (!piece || piece.type === 'king' || piece.role === 'king') return;
+  if (typeof VGBFlavor === 'undefined' || !VGBFlavor.pickQuote) return;
+  const quote = VGBFlavor.pickQuote(piece);
+  if (!quote) return;
+
+  // S'assurer que la bulle est bien dans le plateau (Phaser peut avoir réordonné le DOM)
+  let bubble = document.getElementById('piece-quote-bubble');
+  const root = document.getElementById('game-root');
+  if (root && bubble && bubble.parentNode !== root) {
+    root.appendChild(bubble);
+  }
+  if (!bubble && root) {
+    bubble = document.createElement('div');
+    bubble.id = 'piece-quote-bubble';
+    bubble.setAttribute('aria-hidden', 'true');
+    bubble.innerHTML = '<span class="pq-name"></span><span class="pq-text"></span>';
+    root.appendChild(bubble);
+  }
+  if (!bubble) {
+    showInfoMessage((piece.name || 'Héros') + ' : ' + quote, 1600);
+    return;
+  }
+
+  const textEl = bubble.querySelector('.pq-text');
+  if (textEl) textEl.textContent = quote;
+
+  bubble.classList.add('visible');
+  bubble.setAttribute('aria-hidden', 'false');
+  positionPieceQuoteBubble(bubble, piece);
+  requestAnimationFrame(function() {
+    positionPieceQuoteBubble(bubble, piece);
+  });
+
+  if (window.__vgbQuoteTimer) clearTimeout(window.__vgbQuoteTimer);
+  window.__vgbQuoteTimer = setTimeout(function() {
+    bubble.classList.remove('visible', 'below');
+    bubble.setAttribute('aria-hidden', 'true');
+  }, 1700);
+}
+
+function showFactionVsIntro() {
+  return new Promise(function(resolve) {
+    const overlay = document.getElementById('vs-intro-overlay');
+    if (!overlay) {
+      resolve();
+      return;
+    }
+    const f0 = formatFactionLabel(playerFactions[0] || (players[0] && players[0].faction));
+    const f1 = formatFactionLabel(playerFactions[1] || (players[1] && players[1].faction));
+    const n0 = nameWithStreak(playerNames[0] || (players[0] && players[0].name) || 'Joueur 1', 0);
+    const n1 = nameWithStreak(playerNames[1] || (players[1] && players[1].name) || 'Joueur 2', 1);
+    const elF0 = document.getElementById('vs-faction-0');
+    const elF1 = document.getElementById('vs-faction-1');
+    const elN0 = document.getElementById('vs-name-0');
+    const elN1 = document.getElementById('vs-name-1');
+    if (elF0) elF0.textContent = f0;
+    if (elF1) elF1.textContent = f1;
+    if (elN0) elN0.textContent = n0;
+    if (elN1) elN1.textContent = n1;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('visible');
+    window.__vgbSkipStartToast = true;
+    setTimeout(function() {
+      overlay.classList.remove('visible');
+      overlay.setAttribute('aria-hidden', 'true');
+      resolve();
+    }, 2000);
+  });
+}
+
+function playApplauseSound(scene) {
+  try {
+    if (scene && scene.sound && scene.sound.play) {
+      scene.sound.play('star', { volume: 0.55 });
+    }
+  } catch (e) {}
+  // Petite rafale WebAudio pour un effet "foule"
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    for (let i = 0; i < 8; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.value = 180 + Math.random() * 420;
+      g.gain.value = 0.0001;
+      o.connect(g);
+      g.connect(ctx.destination);
+      const t0 = now + i * 0.04;
+      g.gain.exponentialRampToValueAtTime(0.03, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
+      o.start(t0);
+      o.stop(t0 + 0.14);
+    }
+    setTimeout(function() { try { ctx.close(); } catch (e) {} }, 600);
+  } catch (e) {}
+}
+
+function playVictoryCinematic(ranking, done) {
+  const scene = (infoText && infoText.scene)
+    || (typeof game !== 'undefined' && game.scene && game.scene.scenes && game.scene.scenes[0]);
+  const winnerId = ranking && ranking.length ? ranking[0] : null;
+  const loserId = ranking && ranking.length > 1 ? ranking[1] : null;
+  const fx = document.getElementById('victory-fx-overlay');
+
+  // Zoom sur le perso qui a tué le roi (ou livré le mat)
+  let focusPiece = null;
+  if (victoryFocusPiece && victoryFocusPiece.sprite && pieces.indexOf(victoryFocusPiece) >= 0) {
+    focusPiece = victoryFocusPiece;
+  } else if (lastMove && lastMove.to) {
+    focusPiece = getPieceAt(lastMove.to);
+  }
+  if (!focusPiece && typeof winnerId === 'number') {
+    focusPiece = pieces.find(p => p.player === winnerId && p.role === 'unique' && p.sprite)
+      || pieces.find(p => p.player === winnerId && p.role === 'queen' && p.sprite)
+      || pieces.find(p => p.player === winnerId && p.sprite);
+  }
+
+  const focusCenter = focusPiece ? cellCenter(focusPiece.x, focusPiece.y) : null;
+
+  if (scene && scene.cameras && scene.cameras.main) {
+    try {
+      const cam = scene.cameras.main;
+      if (focusCenter && cam.pan) {
+        cam.pan(focusCenter.x, focusCenter.y, 420, 'Cubic.easeOut', true);
+      }
+      cam.zoomTo(1.38, 420, 'Cubic.easeOut', true);
+    } catch (e) {}
+  }
+
+  // Roi adverse : tombe s'il est encore visible (ex. mat classique)
+  const loserKing = (typeof loserId === 'number') ? findKingPiece(loserId) : null;
+  if (loserKing && loserKing.sprite && scene && scene.tweens) {
+    const targets = [loserKing.sprite];
+    if (loserKing.backgroundSprite) targets.push(loserKing.backgroundSprite);
+    if (loserKing.letterText) targets.push(loserKing.letterText);
+    try {
+      scene.tweens.add({
+        targets: targets,
+        angle: 92,
+        y: (loserKing.sprite.y || 0) + Math.max(36, TILE_SIZE * 0.45),
+        alpha: 0.12,
+        duration: 780,
+        ease: 'Cubic.easeIn'
+      });
+    } catch (e) {}
+  }
+
+  // Geste du vainqueur (le tueur)
+  if (focusPiece && focusPiece.sprite && scene && scene.tweens) {
+    try {
+      scene.tweens.add({
+        targets: [focusPiece.sprite],
+        y: focusPiece.sprite.y - 24,
+        angle: -10,
+        duration: 160,
+        yoyo: true,
+        repeat: 3,
+        ease: 'Sine.easeOut'
+      });
+    } catch (e) {}
+  }
+
+  playApplauseSound(scene);
+  if (fx) {
+    fx.classList.add('visible');
+    fx.setAttribute('aria-hidden', 'false');
+  }
+
+  setTimeout(function() {
+    if (fx) {
+      fx.classList.remove('visible');
+      fx.setAttribute('aria-hidden', 'true');
+    }
+    if (scene && scene.cameras && scene.cameras.main) {
+      try {
+        const cam = scene.cameras.main;
+        cam.zoomTo(1, 280, 'Cubic.easeOut', true);
+        if (cam.pan) cam.pan(BOARD_CANVAS / 2, BOARD_CANVAS / 2, 280, 'Cubic.easeOut', true);
+      } catch (e) {}
+    }
+    if (typeof done === 'function') done();
+  }, 1900);
+}
+
+function updateLocalWinStreakFromRanking(ranking) {
+  try {
+    const key = 'vgb_local_win_streak_' + (gameMode === 'classic' ? 'classic' : 'vgb');
+    let streak = Number(localStorage.getItem(key) || 0) || 0;
+    if (!ranking || !ranking.length || lastEndGameReason === 'stalemate') {
+      streak = 0;
+    } else if (ranking[0] === 0) {
+      streak += 1;
+    } else {
+      streak = 0;
+    }
+    localStorage.setItem(key, String(streak));
+    window.__vgbLastLocalStreak = streak;
+  } catch (e) {}
+}
+
+function launchMatchWithIntro(scene, afterStart) {
+  const sc = scene || (typeof game !== 'undefined' && game.scene && game.scene.scenes && game.scene.scenes[0]);
+  showFactionVsIntro().then(function() {
+    startGame(sc);
+    if (typeof afterStart === 'function') afterStart();
+  });
+}
+
 let endGameHandled = false;
 
 function endGameWithRanking(ranking) {
@@ -7611,72 +8134,75 @@ function endGameWithRanking(ranking) {
   recordReplaySnapshot('end');
 
   const overlayOpts = { ranking: ranking || [], reason: lastEndGameReason };
+  updateLocalWinStreakFromRanking(ranking || []);
 
-  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
-    const winnerSeat = ranking && ranking.length ? ranking[0] : null;
-    const onlineMatchId = VGBOnline.match.matchId;
-    const replayPayload = buildReplayPayload();
+  function afterCinematic() {
+    if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+      const winnerSeat = ranking && ranking.length ? ranking[0] : null;
+      const onlineMatchId = VGBOnline.match.matchId;
+      const replayPayload = buildReplayPayload();
 
-    function finalizeOnlineFinish() {
-      const finishPromise = VGBOnline.finish(winnerSeat, {
-        moveLog: moveLog.slice(),
-        replayPayload,
-        result: lastEndGameReason || undefined
-      }).catch(function (e) {
-        console.warn('finish failed', e);
-        return null;
-      });
-      VGBOnline.stopPolling();
-      VGBOnline.enabled = false;
+      function finalizeOnlineFinish() {
+        const finishPromise = VGBOnline.finish(winnerSeat, {
+          moveLog: moveLog.slice(),
+          replayPayload,
+          result: lastEndGameReason || undefined
+        }).catch(function (e) {
+          console.warn('finish failed', e);
+          return null;
+        });
+        VGBOnline.stopPolling();
+        VGBOnline.enabled = false;
 
-      showEndGameOverlay(overlayOpts);
+        showEndGameOverlay(overlayOpts);
 
-      finishPromise.then(async function (data) {
-        if (data && data.elo) {
-          updateEndGameElo(data.elo);
-        }
-        if (data && data.you && VGBOnline.user) {
-          VGBOnline.user = Object.assign({}, VGBOnline.user, data.you);
-          if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
-        } else if (data && data.alreadyFinished) {
-          try {
-            const me = await VGBOnline.refreshMe();
-            if (me && typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
-          } catch (e) {}
-        }
-        if ((!data || !data.savedReplay) && !(data && data.alreadyFinished)) {
-          await persistAccountAutoReplay(onlineMatchId);
-        }
-      });
-    }
-
-    // Pousser l'état final pour que l'adversaire puisse le rejouer
-    VGBOnline.pushGameState(serializeOnlineBoardState(), currentPlayer)
-      .catch(function () { return null; })
-      .then(finalizeOnlineFinish);
-  } else {
-    // Historique local (hors ligne)
-    try {
-      const key = 'vgb_local_results';
-      const prev = JSON.parse(localStorage.getItem(key) || '[]');
-      let result = 'D';
-      if (lastEndGameReason === 'stalemate' || !ranking || !ranking.length) {
-        result = 'D';
-      } else if (ranking.length >= 2) {
-        result = ranking[0] === 0 ? 'W' : 'L';
+        finishPromise.then(async function (data) {
+          if (data && data.elo) {
+            updateEndGameElo(data.elo);
+          }
+          if (data && data.you && VGBOnline.user) {
+            VGBOnline.user = Object.assign({}, VGBOnline.user, data.you);
+            if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+          } else if (data && data.alreadyFinished) {
+            try {
+              const me = await VGBOnline.refreshMe();
+              if (me && typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+            } catch (e) {}
+          }
+          if ((!data || !data.savedReplay) && !(data && data.alreadyFinished)) {
+            await persistAccountAutoReplay(onlineMatchId);
+          }
+        });
       }
-      localStorage.setItem(key, JSON.stringify([result].concat(prev).slice(0, 10)));
-    } catch (e) {}
-    persistAccountAutoReplay(null);
-    showEndGameOverlay(overlayOpts);
+
+      VGBOnline.pushGameState(serializeOnlineBoardState(), currentPlayer)
+        .catch(function () { return null; })
+        .then(finalizeOnlineFinish);
+    } else {
+      try {
+        const key = 'vgb_local_results';
+        const prev = JSON.parse(localStorage.getItem(key) || '[]');
+        let result = 'D';
+        if (lastEndGameReason === 'stalemate' || !ranking || !ranking.length) {
+          result = 'D';
+        } else if (ranking.length >= 2) {
+          result = ranking[0] === 0 ? 'W' : 'L';
+        }
+        localStorage.setItem(key, JSON.stringify([result].concat(prev).slice(0, 10)));
+      } catch (e) {}
+      persistAccountAutoReplay(null);
+      showEndGameOverlay(overlayOpts);
+    }
+    savePreset();
   }
 
-  savePreset();
+  playVictoryCinematic(ranking || [], afterCinematic);
 }
 
 function getPlayerDisplayInfo(playerId) {
   const player = players[playerId];
-  const name = (player && player.name) || playerNames[playerId] || (`Joueur ${playerId + 1}`);
+  const baseName = (player && player.name) || playerNames[playerId] || (`Joueur ${playerId + 1}`);
+  const name = nameWithStreak(baseName, playerId);
   let faction = (player && player.faction) || playerFactions[playerId] || 'nintendo';
   if (typeof faction === 'string') {
     faction = faction.charAt(0).toUpperCase() + faction.slice(1).toLowerCase();
@@ -8144,12 +8670,28 @@ function setupHtmlHud() {
     const el = document.getElementById('hud-player-' + slot);
     if (!el) continue;
     el.hidden = false;
-    const name = (players[i] && players[i].name) || playerNames[i] || ('Joueur ' + (i + 1));
+    const baseName = (players[i] && players[i].name) || playerNames[i] || ('Joueur ' + (i + 1));
+    const streak = formatStreakLabel(getPlayerWinStreak(i));
     const faction = (players[i] && players[i].faction) || playerFactions[i] || 'nintendo';
     const nameEl = document.getElementById('hud-name-' + slot);
     const facEl = document.getElementById('hud-faction-' + slot);
     const timEl = document.getElementById('hud-timer-' + slot);
-    if (nameEl) nameEl.textContent = name;
+    if (nameEl) {
+      nameEl.textContent = baseName;
+      let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
+      if (streak) {
+        if (!streakEl) {
+          streakEl = document.createElement('span');
+          streakEl.className = 'hud-streak';
+          nameEl.insertAdjacentElement('afterend', streakEl);
+        }
+        streakEl.textContent = ' (' + streak + ')';
+        streakEl.hidden = false;
+      } else if (streakEl) {
+        streakEl.hidden = true;
+        streakEl.textContent = '';
+      }
+    }
     if (facEl) facEl.textContent = '(' + getFactionDisplayName(faction) + ')';
     if (timEl) {
       timEl.textContent = formatTimerHud(playerTimersMs[i] || 0);
@@ -8166,6 +8708,25 @@ function refreshHtmlHudTurn() {
     const slot = hudSlotForPlayer(i);
     const el = document.getElementById('hud-player-' + slot);
     if (el) el.classList.toggle('active-turn', gameStarted && i === currentPlayer);
+
+    // Série visible pendant toute la partie (HUD)
+    const nameEl = document.getElementById('hud-name-' + slot);
+    if (!nameEl || !gameStarted) continue;
+    const baseName = (players[i] && players[i].name) || playerNames[i] || ('Joueur ' + (i + 1));
+    nameEl.textContent = baseName;
+    const streak = formatStreakLabel(getPlayerWinStreak(i));
+    let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
+    if (streak) {
+      if (!streakEl) {
+        streakEl = document.createElement('span');
+        streakEl.className = 'hud-streak';
+        nameEl.insertAdjacentElement('afterend', streakEl);
+      }
+      streakEl.textContent = ' (' + streak + ')';
+      streakEl.hidden = false;
+    } else if (streakEl) {
+      streakEl.hidden = true;
+    }
   }
   refreshTurnBanner();
 }
@@ -8228,6 +8789,8 @@ function syncAllHtmlHudItems() {
 }
 
 function startCharacterSelection() {
+  // Empêche un match online "fantôme" de bloquer le 2e joueur en local
+  clearOnlineMatchState();
   applyGameMode(readSelectedGameMode());
   computeBoardLayout();
   readLocalAiSettings();
@@ -8944,6 +9507,8 @@ function startGameFromSelection() {
     return;
   }
 
+  // Partie locale : s'assurer qu'aucune session online ne bloque les tours
+  clearOnlineMatchState();
   readTimerOptionsFromUI();
 
   // Récupérer et mettre à jour la taille du plateau sélectionnée
@@ -8977,11 +9542,10 @@ function startGameFromSelection() {
     }
   }, 100);
   
-  startGame(game.scene.scenes[0]);
+  launchMatchWithIntro(game.scene.scenes[0]);
 }
 
 let onlineGameStartedOnce = false;
-
 function applyOnlineDraftAndStart(state) {
   if (!state || !state.armies) return;
   if (onlineGameStartedOnce || gameStarted) return;
@@ -9024,10 +9588,11 @@ function applyOnlineDraftAndStart(state) {
       if (typeof game !== 'undefined' && game.scale) {
         try { game.scale.refresh(); } catch (e) {}
       }
-      startGame(game.scene.scenes[0]);
-      onlineLastKnownTurn = currentPlayer;
-      startOnlineLiveSync();
-      VGBOnline.startMatchPoll(onOnlineRemoteUpdate);
+      launchMatchWithIntro(game.scene.scenes[0], function() {
+        onlineLastKnownTurn = currentPlayer;
+        startOnlineLiveSync();
+        VGBOnline.startMatchPoll(onOnlineRemoteUpdate);
+      });
     }, 200);
   });
 }
@@ -9372,6 +9937,7 @@ function createPiecesFromSelection() {
     modeOnline.classList.toggle('active', isOnline);
     if (localSetup) localSetup.style.display = isOnline ? 'none' : 'block';
     if (onlineSetup) onlineSetup.classList.toggle('visible', isOnline);
+    if (!isOnline) clearOnlineMatchState();
     if (isOnline) refreshOnlineUI();
   }
 
@@ -9395,7 +9961,13 @@ function createPiecesFromSelection() {
         ol.innerHTML = '<li>Aucun joueur encore — soyez le premier !</li>';
         return;
       }
-      ol.innerHTML = rows.map(r => `<li><strong>${r.username}</strong> — ${r.elo} Elo (${r.wins}V/${r.losses}D)</li>`).join('');
+      ol.innerHTML = rows.map(function (r) {
+        const streak = formatStreakLabel(r.winStreak);
+        const streakHtml = streak
+          ? ' <span class="streak" style="color:#ff8a3d;font-weight:bold;font-size:12px;">(' + streak + ')</span>'
+          : '';
+        return '<li><strong>' + r.username + '</strong>' + streakHtml + ' — ' + r.elo + ' Elo (' + r.wins + 'V/' + r.losses + 'D)</li>';
+      }).join('');
     } catch (e) {
       ol.innerHTML = '<li>Classement indisponible (API PHP requise)</li>';
     }
@@ -9581,7 +10153,13 @@ function createPiecesFromSelection() {
   window.VGBOnline_onMatched = function (match) {
     stopPrivatePoll();
     hidePrivateRoom();
-    statusEl.textContent = `Adversaire trouvé : ${match.opponent ? match.opponent.username : '???'} (Elo ${match.opponent ? match.opponent.elo : '—'})`;
+    const opp = match.opponent;
+    const classicMatch = match.gameMode === 'classic' || match.gridSize === 8;
+    const oppStreak = opp
+      ? formatStreakLabel(classicMatch ? (opp.winStreakClassic || 0) : (opp.winStreak || 0))
+      : '';
+    const oppStreakTxt = oppStreak ? ' (' + oppStreak + ')' : '';
+    statusEl.textContent = `Adversaire trouvé : ${opp ? opp.username : '???'}${oppStreakTxt} (Elo ${opp ? opp.elo : '—'})`;
     btnFind.style.display = 'block';
     if (btnCancel) btnCancel.style.display = 'none';
 
