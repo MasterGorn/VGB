@@ -74,14 +74,35 @@ export type UserDoc = HydratedDocument<{
 
 /**
  * Next.js HMR peut garder un ancien `mongoose.models.User` sans les nouveaux champs.
- * On recrée toujours le modèle pour garantir avatarUrl / countryCode au save.
+ * On complète le schéma existant plutôt que de le supprimer (readonly côté types TS).
  */
 function getUserModel(): Model<UserDoc> {
-  if (mongoose.models.User) {
-    delete mongoose.models.User;
-  }
-  if (mongoose.connection?.models?.User) {
-    delete mongoose.connection.models.User;
+  const existing = mongoose.models.User as Model<UserDoc> | undefined;
+  if (existing) {
+    if (!existing.schema.path("avatarUrl")) {
+      existing.schema.add({
+        avatarUrl: { type: String, default: "", maxlength: 200 },
+      });
+    }
+    if (!existing.schema.path("countryCode")) {
+      existing.schema.add({
+        countryCode: { type: String, default: "", maxlength: 2, uppercase: true },
+      });
+    }
+    if (!existing.schema.path("lastPlayedAt")) {
+      existing.schema.add({
+        lastPlayedAt: { type: Date, default: Date.now },
+      });
+    }
+    if (!existing.schema.path("winStreak")) {
+      existing.schema.add({
+        winStreak: { type: Number, default: 0 },
+        bestWinStreak: { type: Number, default: 0 },
+        winStreakClassic: { type: Number, default: 0 },
+        bestWinStreakClassic: { type: Number, default: 0 },
+      });
+    }
+    return existing;
   }
   return mongoose.model<UserDoc>("User", userSchema);
 }
