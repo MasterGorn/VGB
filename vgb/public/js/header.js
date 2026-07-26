@@ -25,7 +25,17 @@
   function authLabel(user) {
     if (!user || !user.username) return 'Se connecter';
     var elo = (typeof user.elo === 'number') ? user.elo : (user.elo || '—');
-    return escapeHtml(user.username) + ' <span class="nav-elo">' + escapeHtml(elo) + ' Elo</span>';
+    var parts = '';
+    if (user.avatarUrl) {
+      parts += '<img class="nav-user-avatar" src="' + escapeHtml(user.avatarUrl) + '" alt="" width="22" height="22" />';
+    }
+    if (user.countryCode && typeof VGBProfile !== 'undefined' && VGBProfile.flagEmoji) {
+      parts += '<span class="nav-user-flag">' + VGBProfile.flagEmoji(user.countryCode) + '</span>';
+    } else if (user.countryCode) {
+      parts += '<span class="nav-user-flag">' + escapeHtml(user.countryCode) + '</span>';
+    }
+    parts += escapeHtml(user.username) + ' <span class="nav-elo">' + escapeHtml(elo) + ' Elo</span>';
+    return parts;
   }
 
   function renderAuthLink(extraClass, active) {
@@ -52,13 +62,12 @@
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
             '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
-            renderAuthLink('nav-link-mobile-only', active) +
           '</nav>' +
           '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
-            renderAuthLink('nav-link-desktop-only', active) +
+            renderAuthLink('', active) +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
                 '<span class="flag-icon" id="current-flag">🇫🇷</span>' +
@@ -214,7 +223,17 @@
     }
   }
 
+  function ensureProfileUi() {
+    if (typeof VGBProfile !== 'undefined') return;
+    if (document.querySelector('script[data-vgb-profile-ui]')) return;
+    var s = document.createElement('script');
+    s.src = '/js/profile-ui.js?v=20260726c';
+    s.setAttribute('data-vgb-profile-ui', '1');
+    document.head.appendChild(s);
+  }
+
   function injectHeader(active) {
+    ensureProfileUi();
     ensurePwaInstall();
     var placeholder = document.getElementById('header-root');
     if (!placeholder) return;

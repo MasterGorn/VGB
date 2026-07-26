@@ -225,14 +225,24 @@
           draws: data.user.draws,
           recentResults: [],
         };
+        // Profil complet depuis Mongo (avatar, pays, séries…) — pas seulement le JWT NextAuth
+        try {
+          const prof = await this.request("/api/profile");
+          if (prof && prof.user) {
+            this.user = Object.assign({}, this.user, prof.user, {
+              username: prof.user.username || this.user.username,
+            });
+          }
+        } catch (e) {}
         try {
           const hist = await this.request("/api/history");
           if (hist && hist.user) {
-            this.user.elo = hist.user.elo;
-            this.user.wins = hist.user.wins;
-            this.user.losses = hist.user.losses;
-            this.user.draws = hist.user.draws;
-            this.user.recentResults = hist.results || hist.user.recentResults || [];
+            this.user = Object.assign({}, this.user, hist.user, {
+              username: hist.user.username || this.user.username,
+              recentResults: hist.results || hist.user.recentResults || this.user.recentResults || [],
+            });
+          } else if (hist && hist.results) {
+            this.user.recentResults = hist.results;
           }
         } catch (e) {}
         this.saveSession();
@@ -251,6 +261,18 @@
         return this.request("/api/history");
       }
       return { ok: true, results: (this.user && this.user.recentResults) || [], slots: [] };
+    },
+
+    async updateProfile(payload) {
+      if (this.mode !== "next") {
+        throw new Error("Profil disponible uniquement avec l’API Next.js");
+      }
+      const data = await this.request("/api/profile", payload, "PATCH");
+      if (data && data.user) {
+        this.user = Object.assign({}, this.user || {}, data.user);
+        this.saveSession();
+      }
+      return data;
     },
 
     async logout() {

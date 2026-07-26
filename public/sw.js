@@ -1,5 +1,5 @@
 /* Video Games Battle — service worker (cache shell PWA) */
-const CACHE_NAME = 'vgb-shell-v3';
+const CACHE_NAME = 'vgb-shell-v5';
 const PRECACHE_URLS = [
   '/play.html',
   '/login.html',
@@ -13,6 +13,7 @@ const PRECACHE_URLS = [
   '/css/global.css',
   '/js/header.js',
   '/js/online.js',
+  '/js/profile-ui.js',
   '/js/translations.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
