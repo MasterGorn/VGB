@@ -27,6 +27,8 @@ export async function GET(req: Request) {
         draws: u.drawsClassic ?? 0,
         winStreak: u.winStreakClassic ?? 0,
         bestWinStreak: u.bestWinStreakClassic ?? 0,
+        avatarUrl: u.avatarUrl || "",
+        countryCode: (u.countryCode || "").toUpperCase(),
         mode: "classic" as const,
       }));
 
@@ -48,6 +50,8 @@ export async function GET(req: Request) {
       draws: u.draws,
       winStreak: u.winStreak ?? 0,
       bestWinStreak: u.bestWinStreak ?? 0,
+      avatarUrl: u.avatarUrl || "",
+      countryCode: (u.countryCode || "").toUpperCase(),
       mode: "vgb" as const,
     }));
 

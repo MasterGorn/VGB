@@ -34,6 +34,12 @@ const userSchema = new Schema(
     bestWinStreak: { type: Number, default: 0 },
     winStreakClassic: { type: Number, default: 0 },
     bestWinStreakClassic: { type: Number, default: 0 },
+    /** Avatar (chemin image public, ex. /images/nintendo/characters/mario.png) */
+    avatarUrl: { type: String, default: "", maxlength: 200 },
+    /** ISO 3166-1 alpha-2 (ex. FR, JP, US) */
+    countryCode: { type: String, default: "", maxlength: 2, uppercase: true },
+    /** Dernière activité (partie / connexion) */
+    lastPlayedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
@@ -59,13 +65,49 @@ export type UserDoc = HydratedDocument<{
   bestWinStreak: number;
   winStreakClassic: number;
   bestWinStreakClassic: number;
+  avatarUrl: string;
+  countryCode: string;
+  lastPlayedAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }>;
 
-const User =
-  (mongoose.models.User as Model<UserDoc>) ||
-  mongoose.model<UserDoc>("User", userSchema);
+/**
+ * Next.js HMR peut garder un ancien `mongoose.models.User` sans les nouveaux champs.
+ * On complète le schéma existant plutôt que de le supprimer (readonly côté types TS).
+ */
+function getUserModel(): Model<UserDoc> {
+  const existing = mongoose.models.User as Model<UserDoc> | undefined;
+  if (existing) {
+    if (!existing.schema.path("avatarUrl")) {
+      existing.schema.add({
+        avatarUrl: { type: String, default: "", maxlength: 200 },
+      });
+    }
+    if (!existing.schema.path("countryCode")) {
+      existing.schema.add({
+        countryCode: { type: String, default: "", maxlength: 2, uppercase: true },
+      });
+    }
+    if (!existing.schema.path("lastPlayedAt")) {
+      existing.schema.add({
+        lastPlayedAt: { type: Date, default: Date.now },
+      });
+    }
+    if (!existing.schema.path("winStreak")) {
+      existing.schema.add({
+        winStreak: { type: Number, default: 0 },
+        bestWinStreak: { type: Number, default: 0 },
+        winStreakClassic: { type: Number, default: 0 },
+        bestWinStreakClassic: { type: Number, default: 0 },
+      });
+    }
+    return existing;
+  }
+  return mongoose.model<UserDoc>("User", userSchema);
+}
+
+const User = getUserModel();
 
 export default User;
 
@@ -85,6 +127,8 @@ export function publicUser(user: UserDoc) {
     bestWinStreak: user.bestWinStreak ?? 0,
     winStreakClassic: user.winStreakClassic ?? 0,
     bestWinStreakClassic: user.bestWinStreakClassic ?? 0,
+    avatarUrl: user.avatarUrl || "",
+    countryCode: (user.countryCode || "").toUpperCase(),
     recentResults: Array.isArray(user.recentResults) ? user.recentResults.slice(0, 10) : [],
     recentResultsClassic: Array.isArray(user.recentResultsClassic)
       ? user.recentResultsClassic.slice(0, 10)
@@ -135,4 +179,32 @@ export function pushRecentResult(
 
 export function isClassicGrid(gridSize: number | undefined | null) {
   return Number(gridSize) === 8;
+}
+
+/** Avatars autorisés (chemins relatifs au site). */
+export const ALLOWED_AVATARS = [
+  "/images/nintendo/characters/mario.png",
+  "/images/nintendo/characters/luigi.png",
+  "/images/nintendo/characters/peach.png",
+  "/images/nintendo/characters/bowser.png",
+  "/images/nintendo/characters/link.png",
+  "/images/nintendo/characters/zelda.png",
+  "/images/nintendo/characters/samus.png",
+  "/images/nintendo/characters/kirby.png",
+  "/images/nintendo/characters/pikachu.png",
+  "/images/nintendo/characters/fox-mccloud.png",
+  "/images/sega/characters/sonic.png",
+  "/images/sega/characters/tails.png",
+  "/images/playstation/characters/kratos.png",
+  "/images/playstation/characters/astro-bot.png",
+  "/images/xbox/characters/masterchief.png",
+  "/images/xbox/characters/crash-bandicoot.png",
+] as const;
+
+export function isAllowedAvatar(url: string) {
+  return (ALLOWED_AVATARS as readonly string[]).includes(url);
+}
+
+export function isValidCountryCode(code: string) {
+  return /^[A-Z]{2}$/.test(String(code || "").toUpperCase());
 }

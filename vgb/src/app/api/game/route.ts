@@ -15,6 +15,49 @@ import { mergeMoveLogIntoPayload } from "@/models/Replay";
 
 export const dynamic = "force-dynamic";
 
+/** Mets à jour les stats sans toucher avatarUrl / countryCode. */
+async function saveUserMatchStats(u: {
+  _id: unknown;
+  elo: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  eloClassic?: number;
+  winsClassic?: number;
+  lossesClassic?: number;
+  drawsClassic?: number;
+  recentResults?: unknown;
+  recentResultsClassic?: unknown;
+  winStreak?: number;
+  bestWinStreak?: number;
+  winStreakClassic?: number;
+  bestWinStreakClassic?: number;
+  lastPlayedAt?: Date;
+}) {
+  await User.updateOne(
+    { _id: u._id },
+    {
+      $set: {
+        elo: u.elo,
+        wins: u.wins,
+        losses: u.losses,
+        draws: u.draws,
+        eloClassic: u.eloClassic,
+        winsClassic: u.winsClassic,
+        lossesClassic: u.lossesClassic,
+        drawsClassic: u.drawsClassic,
+        recentResults: u.recentResults,
+        recentResultsClassic: u.recentResultsClassic,
+        winStreak: u.winStreak,
+        bestWinStreak: u.bestWinStreak,
+        winStreakClassic: u.winStreakClassic,
+        bestWinStreakClassic: u.bestWinStreakClassic,
+        lastPlayedAt: u.lastPlayedAt,
+      },
+    }
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
@@ -226,8 +269,10 @@ export async function POST(req: Request) {
         applyWinStreak(p1, "L", classic ? "classic" : "vgb");
         applyWinStreak(p2, "W", classic ? "classic" : "vgb");
       }
-      await p1.save();
-      await p2.save();
+      p1.lastPlayedAt = new Date();
+      p2.lastPlayedAt = new Date();
+      await saveUserMatchStats(p1);
+      await saveUserMatchStats(p2);
 
       const nextState = {
         ...state,

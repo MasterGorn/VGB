@@ -7618,7 +7618,12 @@ function createPiecesFromSelection() {
         ol.innerHTML = '<li>Aucun joueur encore — soyez le premier !</li>';
         return;
       }
-      ol.innerHTML = rows.map(r => `<li><strong>${r.username}</strong> — ${r.elo} Elo (${r.wins}V/${r.losses}D)</li>`).join('');
+      ol.innerHTML = rows.map(r => {
+        const nameHtml = (typeof VGBProfile !== 'undefined' && VGBProfile.userBadgeHtml)
+          ? VGBProfile.userBadgeHtml(r, { size: 18 })
+          : ('<strong>' + r.username + '</strong>');
+        return '<li>' + nameHtml + ' — ' + r.elo + ' Elo (' + r.wins + 'V/' + r.losses + 'D)</li>';
+      }).join('');
     } catch (e) {
       ol.innerHTML = '<li>Classement indisponible (API PHP requise)</li>';
     }

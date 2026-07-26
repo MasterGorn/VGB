@@ -92,9 +92,10 @@
   </div>
 </main>
 <script src="/js/translations.js"></script>
+<script src="/js/profile-ui.js?v=20260726b"></script>
 <script src="/js/header.js"></script>
 <script src="/js/piece-flavor.js?v=20260725b"></script>
-<script src="/js/online.js"></script>
+<script src="/js/online.js?v=20260726b"></script>
 <script>
 VGBHeader.injectHeader('classement');
 if (typeof initTranslation === 'function') initTranslation();
@@ -127,9 +128,12 @@ if (typeof initTranslation === 'function') initTranslation();
         const streakHtml = streak
           ? ' <span class="streak" title="Série de victoires">(' + streak + ')</span>'
           : '';
+        const nameHtml = (typeof VGBProfile !== 'undefined' && VGBProfile.userBadgeHtml)
+          ? VGBProfile.userBadgeHtml(r)
+          : r.username;
         return `<tr>
           <td class="rank">${r.rank}</td>
-          <td>${r.username}${streakHtml}</td>
+          <td>${nameHtml}${streakHtml}</td>
           <td class="elo">${r.elo}</td>
           <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
         </tr>`;
