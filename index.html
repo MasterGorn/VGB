@@ -1548,8 +1548,10 @@ function toggleSecondaryMode() {
     showSecondaryModeIndicator();
     showInfoMessage(`Mode secondaire activé pour ${selectedPiece.name}`, 2000);
     clearHighlights();
-    // Afficher les cibles possibles pour la conversion
-    showConversionTargets();
+    // Afficher les cibles possibles pour la conversion (Moine uniquement)
+    if (isMoinePiece(selectedPiece)) {
+      showConversionTargets();
+    }
   } else {
     // Désactiver le mode secondaire
     hideSecondaryModeIndicator();
@@ -1593,6 +1595,12 @@ function updateSecondaryModeIndicator() {
   }
 }
 
+
+function isMoinePiece(piece) {
+  if (!piece) return false;
+  const t = String(piece.type || piece.nameKey || '').toLowerCase();
+  return t === 'moine' || t.includes('moine');
+}
 function showConversionTargets() {
   if (!selectedPiece) return;
   
@@ -1619,6 +1627,8 @@ function getConversionTargets(piece) {
       // Vérifier s'il y a une pièce adverse à cette position
       const targetPiece = getPieceAt({x: targetX, y: targetY});
       if (targetPiece && targetPiece.player !== piece.player) {
+        const role = targetPiece.role || 'pawn';
+        if (role === 'unique' || role === 'king') continue;
         targets.push({x: targetX, y: targetY});
       }
     }
@@ -1638,7 +1648,7 @@ function attemptConversion(targetPiece) {
     bishop: 50,
     rook: 50,
     queen: 75,
-    unique: 75,
+    unique: 100,
     king: 100
   };
   const failureRate = failureByRole[role] != null ? failureByRole[role] : 50;
@@ -2992,8 +3002,8 @@ function handleClick(scene, pos) {
   
   const clickedPiece = getPieceAt(pos);
   
-  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion
-  if (secondaryMode && selectedPiece && clickedPiece && clickedPiece.player !== selectedPiece.player) {
+  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion (Moine)
+  if (secondaryMode && selectedPiece && isMoinePiece(selectedPiece) && clickedPiece && clickedPiece.player !== selectedPiece.player) {
     const targets = getConversionTargets(selectedPiece);
     const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
     

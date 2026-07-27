@@ -58,7 +58,6 @@
           '</button>' +
           '<nav class="site-nav" id="site-nav-panel">' +
             '<a href="/play.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
-            '<a href="/progression.html" class="nav-link'+(active==='progression'?' active':'')+'">Progression</a>' +
             '<a href="/classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
@@ -68,6 +67,7 @@
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
+            '<a href="/progression.html" class="nav-link'+(active==='progression'?' active':'')+'">Progression</a>' +
             renderAuthLink('', active) +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +

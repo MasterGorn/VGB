@@ -2147,7 +2147,7 @@ body.end-game-open {
       <ul class="commands-list">
         <li>
           <kbd class="commands-key">A</kbd>
-          <span>Action — capacité secondaire de la Unique (double-clic sur mobile)</span>
+          <span>Action — capacité secondaire des pièces Unique (double-clic sur mobile)</span>
         </li>
         <li>
           <kbd class="commands-key">S</kbd>
@@ -3217,6 +3217,14 @@ function getUniqueAbilityCtx() {
     getPieceAt,
     updatePieces,
     getPieceMovementData,
+    listItemKeys: function () {
+      let keys = Object.keys(ITEM_WEIGHTS || {});
+      if (GRID_SIZE !== 9) keys = keys.filter(function (k) { return k !== 'sandglass'; });
+      return keys.length ? keys : ['bobomb', 'portals', 'banana', 'star', 'tornado', 'cursor'];
+    },
+    giveItem: function (playerId, itemKey, opts) {
+      giveItemToPlayer(playerId, itemKey, undefined, opts);
+    },
     isBlocked: function (x, y) {
       if (typeof VGBUniqueAbilities !== 'undefined') {
         if (VGBUniqueAbilities.isTileBurned(x, y) || VGBUniqueAbilities.isNeutralBlock(x, y)) return true;
@@ -3329,7 +3337,7 @@ function toggleSecondaryMode() {
     if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
       const targets = VGBUniqueAbilities.getSecondaryTargets(selectedPiece, getUniqueAbilityCtx());
       highlightPositions(targets, 0xffc107);
-    } else {
+    } else if (isMoinePiece(selectedPiece)) {
       showConversionTargets();
     }
   } else {
@@ -3373,6 +3381,12 @@ function updateSecondaryModeIndicator() {
   }
 }
 
+
+function isMoinePiece(piece) {
+  if (!piece) return false;
+  const t = String(piece.type || piece.nameKey || '').toLowerCase();
+  return t === 'moine' || t.includes('moine');
+}
 function showConversionTargets() {
   if (!selectedPiece) return;
   
@@ -3399,6 +3413,8 @@ function getConversionTargets(piece) {
       // Vérifier s'il y a une pièce adverse à cette position
       const targetPiece = getPieceAt({x: targetX, y: targetY});
       if (targetPiece && targetPiece.player !== piece.player) {
+        const role = targetPiece.role || 'pawn';
+        if (role === 'unique' || role === 'king') continue;
         targets.push({x: targetX, y: targetY});
       }
     }
@@ -3418,7 +3434,7 @@ function attemptConversion(targetPiece) {
     bishop: 50,
     rook: 50,
     queen: 75,
-    unique: 75,
+    unique: 100,
     king: 100
   };
   const failureRate = failureByRole[role] != null ? failureByRole[role] : 50;
@@ -5147,7 +5163,7 @@ function handleClick(scene, pos) {
   
   const clickedPiece = getPieceAt(pos);
   
-  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion
+  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion (Moine)
   if (secondaryMode && selectedPiece && clickedPiece && clickedPiece.player !== selectedPiece.player) {
     if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
       const ok = VGBUniqueAbilities.applySecondary(selectedPiece, pos, getUniqueAbilityCtx());
@@ -5160,12 +5176,13 @@ function handleClick(scene, pos) {
         return;
       }
     }
-    const targets = getConversionTargets(selectedPiece);
-    const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
-    
-    if (isTarget) {
-      attemptConversion(clickedPiece);
-      return;
+    if (isMoinePiece(selectedPiece)) {
+      const targets = getConversionTargets(selectedPiece);
+      const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
+      if (isTarget) {
+        attemptConversion(clickedPiece);
+        return;
+      }
     }
   }
 
@@ -5951,10 +5968,19 @@ function maybePickupItem(piece) {
   return null;
 }
 
-function giveItemToPlayer(playerId, itemKey, chargeTurns) {
-  const scene = infoText.scene;
+function giveItemToPlayer(playerId, itemKey, chargeTurns, opts) {
+  const scene = infoText && infoText.scene;
+  if (!scene) return;
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
-  if (playerItemIcons[playerId].length >= 3) return;
+  const force = opts && opts.force;
+  if (force) {
+    while (playerItemIcons[playerId].length >= 3) {
+      const removed = playerItemIcons[playerId].shift();
+      if (removed && removed.sprite && removed.sprite.destroy) removed.sprite.destroy();
+    }
+  } else if (playerItemIcons[playerId].length >= 3) {
+    return;
+  }
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(-100, -100, textureKey).setDisplaySize(24, 24).setVisible(false);
   const entry = { sprite: icon, item: itemKey };
@@ -7065,6 +7091,10 @@ function getOriginalMoves(piece) {
   for (const [dx, dy] of moveDirections) {
     const rayMoves = traceSlidingRay(piece, dx, dy, range, isKnight);
     for (const m of rayMoves) moves.push(m);
+  }
+
+  if (typeof VGBUniqueAbilities !== 'undefined' && typeof VGBUniqueAbilities.appendExtraMoves === 'function') {
+    VGBUniqueAbilities.appendExtraMoves(piece, moves, getUniqueAbilityCtx());
   }
 
   return moves;

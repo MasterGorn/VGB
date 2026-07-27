@@ -28,15 +28,14 @@
     yoshi: 'knight',
     pikachu: 'knight',
     tails: 'knight',
-    spyro: 'knight',
     kirby: 'bishop',
     jak: 'bishop',
     ulala: 'bishop',
-    'ecco-dolphin': 'bishop',
+    'ecco-dolphin': 'rook',
+    moine: 'bishop',
+    'viva-pinata': 'pawn',
     bayonetta: 'queen',
     mewtwo: 'queen',
-    'general-raam': 'queen',
-    reaver: 'queen',
     senua: 'queen'
   };
 
