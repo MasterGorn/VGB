@@ -93,7 +93,49 @@
       if (isType(piece, 'joanna-dark')) {
         return { moves: ORTHO, range: 4, special: 'unique' };
       }
+      if (isType(piece, 'ecco-dolphin', 'ecco')) {
+        return { moves: ORTHO, range: 8, special: 'unique' };
+      }
       return base;
+    },
+
+    /** Cases supplémentaires (ex. Ecco : saut par-dessus une pièce). */
+    appendExtraMoves(piece, moves, ctx) {
+      if (!piece || !moves || !ctx) return moves;
+      if (!isType(piece, 'ecco-dolphin', 'ecco')) return moves;
+      const gridSize = ctx.gridSize || 9;
+      const getPieceAt = ctx.getPieceAt;
+      const isBlocked = ctx.isBlocked || function () { return false; };
+      const seen = {};
+      moves.forEach(function (m) { seen[m.x + ',' + m.y] = true; });
+      for (const [dx, dy] of ORTHO) {
+        let x = piece.x;
+        let y = piece.y;
+        let jumped = false;
+        while (true) {
+          x += dx;
+          y += dy;
+          if (x < 0 || y < 0 || x >= gridSize || y >= gridSize) break;
+          if (isBlocked(x, y)) break;
+          const occ = getPieceAt({ x: x, y: y });
+          if (!jumped) {
+            if (!occ) continue;
+            // Traverser exactement une pièce (alliée ou ennemie)
+            jumped = true;
+            continue;
+          }
+          // Case immédiatement après la pièce traversée
+          if (occ && occ.player !== piece.player && occ.type !== 'king' && occ.role !== 'king') {
+            const key = x + ',' + y;
+            if (!seen[key]) {
+              moves.push({ x: x, y: y });
+              seen[key] = true;
+            }
+          }
+          break;
+        }
+      }
+      return moves;
     },
 
     /** Double-clic Joanna → camouflage */
@@ -147,7 +189,7 @@
     onEnemyCaptured(attacker, victim, ctx) {
       if (!victim) return;
       // Kirby copies movement
-      if (isType(attacker, 'kirby')) {
+      if (attacker && isType(attacker, 'kirby')) {
         const data = ctx.getPieceMovementData
           ? ctx.getPieceMovementData(victim)
           : { moves: victim.moves || KNIGHT, range: victim.range || 1 };
@@ -156,6 +198,31 @@
           range: (data && data.range) || 1
         };
         if (ctx.showInfo) ctx.showInfo('Kirby aspire le style de déplacement de ' + (victim.name || 'la pièce') + ' !', 2200);
+      }
+      // Viva Piñata : à la mort, 3 objets aléatoires distincts pour son propriétaire
+      if (isType(victim, 'viva-pinata', 'viva-piñata')) {
+        API.grantPinataBurst(victim.player, ctx);
+      }
+    },
+
+    grantPinataBurst(playerId, ctx) {
+      if (playerId == null || !ctx || typeof ctx.giveItem !== 'function') return;
+      const pool = (typeof ctx.listItemKeys === 'function')
+        ? ctx.listItemKeys()
+        : ['bobomb', 'portals', 'lightning', 'star', 'tetrimino', 'tornado', 'banana', 'phoenix', 'cursor', 'heart', 'mask', 'ocarina'];
+      const keys = pool.slice();
+      for (let i = keys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = keys[i];
+        keys[i] = keys[j];
+        keys[j] = tmp;
+      }
+      const picked = keys.slice(0, Math.min(3, keys.length));
+      picked.forEach(function (itemKey) {
+        ctx.giveItem(playerId, itemKey, { force: true });
+      });
+      if (ctx.showInfo) {
+        ctx.showInfo('Viva Piñata éclate : ' + picked.length + ' objet' + (picked.length > 1 ? 's' : '') + ' pour son camp !', 2800);
       }
     },
 
@@ -176,7 +243,7 @@
       }
       return [
         'link', 'spyro', 'dr-robotnik', 'dr.robotnik', 'master-chief',
-        'pikachu', 'yoshi', 'tails', 'ecco-dolphin', 'ecco', 'ulala'
+        'pikachu', 'yoshi', 'tails', 'ulala'
       ].some((x) => t === x || t.includes(x) || (piece.nameKey || '') === x);
     },
 
@@ -258,15 +325,6 @@
           const y = piece.y + dy;
           const occ = ctx.getPieceAt({ x, y });
           if (occ && occ.player === piece.player) out.push({ x, y, kind: 'tails-carry' });
-        }
-        return out;
-      }
-      if (isType(piece, 'ecco-dolphin', 'ecco')) {
-        for (const [dx, dy] of ALL8) {
-          const x = piece.x + dx;
-          const y = piece.y + dy;
-          const occ = ctx.getPieceAt({ x, y });
-          if (occ && occ.player !== piece.player) out.push({ x, y, kind: 'ecco-sonar' });
         }
         return out;
       }
@@ -388,27 +446,6 @@
         ally.y = ny;
         if (ctx.updatePieces) ctx.updatePieces();
         if (ctx.showInfo) ctx.showInfo('Vol de soutien !', 1800);
-        return true;
-      }
-      if (hit.kind === 'ecco-sonar') {
-        const victim = ctx.getPieceAt(pos);
-        if (!victim) return false;
-        const dx = Math.sign(victim.x - piece.x);
-        const dy = Math.sign(victim.y - piece.y);
-        let nx = victim.x;
-        let ny = victim.y;
-        for (let i = 0; i < 2; i++) {
-          const tx = nx + dx;
-          const ty = ny + dy;
-          if (tx < 0 || ty < 0 || tx >= ctx.gridSize || ty >= ctx.gridSize) break;
-          if (ctx.getPieceAt({ x: tx, y: ty })) break;
-          nx = tx;
-          ny = ty;
-        }
-        victim.x = nx;
-        victim.y = ny;
-        if (ctx.updatePieces) ctx.updatePieces();
-        if (ctx.showInfo) ctx.showInfo('Sonar mystique !', 1800);
         return true;
       }
       if (hit.kind === 'ulala-control') {

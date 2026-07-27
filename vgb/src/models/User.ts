@@ -1,4 +1,5 @@
 import mongoose, { Schema, type HydratedDocument, type Model } from "mongoose";
+import { titleLabel } from "@/lib/progression-titles";
 
 const userSchema = new Schema(
   {
@@ -40,6 +41,17 @@ const userSchema = new Schema(
     countryCode: { type: String, default: "", maxlength: 2, uppercase: true },
     /** Dernière activité (partie / connexion) */
     lastPlayedAt: { type: Date, default: Date.now },
+    /** Progression plateau (99 étapes) */
+    progressionStage: { type: Number, default: 1, min: 1, max: 99 },
+    progressionLevel: { type: Number, default: 1, min: 1, max: 99 },
+    progressionMissionDone: { type: [Boolean], default: [false, false, false] },
+    progressionMissionProgress: { type: [Number], default: [0, 0, 0] },
+    progressionStageClearedAt: { type: Date, default: null },
+    unlockedAvatars: { type: [String], default: [] },
+    unlockedBadges: { type: [String], default: [] },
+    /** Titre affiché sous le pseudo (id DEFAULT_TITLES / PROGRESSION_TITLES) */
+    titleId: { type: String, default: "", maxlength: 40 },
+    unlockedTitles: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -68,6 +80,15 @@ export type UserDoc = HydratedDocument<{
   avatarUrl: string;
   countryCode: string;
   lastPlayedAt: Date;
+  progressionStage: number;
+  progressionLevel: number;
+  progressionMissionDone: boolean[];
+  progressionMissionProgress: number[];
+  progressionStageClearedAt: Date | null;
+  unlockedAvatars: string[];
+  unlockedBadges: string[];
+  titleId: string;
+  unlockedTitles: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }>;
@@ -102,6 +123,23 @@ function getUserModel(): Model<UserDoc> {
         bestWinStreakClassic: { type: Number, default: 0 },
       });
     }
+    if (!existing.schema.path("progressionStage")) {
+      existing.schema.add({
+        progressionStage: { type: Number, default: 1, min: 1, max: 99 },
+        progressionLevel: { type: Number, default: 1, min: 1, max: 99 },
+        progressionMissionDone: { type: [Boolean], default: [false, false, false] },
+        progressionMissionProgress: { type: [Number], default: [0, 0, 0] },
+        progressionStageClearedAt: { type: Date, default: null },
+        unlockedAvatars: { type: [String], default: [] },
+        unlockedBadges: { type: [String], default: [] },
+      });
+    }
+    if (!existing.schema.path("titleId")) {
+      existing.schema.add({
+        titleId: { type: String, default: "", maxlength: 40 },
+        unlockedTitles: { type: [String], default: [] },
+      });
+    }
     return existing;
   }
   return mongoose.model<UserDoc>("User", userSchema);
@@ -129,6 +167,13 @@ export function publicUser(user: UserDoc) {
     bestWinStreakClassic: user.bestWinStreakClassic ?? 0,
     avatarUrl: user.avatarUrl || "",
     countryCode: (user.countryCode || "").toUpperCase(),
+    progressionStage: user.progressionStage || 1,
+    progressionLevel: user.progressionLevel || 1,
+    unlockedAvatars: Array.isArray(user.unlockedAvatars) ? user.unlockedAvatars : [],
+    unlockedBadges: Array.isArray(user.unlockedBadges) ? user.unlockedBadges : [],
+    titleId: user.titleId || "",
+    title: titleLabel(user.titleId) || "",
+    unlockedTitles: Array.isArray(user.unlockedTitles) ? user.unlockedTitles : [],
     recentResults: Array.isArray(user.recentResults) ? user.recentResults.slice(0, 10) : [],
     recentResultsClassic: Array.isArray(user.recentResultsClassic)
       ? user.recentResultsClassic.slice(0, 10)
@@ -181,7 +226,7 @@ export function isClassicGrid(gridSize: number | undefined | null) {
   return Number(gridSize) === 8;
 }
 
-/** Avatars autorisés (chemins relatifs au site). */
+/** Avatars de base toujours disponibles (hors progression). */
 export const ALLOWED_AVATARS = [
   "/images/nintendo/characters/mario.png",
   "/images/nintendo/characters/luigi.png",
@@ -201,8 +246,55 @@ export const ALLOWED_AVATARS = [
   "/images/xbox/characters/crash-bandicoot.png",
 ] as const;
 
-export function isAllowedAvatar(url: string) {
-  return (ALLOWED_AVATARS as readonly string[]).includes(url);
+export const DEFAULT_AVATAR_OPTIONS = [
+  { url: "/images/nintendo/characters/mario.png", label: "Mario" },
+  { url: "/images/nintendo/characters/luigi.png", label: "Luigi" },
+  { url: "/images/nintendo/characters/peach.png", label: "Peach" },
+  { url: "/images/nintendo/characters/bowser.png", label: "Bowser" },
+  { url: "/images/nintendo/characters/link.png", label: "Link" },
+  { url: "/images/nintendo/characters/zelda.png", label: "Zelda" },
+  { url: "/images/nintendo/characters/samus.png", label: "Samus" },
+  { url: "/images/nintendo/characters/kirby.png", label: "Kirby" },
+  { url: "/images/nintendo/characters/pikachu.png", label: "Pikachu" },
+  { url: "/images/nintendo/characters/fox-mccloud.png", label: "Fox" },
+  { url: "/images/sega/characters/sonic.png", label: "Sonic" },
+  { url: "/images/sega/characters/tails.png", label: "Tails" },
+  { url: "/images/playstation/characters/kratos.png", label: "Kratos" },
+  { url: "/images/playstation/characters/astro-bot.png", label: "Astro" },
+  { url: "/images/xbox/characters/masterchief.png", label: "Chief" },
+  { url: "/images/xbox/characters/crash-bandicoot.png", label: "Crash" },
+] as const;
+
+/** Avatar autorisé = défaut OU débloqué via progression. */
+export function isAllowedAvatar(url: string, unlockedAvatars: string[] = []) {
+  if ((ALLOWED_AVATARS as readonly string[]).includes(url)) return true;
+  return Array.isArray(unlockedAvatars) && unlockedAvatars.includes(url);
+}
+
+/** Liste sélectionnable pour le profil (défauts + débloqués). */
+export function selectableAvatars(
+  unlockedAvatars: string[] = [],
+  labelByUrl: Record<string, string> = {}
+) {
+  const seen = new Set<string>();
+  const out: { url: string; label: string; unlocked: boolean }[] = [];
+  for (const a of DEFAULT_AVATAR_OPTIONS) {
+    seen.add(a.url);
+    out.push({ url: a.url, label: labelByUrl[a.url] || a.label, unlocked: true });
+  }
+  for (const url of unlockedAvatars || []) {
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    if (labelByUrl[url]) {
+      out.push({ url, label: labelByUrl[url], unlocked: true });
+      continue;
+    }
+    const name =
+      url.split("/").pop()?.replace(/\.png$/i, "").replace(/[-_]/g, " ") || "Avatar";
+    const label = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    out.push({ url, label, unlocked: true });
+  }
+  return out;
 }
 
 export function isValidCountryCode(code: string) {

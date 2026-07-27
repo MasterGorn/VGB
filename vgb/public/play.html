@@ -170,6 +170,25 @@
   font-weight: bold;
   color: var(--text-primary);
 }
+.hud-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.hud-title {
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(255, 215, 0, 0.85);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.hud-title:empty {
+  display: none;
+}
 .hud-avatar {
   width: 28px;
   height: 28px;
@@ -1354,6 +1373,17 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
 }
+.vs-intro-title {
+  margin-top: 4px;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(255, 215, 0, 0.85);
+  max-width: 220px;
+  line-height: 1.25;
+}
+.vs-intro-title:empty {
+  display: none;
+}
 .vs-intro-vs {
   font-size: clamp(28px, 6vw, 48px);
   font-weight: 900;
@@ -1936,12 +1966,14 @@ body.end-game-open {
       <img class="vs-intro-avatar" id="vs-avatar-0" alt="" hidden />
       <div class="vs-intro-faction" id="vs-faction-0">Nintendo</div>
       <div class="vs-intro-name" id="vs-name-0"></div>
+      <div class="vs-intro-title" id="vs-title-0"></div>
     </div>
     <div class="vs-intro-vs">VS</div>
     <div class="vs-intro-side right">
       <img class="vs-intro-avatar" id="vs-avatar-1" alt="" hidden />
       <div class="vs-intro-faction" id="vs-faction-1">PlayStation</div>
       <div class="vs-intro-name" id="vs-name-1"></div>
+      <div class="vs-intro-title" id="vs-title-1"></div>
     </div>
   </div>
 </div>
@@ -2081,7 +2113,10 @@ body.end-game-open {
   <div id="hud-player-0" class="player-hud hud-top" hidden>
     <div class="hud-main">
       <img class="hud-avatar" id="hud-avatar-0" alt="" hidden />
-      <span class="hud-name" id="hud-name-0">Joueur 1</span>
+      <div class="hud-identity">
+        <span class="hud-name" id="hud-name-0">Joueur 1</span>
+        <span class="hud-title" id="hud-title-0"></span>
+      </div>
       <span class="hud-faction" id="hud-faction-0"></span>
       <span class="hud-timer" id="hud-timer-0">05:00</span>
     </div>
@@ -2096,7 +2131,10 @@ body.end-game-open {
   <div id="hud-player-1" class="player-hud hud-bottom" hidden>
     <div class="hud-main">
       <img class="hud-avatar" id="hud-avatar-1" alt="" hidden />
-      <span class="hud-name" id="hud-name-1">Joueur 2</span>
+      <div class="hud-identity">
+        <span class="hud-name" id="hud-name-1">Joueur 2</span>
+        <span class="hud-title" id="hud-title-1"></span>
+      </div>
       <span class="hud-faction" id="hud-faction-1"></span>
       <span class="hud-timer" id="hud-timer-1">05:00</span>
     </div>
@@ -2109,7 +2147,7 @@ body.end-game-open {
       <ul class="commands-list">
         <li>
           <kbd class="commands-key">A</kbd>
-          <span>Action — capacité secondaire de la Unique (double-clic sur mobile)</span>
+          <span>Action — capacité secondaire des pièces Unique (double-clic sur mobile)</span>
         </li>
         <li>
           <kbd class="commands-key">S</kbd>
@@ -2347,6 +2385,8 @@ const LOCAL_SAVE_KEY = 'vgb_local_save';
 // Items & caisses
 let itemCrates = []; // [{ x, y, sprite, active, lastRound }]
 let playerItemIcons = []; // par joueur: tableau d'icônes [{ sprite, item }]
+/** Objets utilisés pendant la partie (missions progression) */
+let matchItemsUsedByPlayer = [false, false];
 let currentItemAction = null; // { playerId, type: 'bomb', active: true }
 let lastCrateEventMove = 0; // obsolète (conservé si besoin)
 let roundCounter = 0;
@@ -2361,6 +2401,7 @@ let currentPlayerIndex = 0;
 let playerCount = 2;
 let playerNames = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4']; // Sera mis à jour par initTranslation
 let playerAvatars = ['', '', '', ''];
+let playerTitles = ['', '', '', ''];
 let playerFactions = ['Nintendo', 'Nintendo', 'Nintendo', 'Nintendo'];
 let playerArmies = [[], [], [], []]; // Armées des joueurs
 let playerMoney = [50, 50, 50, 50]; // Budget 9×9 (assez pour remplir jusqu'à 17 pièces)
@@ -3176,6 +3217,14 @@ function getUniqueAbilityCtx() {
     getPieceAt,
     updatePieces,
     getPieceMovementData,
+    listItemKeys: function () {
+      let keys = Object.keys(ITEM_WEIGHTS || {});
+      if (GRID_SIZE !== 9) keys = keys.filter(function (k) { return k !== 'sandglass'; });
+      return keys.length ? keys : ['bobomb', 'portals', 'banana', 'star', 'tornado', 'cursor'];
+    },
+    giveItem: function (playerId, itemKey, opts) {
+      giveItemToPlayer(playerId, itemKey, undefined, opts);
+    },
     isBlocked: function (x, y) {
       if (typeof VGBUniqueAbilities !== 'undefined') {
         if (VGBUniqueAbilities.isTileBurned(x, y) || VGBUniqueAbilities.isNeutralBlock(x, y)) return true;
@@ -3288,7 +3337,7 @@ function toggleSecondaryMode() {
     if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
       const targets = VGBUniqueAbilities.getSecondaryTargets(selectedPiece, getUniqueAbilityCtx());
       highlightPositions(targets, 0xffc107);
-    } else {
+    } else if (isMoinePiece(selectedPiece)) {
       showConversionTargets();
     }
   } else {
@@ -3332,6 +3381,12 @@ function updateSecondaryModeIndicator() {
   }
 }
 
+
+function isMoinePiece(piece) {
+  if (!piece) return false;
+  const t = String(piece.type || piece.nameKey || '').toLowerCase();
+  return t === 'moine' || t.includes('moine');
+}
 function showConversionTargets() {
   if (!selectedPiece) return;
   
@@ -3358,6 +3413,8 @@ function getConversionTargets(piece) {
       // Vérifier s'il y a une pièce adverse à cette position
       const targetPiece = getPieceAt({x: targetX, y: targetY});
       if (targetPiece && targetPiece.player !== piece.player) {
+        const role = targetPiece.role || 'pawn';
+        if (role === 'unique' || role === 'king') continue;
         targets.push({x: targetX, y: targetY});
       }
     }
@@ -3377,7 +3434,7 @@ function attemptConversion(targetPiece) {
     bishop: 50,
     rook: 50,
     queen: 75,
-    unique: 75,
+    unique: 100,
     king: 100
   };
   const failureRate = failureByRole[role] != null ? failureByRole[role] : 50;
@@ -4331,6 +4388,7 @@ function startGame(scene) {
   }
   playerItemIcons = [];
   for (let i = 0; i < playerCount; i++) playerItemIcons[i] = [];
+  matchItemsUsedByPlayer = [false, false];
   syncAllHtmlHudItems();
 
   infoText.setText("");
@@ -5105,7 +5163,7 @@ function handleClick(scene, pos) {
   
   const clickedPiece = getPieceAt(pos);
   
-  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion
+  // Si on est en mode secondaire et qu'on clique sur une pièce adverse, tenter la conversion (Moine)
   if (secondaryMode && selectedPiece && clickedPiece && clickedPiece.player !== selectedPiece.player) {
     if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.canUseSecondary(selectedPiece)) {
       const ok = VGBUniqueAbilities.applySecondary(selectedPiece, pos, getUniqueAbilityCtx());
@@ -5118,12 +5176,13 @@ function handleClick(scene, pos) {
         return;
       }
     }
-    const targets = getConversionTargets(selectedPiece);
-    const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
-    
-    if (isTarget) {
-      attemptConversion(clickedPiece);
-      return;
+    if (isMoinePiece(selectedPiece)) {
+      const targets = getConversionTargets(selectedPiece);
+      const isTarget = targets.some(t => t.x === pos.x && t.y === pos.y);
+      if (isTarget) {
+        attemptConversion(clickedPiece);
+        return;
+      }
     }
   }
 
@@ -5909,10 +5968,19 @@ function maybePickupItem(piece) {
   return null;
 }
 
-function giveItemToPlayer(playerId, itemKey, chargeTurns) {
-  const scene = infoText.scene;
+function giveItemToPlayer(playerId, itemKey, chargeTurns, opts) {
+  const scene = infoText && infoText.scene;
+  if (!scene) return;
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
-  if (playerItemIcons[playerId].length >= 3) return;
+  const force = opts && opts.force;
+  if (force) {
+    while (playerItemIcons[playerId].length >= 3) {
+      const removed = playerItemIcons[playerId].shift();
+      if (removed && removed.sprite && removed.sprite.destroy) removed.sprite.destroy();
+    }
+  } else if (playerItemIcons[playerId].length >= 3) {
+    return;
+  }
   const textureKey = (itemKey === 'portals') ? 'portals' : itemKey;
   const icon = scene.add.image(-100, -100, textureKey).setDisplaySize(24, 24).setVisible(false);
   const entry = { sprite: icon, item: itemKey };
@@ -7023,6 +7091,10 @@ function getOriginalMoves(piece) {
   for (const [dx, dy] of moveDirections) {
     const rayMoves = traceSlidingRay(piece, dx, dy, range, isKnight);
     for (const m of rayMoves) moves.push(m);
+  }
+
+  if (typeof VGBUniqueAbilities !== 'undefined' && typeof VGBUniqueAbilities.appendExtraMoves === 'function') {
+    VGBUniqueAbilities.appendExtraMoves(piece, moves, getUniqueAbilityCtx());
   }
 
   return moves;
@@ -8234,6 +8306,7 @@ function endGameWithRanking(ranking) {
           if ((!data || !data.savedReplay) && !(data && data.alreadyFinished)) {
             await persistAccountAutoReplay(onlineMatchId);
           }
+          reportProgressionAfterGame(ranking || []);
         });
       }
 
@@ -8253,12 +8326,53 @@ function endGameWithRanking(ranking) {
         localStorage.setItem(key, JSON.stringify([result].concat(prev).slice(0, 10)));
       } catch (e) {}
       persistAccountAutoReplay(null);
+      reportProgressionAfterGame(ranking || []);
       showEndGameOverlay(overlayOpts);
     }
     savePreset();
   }
 
   playVictoryCinematic(ranking || [], afterCinematic);
+}
+
+function reportProgressionAfterGame(ranking) {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.user || VGBOnline.mode !== 'next') return;
+  try {
+    const mySeat = typeof VGBOnline.seat === 'number' ? VGBOnline.seat : 0;
+    const won = Array.isArray(ranking) && ranking.length && ranking[0] === mySeat;
+    const faction = (players[mySeat] && players[mySeat].faction) || playerFactions[mySeat] || '';
+    const captures = (playerLostPieces || []).filter(function (e) {
+      return e && e.piece && e.piece.player !== mySeat;
+    }).length;
+    const matePiece = victoryFocusPiece && victoryFocusPiece.player === mySeat
+      ? victoryFocusPiece
+      : null;
+    const mateRole = matePiece
+      ? (matePiece.role || matePiece.type || null)
+      : null;
+    let myElo = VGBOnline.user && VGBOnline.user.elo;
+    let opponentElo = null;
+    const match = VGBOnline.match;
+    if (match) {
+      if (match.you) myElo = match.you.elo;
+      if (match.opponent) opponentElo = match.opponent.elo;
+    }
+    const streak = typeof getPlayerWinStreak === 'function'
+      ? getPlayerWinStreak(mySeat)
+      : (VGBOnline.user.winStreak || 0);
+    VGBOnline.reportProgression({
+      won: !!won,
+      faction: faction,
+      usedItems: !!(matchItemsUsedByPlayer && matchItemsUsedByPlayer[mySeat]),
+      captures: captures,
+      mateRole: mateRole,
+      myElo: myElo,
+      opponentElo: opponentElo,
+      gameMode: (typeof gameMode !== 'undefined' && gameMode === 'classic') ? 'classic' : 'vgb',
+      moveCount: typeof moveCount === 'number' ? moveCount : 0,
+      winStreak: streak || 0
+    }).catch(function () {});
+  } catch (e) {}
 }
 
 function getPlayerDisplayInfo(playerId) {
@@ -8764,6 +8878,37 @@ function resolvePlayerAvatar(playerId) {
   return '';
 }
 
+function resolvePlayerTitle(playerId) {
+  const fromDraft = playerTitles && playerTitles[playerId];
+  if (fromDraft) return fromDraft;
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    const m = VGBOnline.match;
+    const youTitle = (m.you && (m.you.title || '')) || '';
+    const oppTitle = (m.opponent && (m.opponent.title || '')) || '';
+    if (m.seat === playerId) return youTitle;
+    return oppTitle;
+  }
+  if (playerId === 0 && typeof VGBOnline !== 'undefined' && VGBOnline.user) {
+    return VGBOnline.user.title || '';
+  }
+  if (playerId === 0) {
+    try {
+      const raw = localStorage.getItem('vgb_online_session');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.user && data.user.title) return data.user.title;
+      }
+    } catch (e) {}
+  }
+  return '';
+}
+
+function setHudTitle(slot, title) {
+  const el = document.getElementById('hud-title-' + slot);
+  if (!el) return;
+  el.textContent = title || '';
+}
+
 function setVsIntroAvatar(playerId, url) {
   const img = document.getElementById('vs-avatar-' + playerId);
   if (!img) return;
@@ -8795,6 +8940,10 @@ function showFactionVsIntro() {
     if (elF1) elF1.textContent = f1;
     if (elN0) elN0.textContent = n0;
     if (elN1) elN1.textContent = n1;
+    const elT0 = document.getElementById('vs-title-0');
+    const elT1 = document.getElementById('vs-title-1');
+    if (elT0) elT0.textContent = resolvePlayerTitle(0) || '';
+    if (elT1) elT1.textContent = resolvePlayerTitle(1) || '';
     setVsIntroAvatar(0, resolvePlayerAvatar(0));
     setVsIntroAvatar(1, resolvePlayerAvatar(1));
     overlay.setAttribute('aria-hidden', 'false');
@@ -8823,6 +8972,9 @@ function setupHtmlHud() {
     const avatarUrl = resolvePlayerAvatar(i);
     if (playerAvatars) playerAvatars[i] = avatarUrl || playerAvatars[i] || '';
     setHudAvatar(slot, avatarUrl);
+    const titleText = resolvePlayerTitle(i);
+    if (playerTitles) playerTitles[i] = titleText || playerTitles[i] || '';
+    setHudTitle(slot, titleText);
     if (nameEl) {
       nameEl.textContent = baseName;
       let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
@@ -8862,6 +9014,7 @@ function refreshHtmlHudTurn() {
     const baseName = (players[i] && players[i].name) || playerNames[i] || ('Joueur ' + (i + 1));
     nameEl.textContent = baseName;
     setHudAvatar(slot, resolvePlayerAvatar(i));
+    setHudTitle(slot, resolvePlayerTitle(i));
     const streak = formatStreakLabel(getPlayerWinStreak(i));
     let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
     if (streak) {
@@ -8949,10 +9102,12 @@ function startCharacterSelection() {
   playerMoney = [999, 999];
   playerNames = ['Joueur 1', aiEnabled ? ('IA — ' + aiDifficultyLabel(aiDifficulty)) : 'Joueur 2'];
   playerAvatars = ['', ''];
+  playerTitles = ['', ''];
   // Compte connecté → préremplir Joueur 1
   if (typeof VGBOnline !== 'undefined' && VGBOnline.user && VGBOnline.user.username) {
     playerNames[0] = VGBOnline.user.username;
     playerAvatars[0] = VGBOnline.user.avatarUrl || '';
+    playerTitles[0] = VGBOnline.user.title || '';
   }
   playerFactions = ['Nintendo', aiEnabled ? 'PlayStation' : 'PlayStation'];
   availablePieces = piecesData.filter(piece => piece.type !== 'king');
@@ -9739,6 +9894,10 @@ function applyOnlineDraftAndStart(state) {
       m.seat === 0 ? (m.you.avatarUrl || '') : ((m.opponent && m.opponent.avatarUrl) || ''),
       m.seat === 1 ? (m.you.avatarUrl || '') : ((m.opponent && m.opponent.avatarUrl) || '')
     ];
+    playerTitles = [
+      m.seat === 0 ? (m.you.title || '') : ((m.opponent && m.opponent.title) || ''),
+      m.seat === 1 ? (m.you.title || '') : ((m.opponent && m.opponent.title) || '')
+    ];
   }
 
   const selectionContainer = document.getElementById('character-selection-container');
@@ -10358,6 +10517,10 @@ function createPiecesFromSelection() {
     playerAvatars = [
       match.seat === 0 ? (match.you.avatarUrl || '') : (match.opponent.avatarUrl || ''),
       match.seat === 1 ? (match.you.avatarUrl || '') : (match.opponent.avatarUrl || '')
+    ];
+    playerTitles = [
+      match.seat === 0 ? (match.you.title || '') : ((match.opponent && match.opponent.title) || ''),
+      match.seat === 1 ? (match.you.title || '') : ((match.opponent && match.opponent.title) || '')
     ];
     playerFactions = ['Nintendo', 'PlayStation'];
     availablePieces = piecesData.filter(piece => piece.type !== 'king');

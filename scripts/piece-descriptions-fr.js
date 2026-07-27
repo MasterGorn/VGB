@@ -99,7 +99,7 @@ const descriptions = {
   vyse: "Pirate du ciel de Skies of Arcadia. Grand bleu, ambition plus grande encore : découvrir les confins. L'aventure a un rire.",
   aika: "Navigatrice fidèle de Vyse dans Skies of Arcadia. Esprit vif, courage et cœur sur la main. Sans elle, le Delphinus dérive.",
   amigo: "Singe maracas de Samba de Amigo. Rythme latino, sourire large, fête permanente. Secoue au tempo… ou rate le groove.",
-  'ecco-dolphin': "Dauphin d'Ecco the Dolphin, sauveur des océans temporels. Sonar, mystère et voyage à travers les ères. La mer chante avec lui.",
+  'ecco-dolphin': "Dauphin d'Ecco the Dolphin, sauveur des océans temporels. Sonar, mystère et voyage à travers les ères. La mer chante avec lui. Nage libre : se déplace comme une tour et peut traverser une pièce pour capturer la suivante sur la même ligne ou colonne.",
   'pilote-hang-on': "Motard anonyme du classique arcade Hang-On. Virages inclinés, asphalte et adrénaline Yu Suzuki. Le corps devient le guidon.",
   'dj-professeur-k': "Voix pirate de Jet Set Radio / Jet Grind Radio. Groove, graffiti et liberté urbaine contre la censure. Monte le son !",
   ulala: "Reporter de Space Channel 5, danseuse d'actualité. Micro, rayons aliens et chorégraphies sauvent la galaxie. « Chu chu ! »",
@@ -146,14 +146,14 @@ const descriptions = {
   blinx: "Chat manipulateur du temps dans Blinx: The Time Sweeper. Aspirateur temporel, paradoxes et souris à rattraper. Rembobinez le chaos.",
   'crash-bandicoot': "Bandicoot mutant créé par Cortex, star des jeux de plates-formes. Vrille fulgurante, caisses TNT et cri de surprise signature. Marsupial, héroïque, indestructible.",
   spyro: "Jeune dragon violet des Dragon Realms. Vol, souffle de feu et attitude cool : il sauve les siens avec panache. Petite taille, grande flamme.",
-  'viva-pinata': "Créature piñata de Viva Piñata, jardin et élevage colorés. Attirez, soignez, fêtez — sans trop secouer. Le jardin est un écosystème joyeux.",
+  'viva-pinata': "Créature piñata de Viva Piñata, jardin et élevage colorés. Attirez, soignez, fêtez — sans trop secouer. Le jardin est un écosystème joyeux. Éclatement de confettis : une fois capturée, donne 3 objets aléatoires et différents au joueur auquel elle appartenait.",
   'joule-adams': "Héroïne de ReCore, mécanicienne du desert de Far Eden. Frame companion et espoir terraforma. Elle répare le monde, pièce par pièce.",
   steeve: "Compagnon Core de Far Eden aux côtés de Joule Adams. Carcasse métallique, cœur fidèle, prêt pour le désert. Sans lui, la traversée serait solitaire.",
-  cooper: "Héros chaotique de Sunset Overdrive. Armes absurdes, parkour et apocalypse amusante. Le soleil se couche, la fête commence.",
+  cooper: "Héros de Grabbed by the Ghoulies, jeu Rareware sorti sur Xbox. Dans le manoir hanté des Ghoulies, humour british et baston arcade. Un classique Rare trop souvent oublié.",
   hornet: "Agent d'élite plongé dans les fractures temporelles de Quantum Break. Missions tendues, réalités qui se fissurent, sang-froid obligatoire. Chaque seconde peut tout changer.",
   shu: "Survivant miniature de Grounded. Dans le jardin géant, une fourmi est un boss. Courage à l'échelle d'un brin d'herbe.",
   lupus: "Survivant de State of Decay, monde zombie sans filet. Base, communauté, choix durs. L'espoir se gère comme des ressources.",
-  moine: "Figure spirituelle / survivante de State of Decay. Foi, calme et utilité au camp. Même l'apocalypse a besoin de silence.",
+  moine: "Moine d'Age of Empires, unité culte capable de convertir l'ennemi au cri de « Wololo ! ». Foi, patience et un brin de magie : il retourne les troupes sans lever l'épée. Conversion : 100 % sur un pion, 75 % sur un cavalier, 50 % sur une tour, 25 % sur une dame ; 0 % sur une pièce unique ou un roi.",
   vela: "Exploratrice Xbox au nom d'étoile, toujours tournée vers l'horizon. Curieuse, déterminée, lumière dans l'inconnu. Sa route s'écrit à chaque pas.",
   pikachu: "Pokémon Électrique emblématique, partenaire loyal de Sacha. Joues pétillantes, éclair foudroyant et cri mythique. La souris jaune qui a électrisé le monde."
 };
@@ -169,7 +169,7 @@ const abilities = {
   pikachu: "Éclair : frappe toutes les pièces adverses adjacentes situées sur des cases blanches, sans se déplacer (recharge 2 tours).",
   yoshi: "Langue élastique : attire une pièce ennemie à 1 case et la dépose juste derrière Yoshi.",
   tails: "Vol de soutien : transporte une pièce alliée adjacente d'1 case vers l'avant.",
-  'ecco-dolphin': "Sonar mystique : secondaire qui repousse une pièce de 2 cases vers l'arrière.",
+  'ecco-dolphin': "Nage libre : se déplace comme une tour et peut traverser une pièce pour capturer la suivante sur la même ligne ou colonne.",
   ulala: "Groove laser : secondaire qui contrôle temporairement une pièce ennemie adjacente pendant 1 tour.",
   'mr-game-and-watch': "Affichage LCD : chaque tour, 1 chance sur 9 de se comporter comme une dame ; sinon comme un fou.",
   // Uniques existants — pouvoirs signature inventés (identité VGB)
@@ -178,7 +178,8 @@ const abilities = {
   jak: "Éco sombre : après un déplacement, peut marquer une case voisine (interdit aux ennemis 1 tour).",
   'general-raam': "Nuée de Kryll : les cases orthognales adjacentes bloquent les fuites ennemies tant qu'il reste immobile.",
   reaver: "Pacte immortel : la première fois qu'il devrait être capturé, il réapparaît sur une case libre adjacente (1 fois / partie).",
-  senua: "Focus : révèle et frappe une pièce ennemie dans un rayon de 2 cases si elle est isolée (sans allié adjacent), 1 fois / 3 tours."
+  senua: "Focus : révèle et frappe une pièce ennemie dans un rayon de 2 cases si elle est isolée (sans allié adjacent), 1 fois / 3 tours.",
+  'viva-pinata': "Éclatement de confettis : une fois capturée, donne 3 objets aléatoires et différents au joueur auquel elle appartenait."
 };
 
 const uniqueRoleUpdates = {
@@ -260,8 +261,8 @@ const uniqueRoleUpdates = {
   },
   'ecco-dolphin': {
     role: 'unique',
-    moves: [...ALL8, [2, 0], [-2, 0], [0, 2], [0, -2]],
-    range: 5,
+    moves: [[1, 0], [-1, 0], [0, 1], [0, -1]],
+    range: 8,
     cost: 8,
     tier: 4
   },

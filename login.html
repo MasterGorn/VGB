@@ -55,6 +55,99 @@
   .msg { margin-top: 10px; font-size: 13px; color: #ff8a80; }
   a { color: #ffd700; }
 
+  .profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .profile-avatar-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(0,0,0,.35);
+    border: 2px solid rgba(255,213,79,.55);
+  }
+  .profile-identity-text { flex: 1; min-width: 0; }
+  .profile-identity-text #profile-name { margin: 0 0 4px; font-weight: bold; }
+  .profile-flag-inline { font-size: 22px; margin-left: 6px; vertical-align: middle; }
+
+  .profile-edit-section {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .profile-edit-section h2 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    color: #ffd700;
+  }
+  .avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px;
+  }
+  .avatar-pick {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: rgba(0,0,0,.3);
+    padding: 4px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .avatar-pick img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .avatar-pick.selected { border-color: #ffd700; box-shadow: 0 0 0 1px rgba(255,215,0,.35); }
+  .avatar-pick:hover { border-color: rgba(255,255,255,.35); }
+  .title-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .title-pick {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: rgba(0,0,0,.35);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 14px;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .title-pick.selected {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.12);
+    color: #ffd700;
+  }
+  .title-pick:hover { border-color: rgba(255,255,255,.35); }
+  .profile-title-preview {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: rgba(255, 215, 0, 0.9);
+    font-style: italic;
+    min-height: 1.2em;
+  }
+  #profile-country {
+    font-size: 16px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    min-height: 48px;
+    width: 100%;
+  }
+  .profile-edit-section .actions {
+    margin-top: 12px;
+  }
+  #btn-save-profile {
+    background: linear-gradient(135deg, #e67e22, #f1c40f);
+    color: #111;
+  }
+  .profile-save-msg { font-size: 13px; margin-top: 8px; color: #2ecc71; }
+
   .match-history {
     display: flex;
     align-items: center;
@@ -200,9 +293,29 @@
     <p class="msg" id="msg"></p>
   </div>
   <div class="card" id="profile-card" style="display:none;">
-    <p id="profile-name"></p>
-    <p class="elo" id="profile-elo"></p>
+    <div class="profile-identity">
+      <img id="profile-avatar-preview" class="profile-avatar-preview" alt="" hidden />
+      <div class="profile-identity-text">
+        <p id="profile-name"></p>
+        <p class="profile-title-preview" id="profile-title-preview"></p>
+        <p class="elo" id="profile-elo" style="margin:0;"></p>
+      </div>
+    </div>
     <div class="match-history" id="match-history" aria-label="Historique des 5 derniers matchs"></div>
+
+    <div class="profile-edit-section">
+      <h2>Avatar</h2>
+      <div class="avatar-grid" id="avatar-grid"></div>
+      <h2 style="margin-top:16px;">Titre</h2>
+      <div class="title-grid" id="title-grid"></div>
+      <h2 style="margin-top:16px;">Nationalité</h2>
+      <select id="profile-country" aria-label="Pays"></select>
+      <div class="actions">
+        <button type="button" id="btn-save-profile">Enregistrer le profil</button>
+      </div>
+      <p class="profile-save-msg" id="profile-save-msg" hidden></p>
+    </div>
+
     <div class="replay-section" id="replay-auto-section" hidden>
       <h2>Derniers matchs <span id="replay-auto-count"></span></h2>
       <ul class="replay-list" id="replay-auto-list"></ul>
@@ -219,7 +332,8 @@
 </main>
 <script src="/js/translations.js"></script>
 <script src="/js/header.js"></script>
-<script src="/js/online.js?v=20260720a"></script>
+<script src="/js/profile-ui.js?v=20260727t"></script>
+<script src="/js/online.js?v=20260726b"></script>
 <script>
 VGBHeader.injectHeader('login');
 if (typeof initTranslation === 'function') initTranslation();
@@ -358,6 +472,11 @@ function bindReplayActions() {
 
 bindReplayActions();
 
+let selectedAvatarUrl = '';
+let selectedTitleId = '';
+let profileAvatarList = null;
+let profileTitleList = null;
+
 function renderMatchHistory(results) {
   const el = document.getElementById('match-history');
   if (!el) return;
@@ -370,18 +489,119 @@ function renderMatchHistory(results) {
   }).join('');
 }
 
+function updateProfilePreview(user) {
+  const u = user || (VGBOnline && VGBOnline.user) || {};
+  const flag = (typeof VGBProfile !== 'undefined' && VGBProfile.flagEmoji)
+    ? VGBProfile.flagEmoji(u.countryCode)
+    : '';
+  const nameEl = document.getElementById('profile-name');
+  if (nameEl) {
+    nameEl.innerHTML = 'Connecté : ' + escapeHtml(u.username || '') +
+      (flag ? ' <span class="profile-flag-inline">' + flag + '</span>' : '');
+  }
+  const eloEl = document.getElementById('profile-elo');
+  if (eloEl) {
+    eloEl.textContent = 'Elo ' + (u.elo != null ? u.elo : '—') +
+      ' — ' + (u.wins || 0) + 'V · ' + (u.losses || 0) + ' déf.';
+  }
+  const img = document.getElementById('profile-avatar-preview');
+  if (img) {
+    if (u.avatarUrl) {
+      img.src = u.avatarUrl;
+      img.hidden = false;
+    } else {
+      img.removeAttribute('src');
+      img.hidden = true;
+    }
+  }
+  const titlePrev = document.getElementById('profile-title-preview');
+  if (titlePrev) {
+    const t = u.title || (typeof VGBProfile !== 'undefined' && VGBProfile.titleLabel
+      ? VGBProfile.titleLabel(u)
+      : '');
+    titlePrev.textContent = t || '';
+  }
+}
+
+function buildProfileEditors(user, avatarList, titleList) {
+  const u = user || {};
+  selectedAvatarUrl = u.avatarUrl || '';
+  selectedTitleId = u.titleId || '';
+  const grid = document.getElementById('avatar-grid');
+  const list = (avatarList && avatarList.length)
+    ? avatarList
+    : (typeof VGBProfile !== 'undefined' ? VGBProfile.AVATARS : []);
+  if (grid) {
+    grid.innerHTML = list.map(function (a) {
+      const sel = a.url === selectedAvatarUrl ? ' selected' : '';
+      return '<button type="button" class="avatar-pick' + sel + '" data-url="' +
+        escapeHtml(a.url) + '" title="' + escapeHtml(a.label) + '">' +
+        '<img src="' + escapeHtml(a.url) + '" alt="' + escapeHtml(a.label) + '" />' +
+        '</button>';
+    }).join('');
+  }
+  const titleGrid = document.getElementById('title-grid');
+  const titles = (titleList && titleList.length)
+    ? titleList
+    : (typeof VGBProfile !== 'undefined' ? VGBProfile.TITLES : []);
+  if (titleGrid) {
+    titleGrid.innerHTML = titles.map(function (t) {
+      const sel = t.id === selectedTitleId ? ' selected' : '';
+      return '<button type="button" class="title-pick' + sel + '" data-id="' +
+        escapeHtml(t.id) + '">' + escapeHtml(t.label) + '</button>';
+    }).join('');
+  }
+  const countrySel = document.getElementById('profile-country');
+  if (countrySel && typeof VGBProfile !== 'undefined') {
+    const cur = (u.countryCode || '').toUpperCase();
+    countrySel.innerHTML = '<option value="">— Choisir un pays —</option>' +
+      VGBProfile.COUNTRIES.map(function (c) {
+        return '<option value="' + c.code + '"' + (c.code === cur ? ' selected' : '') + '>' +
+          c.flag + ' ' + c.name + '</option>';
+      }).join('');
+  }
+}
+
+async function loadSelectableProfileOptions() {
+  try {
+    const data = await VGBOnline.request('/api/profile');
+    if (data && data.user) {
+      VGBOnline.user = Object.assign({}, VGBOnline.user || {}, data.user);
+      VGBOnline.saveSession();
+    }
+    profileAvatarList = (data && data.avatars && data.avatars.length)
+      ? data.avatars
+      : (typeof VGBProfile !== 'undefined' ? VGBProfile.AVATARS : []);
+    profileTitleList = (data && data.titles && data.titles.length)
+      ? data.titles
+      : (typeof VGBProfile !== 'undefined' ? VGBProfile.TITLES : []);
+    return { avatars: profileAvatarList, titles: profileTitleList };
+  } catch (e) {
+    profileAvatarList = (typeof VGBProfile !== 'undefined' ? VGBProfile.AVATARS : []);
+    profileTitleList = (typeof VGBProfile !== 'undefined' ? VGBProfile.TITLES : []);
+    return { avatars: profileAvatarList, titles: profileTitleList };
+  }
+}
+
 async function showProfile() {
   authCard.style.display = 'none';
   profileCard.style.display = 'block';
   if (pageContainer) pageContainer.classList.add('profile-wide');
-  document.getElementById('profile-name').textContent = 'Connecté : ' + VGBOnline.user.username;
-  document.getElementById('profile-elo').textContent = 'Elo ' + VGBOnline.user.elo +
-    ' — ' + VGBOnline.user.wins + 'V · ' + VGBOnline.user.losses + ' déf.';
+  updateProfilePreview(VGBOnline.user);
+  const opts = await loadSelectableProfileOptions();
+  buildProfileEditors(VGBOnline.user, opts.avatars, opts.titles);
   const recent = (VGBOnline.user.recentResults || []).filter(function (r) { return r === 'W' || r === 'L'; });
   renderMatchHistory(recent);
   try {
     const hist = await VGBOnline.fetchHistory();
-    if (hist && hist.results) {
+    if (hist && hist.user) {
+      VGBOnline.user = Object.assign({}, VGBOnline.user, hist.user);
+      if (hist.results) VGBOnline.user.recentResults = hist.results;
+      VGBOnline.saveSession();
+      updateProfilePreview(VGBOnline.user);
+      buildProfileEditors(VGBOnline.user, profileAvatarList || opts.avatars, profileTitleList || opts.titles);
+      renderMatchHistory((hist.results || []).filter(function (r) { return r === 'W' || r === 'L'; }));
+    } else if (hist && hist.results) {
       VGBOnline.user.recentResults = hist.results;
       renderMatchHistory(hist.results.filter(function (r) { return r === 'W' || r === 'L'; }));
     }
@@ -409,6 +629,123 @@ async function doAuth(register) {
     msg.textContent = e.message || 'Erreur';
   }
 }
+
+document.getElementById('avatar-grid').addEventListener('click', async function (e) {
+  const btn = e.target.closest('.avatar-pick');
+  if (!btn) return;
+  selectedAvatarUrl = btn.dataset.url || '';
+  document.querySelectorAll('.avatar-pick').forEach(function (el) {
+    el.classList.toggle('selected', el === btn);
+  });
+  const img = document.getElementById('profile-avatar-preview');
+  if (img && selectedAvatarUrl) {
+    img.src = selectedAvatarUrl;
+    img.hidden = false;
+  }
+  const saveMsg = document.getElementById('profile-save-msg');
+  const country = (document.getElementById('profile-country') || {}).value || '';
+  try {
+    const payload = { avatarUrl: selectedAvatarUrl || '', countryCode: country };
+    if (selectedTitleId) payload.titleId = selectedTitleId;
+    await VGBOnline.updateProfile(payload);
+    updateProfilePreview(VGBOnline.user);
+    if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = 'Avatar enregistré ✓';
+      saveMsg.style.color = '#2ecc71';
+      setTimeout(function () { saveMsg.hidden = true; }, 2000);
+    }
+  } catch (err) {
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = err.message || 'Erreur';
+      saveMsg.style.color = '#ff8a80';
+    }
+  }
+});
+
+document.getElementById('title-grid').addEventListener('click', async function (e) {
+  const btn = e.target.closest('.title-pick');
+  if (!btn) return;
+  selectedTitleId = btn.dataset.id || '';
+  document.querySelectorAll('.title-pick').forEach(function (el) {
+    el.classList.toggle('selected', el === btn);
+  });
+  const saveMsg = document.getElementById('profile-save-msg');
+  const country = (document.getElementById('profile-country') || {}).value || '';
+  try {
+    const payload = { titleId: selectedTitleId || '', countryCode: country };
+    if (selectedAvatarUrl) payload.avatarUrl = selectedAvatarUrl;
+    await VGBOnline.updateProfile(payload);
+    updateProfilePreview(VGBOnline.user);
+    if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = 'Titre enregistré ✓';
+      saveMsg.style.color = '#2ecc71';
+      setTimeout(function () { saveMsg.hidden = true; }, 2000);
+    }
+  } catch (err) {
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = err.message || 'Erreur';
+      saveMsg.style.color = '#ff8a80';
+    }
+  }
+});
+
+document.getElementById('profile-country').addEventListener('change', async function () {
+  const saveMsg = document.getElementById('profile-save-msg');
+  const country = this.value || '';
+  try {
+    const payload = { countryCode: country };
+    if (selectedAvatarUrl) payload.avatarUrl = selectedAvatarUrl;
+    if (selectedTitleId) payload.titleId = selectedTitleId;
+    await VGBOnline.updateProfile(payload);
+    updateProfilePreview(VGBOnline.user);
+    if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = 'Nationalité enregistrée ✓';
+      saveMsg.style.color = '#2ecc71';
+      setTimeout(function () { saveMsg.hidden = true; }, 2000);
+    }
+  } catch (err) {
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = err.message || 'Erreur';
+      saveMsg.style.color = '#ff8a80';
+    }
+  }
+});
+
+document.getElementById('btn-save-profile').onclick = async function () {
+  const saveMsg = document.getElementById('profile-save-msg');
+  const country = document.getElementById('profile-country').value || '';
+  try {
+    const payload = {
+      countryCode: country,
+      titleId: selectedTitleId || ''
+    };
+    if (selectedAvatarUrl) payload.avatarUrl = selectedAvatarUrl;
+    await VGBOnline.updateProfile(payload);
+    updateProfilePreview(VGBOnline.user);
+    if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = 'Profil enregistré ✓';
+      saveMsg.style.color = '#2ecc71';
+      setTimeout(function () { saveMsg.hidden = true; }, 2500);
+    }
+  } catch (e) {
+    if (saveMsg) {
+      saveMsg.hidden = false;
+      saveMsg.textContent = e.message || 'Erreur';
+      saveMsg.style.color = '#ff8a80';
+    }
+  }
+};
 
 document.getElementById('btn-login').onclick = () => doAuth(false);
 document.getElementById('btn-register').onclick = () => doAuth(true);

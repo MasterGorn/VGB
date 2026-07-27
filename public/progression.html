@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Progression — Video Games Battle</title>
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+  :root {
+    --prog-sky-top: #6ec6ff;
+    --prog-sky-mid: #b8e4ff;
+    --prog-grass: #3d9e4a;
+    --prog-dirt: #8b5a2b;
+    --prog-path: #f4d59a;
+    --prog-gold: #f1c40f;
+    --prog-ink: #1a1a1a;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255, 220, 120, 0.2), transparent 55%),
+      linear-gradient(180deg, #0f1a24 0%, #152536 40%, #1a2f22 100%);
+    min-height: 100vh;
+  }
+  .prog-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 110px 16px 48px;
+  }
+  .prog-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin-bottom: 18px;
+  }
+  .prog-hero h1 {
+    margin: 0;
+    color: var(--prog-gold);
+    font-size: clamp(26px, 5vw, 38px);
+    letter-spacing: 0.02em;
+  }
+  .prog-hero p {
+    margin: 6px 0 0;
+    color: rgba(255,255,255,0.72);
+    max-width: 52ch;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .prog-level-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #e67e22, #f1c40f);
+    color: #111;
+    font-weight: 800;
+    min-height: 44px;
+  }
+  .prog-auth-gate, .prog-error {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.28);
+    color: rgba(255,255,255,0.85);
+  }
+  .prog-auth-gate a {
+    color: #ffd700;
+    font-weight: bold;
+  }
+
+  .board-shell {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+  }
+  .board-sky {
+    height: 280px;
+    background:
+      linear-gradient(180deg, var(--prog-sky-top) 0%, var(--prog-sky-mid) 55%, #9fd89a 78%, var(--prog-grass) 100%);
+    position: relative;
+  }
+  .board-sky::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 12% 28%, rgba(255,255,255,0.85) 0 18px, transparent 19px),
+      radial-gradient(circle at 16% 28%, rgba(255,255,255,0.75) 0 28px, transparent 29px),
+      radial-gradient(circle at 78% 22%, rgba(255,255,255,0.8) 0 22px, transparent 23px),
+      radial-gradient(circle at 84% 22%, rgba(255,255,255,0.7) 0 34px, transparent 35px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .board-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 36px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 48px 40px 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .board-track::-webkit-scrollbar { height: 8px; }
+  .board-track::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+  }
+  .stage-node {
+    flex: 0 0 120px;
+    scroll-snap-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+  }
+  .stage-node::after {
+    content: "";
+    position: absolute;
+    top: 34px;
+    left: 50%;
+    width: 120px;
+    height: 10px;
+    background: var(--prog-path);
+    border: 2px solid rgba(0,0,0,0.15);
+    border-radius: 6px;
+    z-index: -1;
+  }
+  .stage-node:last-child::after { display: none; }
+  .stage-dot {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 16px;
+    color: #fff;
+    background: #7f8c8d;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .stage-node.done .stage-dot {
+    background: linear-gradient(160deg, #2ecc71, #27ae60);
+  }
+  .stage-node.current .stage-dot {
+    background: linear-gradient(160deg, #e67e22, #f1c40f);
+    color: #111;
+    transform: scale(1.12);
+    animation: bounce-soft 1.6s ease-in-out infinite;
+  }
+  .stage-node.cleared .stage-dot {
+    background: linear-gradient(160deg, #f39c12, #e67e22);
+  }
+  .stage-node.locked .stage-dot {
+    background: #566573;
+    opacity: 0.72;
+    cursor: default;
+  }
+  .stage-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #14301a;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    text-align: center;
+    max-width: 100px;
+  }
+  @keyframes bounce-soft {
+    0%, 100% { transform: scale(1.12) translateY(0); }
+    50% { transform: scale(1.12) translateY(-5px); }
+  }
+
+  .panel {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.32);
+  }
+  .panel h2 {
+    margin: 0 0 6px;
+    color: #ffd700;
+    font-size: 20px;
+  }
+  .panel .meta {
+    color: rgba(255,255,255,0.65);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .missions {
+    display: grid;
+    gap: 10px;
+  }
+  .mission {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .mission.share-mission {
+    grid-template-columns: 28px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .mission.share-mission .mission-check { grid-row: 1 / span 2; align-self: center; }
+  .mission.share-mission .mission-share-row {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .mission-share-link {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 8px 12px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #e67e22, #f1c40f);
+    color: #111;
+  }
+  .mission-share-link:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+  .mission-share-url {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    word-break: break-all;
+  }
+  .mission.done {
+    border-color: rgba(46, 204, 113, 0.45);
+    background: rgba(46, 204, 113, 0.12);
+  }
+  .mission-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #2ecc71;
+  }
+  .mission.done .mission-check {
+    background: #2ecc71;
+    border-color: #2ecc71;
+    color: #111;
+    font-weight: bold;
+  }
+  .mission-label { color: #fff; font-size: 14px; line-height: 1.35; }
+  .mission-progress {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+  }
+  .reward-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(230,126,34,0.25), rgba(241,196,15,0.18));
+    border: 1px solid rgba(241,196,15,0.35);
+    color: #ffe9a8;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .reward-box img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(0,0,0,0.25);
+  }
+  .wait-banner {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(52, 152, 219, 0.18);
+    border: 1px solid rgba(52, 152, 219, 0.35);
+    color: #cde9ff;
+    font-size: 14px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .actions a {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    min-height: 48px;
+    padding: 12px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #btn-play {
+    background: #111;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.35) !important;
+  }
+  #btn-catalog {
+    background: rgba(255,255,255,0.08);
+    color: #ffd700;
+    border: 1px solid rgba(255,215,0,0.35) !important;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20,20,20,0.95);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,215,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 50;
+    max-width: min(90vw, 420px);
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  @media (max-width: 640px) {
+    .board-sky { height: 240px; }
+    .stage-node { flex-basis: 96px; }
+    .stage-dot { width: 48px; height: 48px; }
+  }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<main class="prog-page">
+  <div class="prog-hero">
+    <div>
+      <h1>Progression</h1>
+      <p>
+        Un plateau de 99 étapes. Chaque étape contient 3 missions.
+        Termine-les toutes, puis reviens le lendemain pour l’étape suivante.
+        <a href="/progression-catalog.html" style="color:#ffd700;font-weight:bold;">Voir toutes les missions →</a>
+      </p>
+    </div>
+    <div class="prog-level-pill" id="level-pill">Niveau —</div>
+  </div>
+
+  <div id="auth-gate" class="prog-auth-gate" hidden>
+    Connecte-toi pour suivre ta progression.
+    <a href="/login.html">Se connecter</a>
+  </div>
+  <div id="prog-error" class="prog-error" hidden></div>
+
+  <div id="prog-main" hidden>
+    <div class="board-shell">
+      <div class="board-sky">
+        <div class="board-track" id="board-track" aria-label="Plateau de progression"></div>
+      </div>
+    </div>
+
+    <section class="panel" id="stage-panel">
+      <h2 id="stage-title">Étape</h2>
+      <p class="meta" id="stage-meta"></p>
+      <div class="missions" id="missions"></div>
+      <div class="reward-box" id="reward-box"></div>
+      <div class="wait-banner" id="wait-banner" hidden></div>
+      <div class="actions">
+        <a href="/play.html" id="btn-play">Jouer une partie</a>
+        <a href="/progression-catalog.html" id="btn-catalog">Catalogue missions / récompenses</a>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/js/profile-ui.js?v=20260727a"></script>
+<script src="/js/header.js?v=20260727a"></script>
+<script src="/js/online.js?v=20260727a"></script>
+<script>
+VGBHeader.injectHeader('progression');
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__progToast);
+  window.__progToast = setTimeout(function () { el.classList.remove('show'); }, 2800);
+}
+
+function formatWait(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  if (h > 0) return h + ' h ' + m + ' min';
+  return m + ' min';
+}
+
+function renderBoard(data) {
+  const track = document.getElementById('board-track');
+  track.innerHTML = (data.stages || []).map(function (s) {
+    return '<div class="stage-node ' + s.status + '" data-stage="' + s.stage + '">' +
+      '<button type="button" class="stage-dot" aria-label="Étape ' + s.stage + '">' + s.stage + '</button>' +
+      '<div class="stage-label">Niv. ' + s.level + '</div>' +
+      '</div>';
+  }).join('');
+
+  const current = track.querySelector('.stage-node.current, .stage-node.cleared');
+  if (current) {
+    current.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
+
+  track.querySelectorAll('.stage-node').forEach(function (node) {
+    node.addEventListener('click', function () {
+      const n = Number(node.getAttribute('data-stage'));
+      if (n === data.currentStage) renderStagePanel(data);
+    });
+  });
+}
+
+function siteShareUrl() {
+  return location.origin + '/';
+}
+
+async function copySiteLinkAndClaim() {
+  const url = siteShareUrl();
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(url);
+      toast('Lien copié : ' + url);
+    } else {
+      prompt('Copie ce lien :', url);
+    }
+  } catch (e) {
+    prompt('Copie ce lien :', url);
+  }
+  try {
+    const data = await VGBOnline.claimShareProgression();
+    window.__progData = data;
+    renderBoard(data);
+    renderStagePanel(data);
+    if (data.newlyCompleted && data.newlyCompleted.length) {
+      toast('Mission « Partager » validée !');
+    } else if (data.message) {
+      toast(data.message);
+    }
+  } catch (e) {
+    toast(e.message || 'Connexion requise pour valider le partage');
+  }
+}
+
+function renderStagePanel(data) {
+  const stage = data.stage || {};
+  document.getElementById('level-pill').textContent = 'Niveau ' + (data.level || 1);
+  document.getElementById('stage-title').textContent =
+    (stage.title || ('Étape ' + data.currentStage)) + ' — ' + (stage.theme || '');
+  document.getElementById('stage-meta').textContent =
+    'Étape ' + data.currentStage + ' / 99 · 3 missions · 1 étape / jour';
+
+  const box = document.getElementById('missions');
+  const shareUrl = siteShareUrl();
+  box.innerHTML = (data.missions || []).map(function (m) {
+    const needBar = m.kind === 'play_n' || m.kind === 'win_n';
+    const prog = needBar
+      ? (Math.min(m.progress || 0, m.target || 1) + ' / ' + (m.target || 1))
+      : (m.done ? 'OK' : 'À faire');
+
+    if (m.kind === 'share_site') {
+      return '<div class="mission share-mission' + (m.done ? ' done' : '') + '">' +
+        '<div class="mission-check">' + (m.done ? '✓' : '') + '</div>' +
+        '<div class="mission-label">' + escapeHtml(m.label) + '</div>' +
+        '<div class="mission-share-row">' +
+          '<button type="button" class="mission-share-link" data-share-claim="1"' +
+            (m.done ? ' disabled' : '') + '>' +
+            (m.done ? 'Lien déjà partagé' : 'Copier le lien du site') +
+          '</button>' +
+          '<span class="mission-share-url">' + escapeHtml(shareUrl) + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+
+    return '<div class="mission' + (m.done ? ' done' : '') + '">' +
+      '<div class="mission-check">' + (m.done ? '✓' : '') + '</div>' +
+      '<div class="mission-label">' + escapeHtml(m.label) + '</div>' +
+      '<div class="mission-progress">' + prog + '</div>' +
+      '</div>';
+  }).join('');
+
+  box.querySelectorAll('[data-share-claim]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      copySiteLinkAndClaim();
+    });
+  });
+
+  const reward = stage.reward || {};
+  const rewardEl = document.getElementById('reward-box');
+  const titleBit = reward.titleLabel
+    ? '<div style="margin-top:4px;font-style:italic;color:rgba(255,215,0,.9);">« ' +
+      escapeHtml(reward.titleLabel) + ' »</div>'
+    : '';
+  rewardEl.innerHTML =
+    (reward.avatarUrl ? '<img src="' + escapeHtml(reward.avatarUrl) + '" alt="" />' : '') +
+    '<div><strong>Récompense</strong><br/>' + escapeHtml(reward.label || '—') + titleBit + '</div>';
+
+  const wait = document.getElementById('wait-banner');
+  if (data.waitingNextDay) {
+    wait.hidden = false;
+    wait.textContent = 'Étape terminée ! Prochaine étape débloquée dans environ ' +
+      formatWait(data.msUntilUnlock || 0) + '.';
+  } else if (data.stageCleared && data.currentStage >= 99) {
+    wait.hidden = false;
+    wait.textContent = 'Bravo — tu as terminé les 99 étapes !';
+  } else {
+    wait.hidden = true;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function loadProgression() {
+  const gate = document.getElementById('auth-gate');
+  const main = document.getElementById('prog-main');
+  const err = document.getElementById('prog-error');
+  err.hidden = true;
+  try {
+    const user = await VGBOnline.refreshMe();
+    if (!user) {
+      gate.hidden = false;
+      main.hidden = true;
+      return;
+    }
+    gate.hidden = true;
+    const data = await VGBOnline.fetchProgression();
+    main.hidden = false;
+    renderBoard(data);
+    renderStagePanel(data);
+    window.__progData = data;
+  } catch (e) {
+    gate.hidden = true;
+    main.hidden = true;
+    err.hidden = false;
+    err.textContent = e.message || 'Impossible de charger la progression';
+  }
+}
+
+loadProgression();
+</script>
+</body>
+</html>

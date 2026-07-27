@@ -67,6 +67,7 @@
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
+            '<a href="/progression.html" class="nav-link'+(active==='progression'?' active':'')+'">Progression</a>' +
             renderAuthLink('', active) +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
@@ -227,7 +228,7 @@
     if (typeof VGBProfile !== 'undefined') return;
     if (document.querySelector('script[data-vgb-profile-ui]')) return;
     var s = document.createElement('script');
-    s.src = '/js/profile-ui.js?v=20260726c';
+    s.src = '/js/profile-ui.js?v=20260727t';
     s.setAttribute('data-vgb-profile-ui', '1');
     document.head.appendChild(s);
   }

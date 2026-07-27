@@ -21,6 +21,14 @@
     { url: "/images/xbox/characters/crash-bandicoot.png", label: "Crash" }
   ];
 
+  const TITLES = [
+    { id: "default-nouveau", label: "Nouveau joueur" },
+    { id: "default-amateur", label: "Amateur d'échecs" },
+    { id: "default-collectionneur", label: "Collectionneur de jeux vidéo" },
+    { id: "default-retro", label: "Fan de rétro" },
+    { id: "default-curieux", label: "Curieux du plateau" }
+  ];
+
   /** Pays courants pour le sélecteur (ISO + emoji). */
   const COUNTRIES = [
     { code: "FR", flag: "🇫🇷", name: "France" },
@@ -105,10 +113,24 @@
 
   global.VGBProfile = {
     AVATARS,
+    TITLES,
     COUNTRIES,
     countryMeta,
     flagEmoji,
     userBadgeHtml,
-    escapeHtml
+    escapeHtml,
+    titleLabel: function (userOrId) {
+      if (!userOrId) return "";
+      if (typeof userOrId === "string") {
+        const hit = TITLES.find(function (t) { return t.id === userOrId; });
+        return hit ? hit.label : "";
+      }
+      if (userOrId.title) return String(userOrId.title);
+      if (userOrId.titleId) {
+        const hit = TITLES.find(function (t) { return t.id === userOrId.titleId; });
+        return hit ? hit.label : "";
+      }
+      return "";
+    }
   };
 })(window);

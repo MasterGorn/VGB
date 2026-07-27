@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalogue Progression — Video Games Battle</title>
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+  .page { max-width: 920px; margin: 0 auto; padding: 110px 16px 48px; }
+  h1 { color: #ffd700; margin: 0 0 8px; font-size: clamp(24px, 5vw, 34px); }
+  .sub { color: rgba(255,255,255,0.7); margin: 0 0 16px; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center;
+  }
+  .toolbar input, .toolbar select {
+    min-height: 44px; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;
+    font-size: 14px;
+  }
+  .toolbar input { flex: 1 1 220px; }
+  .toolbar a, .toolbar button {
+    min-height: 44px; padding: 10px 14px; border-radius: 8px; border: none;
+    font-weight: bold; cursor: pointer; text-decoration: none; display: inline-flex;
+    align-items: center; background: linear-gradient(135deg,#e67e22,#f1c40f); color: #111;
+  }
+  .stats { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 14px; }
+  .stage-card {
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+    background: rgba(255,255,255,0.04); padding: 14px 16px; margin-bottom: 10px;
+  }
+  .stage-card h2 {
+    margin: 0 0 4px; font-size: 16px; color: #ffd700;
+  }
+  .stage-card .theme { color: rgba(255,255,255,0.55); font-size: 12px; margin-bottom: 8px; }
+  .stage-card ul { margin: 0; padding-left: 18px; color: #fff; font-size: 14px; line-height: 1.5; }
+  .stage-card li { margin: 2px 0; }
+  .kind {
+    display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); margin-left: 6px;
+  }
+  .reward {
+    margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+    background: rgba(241,196,15,0.12); border: 1px solid rgba(241,196,15,0.3);
+    color: #ffe9a8; font-size: 13px; display: flex; align-items: center; gap: 8px;
+  }
+  .reward img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .muted { color: rgba(255,255,255,0.55); }
+  #raw { width: 100%; min-height: 160px; margin-top: 12px; font-family: ui-monospace, monospace;
+    font-size: 12px; background: #0b0b0b; color: #cfcfcf; border-radius: 8px; border: 1px solid #333; padding: 10px; }
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<main class="page">
+  <h1>Catalogue des missions</h1>
+  <p class="sub">Liste complète des 99 étapes (297 missions) et récompenses — pour relecture et tests.</p>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Filtrer (ex. Xbox, Tour, capture…)" />
+    <select id="filter-kind">
+      <option value="">Tous les types</option>
+    </select>
+    <a href="/progression.html">← Plateau</a>
+    <button type="button" id="btn-copy-md">Copier en Markdown</button>
+  </div>
+  <p class="stats" id="stats">Chargement…</p>
+  <div id="list"></div>
+  <details style="margin-top:16px;">
+    <summary class="muted">JSON brut</summary>
+    <textarea id="raw" readonly></textarea>
+  </details>
+</main>
+<script src="/js/header.js?v=20260727a"></script>
+<script>
+VGBHeader.injectHeader('progression');
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let CATALOG = null;
+
+function toMarkdown(data) {
+  let md = '# Progression VGB — catalogue\n\n';
+  md += data.stageCount + ' étapes · ' + data.missionCount + ' missions\n\n';
+  data.stages.forEach(function (s) {
+    md += '## Étape ' + s.stage + ' (niv. ' + s.level + ') — ' + s.title + '\n';
+    md += '_Thème : ' + s.theme + '_\n\n';
+    s.missions.forEach(function (m, i) {
+      md += (i + 1) + '. **' + m.label + '** (`' + m.kind + '`)\n';
+    });
+    md += '\n**Récompense :** ' + s.reward.label + ' (' + s.reward.type + ')\n\n';
+  });
+  return md;
+}
+
+function render() {
+  if (!CATALOG) return;
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  const kind = document.getElementById('filter-kind').value;
+  const list = document.getElementById('list');
+  let shown = 0;
+  list.innerHTML = CATALOG.stages.map(function (s) {
+    const missions = s.missions.filter(function (m) {
+      if (kind && m.kind !== kind) return false;
+      if (!q) return true;
+      const hay = (s.title + ' ' + s.theme + ' ' + s.reward.label + ' ' + m.label + ' ' + m.kind).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    if (q || kind) {
+      if (!missions.length && !(q && (s.title + s.theme + s.reward.label).toLowerCase().indexOf(q) !== -1)) {
+        return '';
+      }
+    }
+    const showM = (q || kind) ? missions : s.missions;
+    if (!showM.length && (q || kind)) return '';
+    shown++;
+    return '<article class="stage-card" id="stage-' + s.stage + '">' +
+      '<h2>Étape ' + s.stage + ' · Niveau ' + s.level + ' — ' + escapeHtml(s.title) + '</h2>' +
+      '<div class="theme">' + escapeHtml(s.theme) + '</div>' +
+      '<ul>' + showM.map(function (m) {
+        return '<li>' + escapeHtml(m.label) + '<span class="kind">' + escapeHtml(m.kind) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<div class="reward">' +
+        (s.reward.avatarUrl ? '<img src="' + escapeHtml(s.reward.avatarUrl) + '" alt="" />' : '') +
+        '<span>' + escapeHtml(s.reward.label) +
+          (s.reward.titleLabel ? ' · « ' + escapeHtml(s.reward.titleLabel) + ' »' : '') +
+          ' · <em>' + escapeHtml(s.reward.type) + '</em></span>' +
+      '</div></article>';
+  }).join('');
+  document.getElementById('stats').textContent =
+    CATALOG.stageCount + ' étapes · ' + CATALOG.missionCount + ' missions' +
+    (q || kind ? ' · affichage filtré : ' + shown + ' étape(s)' : '');
+}
+
+async function load() {
+  const res = await fetch('/api/progression/catalog', { headers: { Accept: 'application/json' } });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || 'Erreur catalogue');
+  CATALOG = data;
+  document.getElementById('raw').value = JSON.stringify(data, null, 2);
+  const kinds = {};
+  data.stages.forEach(function (s) {
+    s.missions.forEach(function (m) { kinds[m.kind] = true; });
+  });
+  const sel = document.getElementById('filter-kind');
+  Object.keys(kinds).sort().forEach(function (k) {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = k;
+    sel.appendChild(o);
+  });
+  render();
+}
+
+document.getElementById('q').addEventListener('input', render);
+document.getElementById('filter-kind').addEventListener('change', render);
+document.getElementById('btn-copy-md').onclick = async function () {
+  if (!CATALOG) return;
+  const md = toMarkdown(CATALOG);
+  try {
+    await navigator.clipboard.writeText(md);
+    this.textContent = 'Markdown copié ✓';
+    setTimeout(() => { this.textContent = 'Copier en Markdown'; }, 2000);
+  } catch (e) {
+    prompt('Copie le Markdown :', md.slice(0, 500) + '…');
+  }
+};
+
+load().catch(function (e) {
+  document.getElementById('stats').textContent = e.message || 'Impossible de charger le catalogue';
+});
+</script>
+</body>
+</html>
