@@ -2,6 +2,7 @@
 const CACHE_NAME = 'vgb-shell-v5';
 const PRECACHE_URLS = [
   '/play.html',
+  '/progression.html',
   '/login.html',
   '/classement.html',
   '/regles.html',

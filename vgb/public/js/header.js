@@ -58,6 +58,7 @@
           '</button>' +
           '<nav class="site-nav" id="site-nav-panel">' +
             '<a href="/play.html" class="nav-link'+(active==='index'?' active':'')+'" data-t="play">Jouer</a>' +
+            '<a href="/progression.html" class="nav-link'+(active==='progression'?' active':'')+'">Progression</a>' +
             '<a href="/classement.html" class="nav-link'+(active==='classement'?' active':'')+'">Classement</a>' +
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
@@ -227,7 +228,7 @@
     if (typeof VGBProfile !== 'undefined') return;
     if (document.querySelector('script[data-vgb-profile-ui]')) return;
     var s = document.createElement('script');
-    s.src = '/js/profile-ui.js?v=20260726c';
+    s.src = '/js/profile-ui.js?v=20260727t';
     s.setAttribute('data-vgb-profile-ui', '1');
     document.head.appendChild(s);
   }

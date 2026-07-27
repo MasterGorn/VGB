@@ -275,6 +275,27 @@
       return data;
     },
 
+    async fetchProgression() {
+      if (this.mode !== "next") {
+        throw new Error("Progression disponible uniquement avec l’API Next.js");
+      }
+      return this.request("/api/progression");
+    },
+
+    async reportProgression(payload) {
+      if (this.mode !== "next" || !this.user) return null;
+      const data = await this.request("/api/progression", payload || {});
+      if (data && data.user) {
+        this.user = Object.assign({}, this.user || {}, data.user);
+        this.saveSession();
+      }
+      return data;
+    },
+
+    async claimShareProgression() {
+      return this.reportProgression({ action: "share", type: "share" });
+    },
+
     async logout() {
       try {
         if (this.mode === "next") {
