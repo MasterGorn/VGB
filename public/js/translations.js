@@ -630,7 +630,7 @@ const translations = {
     'advertisements': 'Publicités',
     'ad-1': 'Annonce 1',
     'ad-2': 'Annonce 2',
-    'ad-update': 'Mise à jour toutes les 5 actions',
+    'ad-update': 'Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a>',
     
     // Langues
     'language': 'Langue',
@@ -1491,7 +1491,7 @@ const translations = {
     'advertisements': 'Advertisements',
     'ad-1': 'Ad 1',
     'ad-2': 'Ad 2',
-    'ad-update': 'Updates every 5 actions',
+    'ad-update': 'Your ad here? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contact us</a>',
     
     // Languages
     'language': 'Language',
@@ -2140,7 +2140,7 @@ const translations = {
     'advertisements': 'Anuncios',
     'ad-1': 'Anuncio 1',
     'ad-2': 'Anuncio 2',
-    'ad-update': 'Actualización cada 5 acciones',
+    'ad-update': '¿Tu publicidad aquí? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contáctanos</a>',
     
     // Idiomas
     'language': 'Idioma',
@@ -2437,7 +2437,7 @@ const translations = {
     'advertisements': 'Werbung',
     'ad-1': 'Anzeige 1',
     'ad-2': 'Anzeige 2',
-    'ad-update': 'Aktualisierung alle 5 Aktionen',
+    'ad-update': 'Ihre Werbung hier? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Kontaktieren Sie uns</a>',
     
     // Sprachen
     'language': 'Sprache',
@@ -2734,7 +2734,7 @@ const translations = {
     'advertisements': 'Anúncios',
     'ad-1': 'Anúncio 1',
     'ad-2': 'Anúncio 2',
-    'ad-update': 'Atualização a cada 5 ações',
+    'ad-update': 'Seu anúncio aqui? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Fale conosco</a>',
     
     // Idiomas
     'language': 'Idioma',
@@ -3031,7 +3031,7 @@ const translations = {
     'advertisements': 'Pubblicità',
     'ad-1': 'Annuncio 1',
     'ad-2': 'Annuncio 2',
-    'ad-update': 'Aggiornamento ogni 5 azioni',
+    'ad-update': 'La tua pubblicità qui? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contattaci</a>',
     
     // Lingue
     'language': 'Lingua',

@@ -630,7 +630,7 @@ const translations = {
     'advertisements': 'Publicités',
     'ad-1': 'Annonce 1',
     'ad-2': 'Annonce 2',
-    'ad-update': 'Mise à jour toutes les 5 actions',
+    'ad-update': 'Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a>',
     
     // Langues
     'language': 'Langue',
@@ -1217,7 +1217,7 @@ const translations = {
     'crowbar-desc': 'Half-Life! Destroys <strong>any placed object</strong> on the board: banana, tetrimino, paint, mine, turret…',
     'crowbar-details': 'Click a square containing an obstacle or trap to destroy it. Does not destroy pieces or crates. Inspired by Half-Life.',
     'mana-potion-desc': 'Diablo II! The <strong>mana potion</strong> resets cooldowns: lightning and recharging abilities become usable again immediately.',
-    'mana-potion-details': 'Click to drink the potion. All cooldown items in your inventory (like Lightning) and Unique abilities on recharge are reset to zero. Inspired by Diablo II.',
+    'mana-potion-details': 'Click to drink the potion. All cooldown items in your inventory (like Lightning) and Unique abilities on recharge are reset to zero. Does not consume your item action: you can follow up with Lightning the same turn. Inspired by Diablo II.',
     
     // Strategic tips
     'strategic-tips': 'Strategic Tips',
@@ -1491,7 +1491,7 @@ const translations = {
     'advertisements': 'Advertisements',
     'ad-1': 'Ad 1',
     'ad-2': 'Ad 2',
-    'ad-update': 'Updates every 5 actions',
+    'ad-update': 'Your ad here? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contact us</a>',
     
     // Languages
     'language': 'Language',
@@ -2065,7 +2065,7 @@ const translations = {
     'crowbar-desc': '¡Half-Life! Destruye <strong>cualquier objeto</strong> colocado en el tablero: plátano, tetrominó, pintura, mina, torreta…',
     'crowbar-details': 'Haz clic en una casilla que contenga un obstáculo o trampa para destruirlo. No destruye piezas ni cajas. Inspirado en Half-Life.',
     'mana-potion-desc': '¡Diablo II! La <strong>poción de maná</strong> reinicia los tiempos de espera: el rayo y las habilidades en recarga vuelven a estar disponibles de inmediato.',
-    'mana-potion-details': 'Haz clic para beber la poción. Todos los objetos en cooldown de tu inventario (como el Rayo) y las habilidades Unique en recarga se reinician a cero. Inspirado en Diablo II.',
+    'mana-potion-details': 'Haz clic para beber la poción. Todos los objetos en cooldown de tu inventario (como el Rayo) y las habilidades Unique en recarga se reinician a cero. No consume tu acción de objeto: puedes encadenar con el Rayo en el mismo turno. Inspirado en Diablo II.',
     
     // Piezas
     'cost': 'Costo',
@@ -2140,7 +2140,7 @@ const translations = {
     'advertisements': 'Anuncios',
     'ad-1': 'Anuncio 1',
     'ad-2': 'Anuncio 2',
-    'ad-update': 'Actualización cada 5 acciones',
+    'ad-update': '¿Tu publicidad aquí? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contáctanos</a>',
     
     // Idiomas
     'language': 'Idioma',
@@ -2437,7 +2437,7 @@ const translations = {
     'advertisements': 'Werbung',
     'ad-1': 'Anzeige 1',
     'ad-2': 'Anzeige 2',
-    'ad-update': 'Aktualisierung alle 5 Aktionen',
+    'ad-update': 'Ihre Werbung hier? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Kontaktieren Sie uns</a>',
     
     // Sprachen
     'language': 'Sprache',
@@ -2734,7 +2734,7 @@ const translations = {
     'advertisements': 'Anúncios',
     'ad-1': 'Anúncio 1',
     'ad-2': 'Anúncio 2',
-    'ad-update': 'Atualização a cada 5 ações',
+    'ad-update': 'Seu anúncio aqui? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Fale conosco</a>',
     
     // Idiomas
     'language': 'Idioma',
@@ -3031,7 +3031,7 @@ const translations = {
     'advertisements': 'Pubblicità',
     'ad-1': 'Annuncio 1',
     'ad-2': 'Annuncio 2',
-    'ad-update': 'Aggiornamento ogni 5 azioni',
+    'ad-update': 'La tua pubblicità qui? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contattaci</a>',
     
     // Lingue
     'language': 'Lingua',
