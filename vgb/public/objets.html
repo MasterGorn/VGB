@@ -176,7 +176,7 @@ function generateItemsHTML() {
     
     itemCard.innerHTML = `
       <h2>${translatedName} <span class="pill" data-t="weight">${t('weight')}: ${item.weight}</span></h2>
-      <img src="${item.image}" alt="${translatedName}" />
+      <img src="${typeof getItemImageUrl === 'function' ? getItemImageUrl(item.image) : item.image}" alt="${translatedName}" />
       <div class="description" data-t="${item.description}">${t(item.description)}</div>
       <div class="details" data-t="${item.details}">${t(item.details)}</div>
     `;

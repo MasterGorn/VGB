@@ -207,6 +207,16 @@
   const PLAYER_COLORS = ['#4fc3f7', '#ff8a65', '#81c784', '#ce93d8'];
   const imgCache = new Map(); // src => { img, loaded }
   const CRATE_IMG = '/images/items/box-item-mario-kart.png';
+  const FAKE_CRATE_IMG = '/images/items/false-box-item-mario-kart.png';
+  const BOARD_ITEM_IMG = {
+    banana: '/images/items/banana.png',
+    tetrimino: '/images/items/tetrimino.png',
+    turret: '/images/items/turret.png',
+    'portal-orange': '/images/items/portal-orange.png',
+    'portal-blue': '/images/items/portal-blue.png',
+    'proximity-mine': '/images/items/local-mine.png',
+    cardboard: '/images/items/cardboard.png'
+  };
   const ITEM_IMG = {
     bobomb: '/images/items/bobomb.png',
     portals: '/images/items/portals.png',
@@ -220,7 +230,18 @@
     heart: '/images/items/heart.png',
     sandglass: '/images/items/hourglass.png',
     mask: '/images/items/mask-majora.png',
-    ocarina: '/images/items/oracina.png'
+    ocarina: '/images/items/oracina.png',
+    objection: '/images/items/objection.png',
+    'sonic-shoes': '/images/items/Sonic-shoe.png',
+    turret: '/images/items/turret.png',
+    'paint-bomb': '/images/items/spray-paint-can.png',
+    pokeball: '/images/items/pokeball.png',
+    cardboard: '/images/items/cardboard.png',
+    'proximity-mine': '/images/items/local-mine.png',
+    cherry: '/images/items/cherry.png',
+    'storm-wall': '/images/items/storm-wall.png',
+    'golden-gun': '/images/items/golden-gun.png',
+    crowbar: '/images/items/crowbar.png'
   };
 
   function itemImageSrc(itemKey) {
@@ -411,16 +432,94 @@
     if (!snap) return;
 
     ensureImage(CRATE_IMG);
+    ensureImage(FAKE_CRATE_IMG);
+    Object.keys(BOARD_ITEM_IMG).forEach(function (k) { ensureImage(BOARD_ITEM_IMG[k]); });
+
+    // Tempête (zone hors plateau)
+    if (snap.stormWallActive && snap.stormWallShrink > 0) {
+      const s = snap.stormWallShrink;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          if (x < s || x >= size - s || y < s || y >= size - s) {
+            ctx.fillStyle = 'rgba(106, 13, 173, 0.45)';
+            ctx.fillRect(margin + x * tile, margin + y * tile, tile, tile);
+          }
+        }
+      }
+    }
+
+    // Peinture
+    if (Array.isArray(snap.paintCells)) {
+      for (const cell of snap.paintCells) {
+        const px = margin + cell.x * tile;
+        const py = margin + cell.y * tile;
+        ctx.fillStyle = ((cell.x + cell.y) % 2 === 0) ? 'rgba(255, 230, 0, 0.72)' : 'rgba(124, 252, 0, 0.72)';
+        ctx.fillRect(px, py, tile, tile);
+      }
+    }
+
+    // Tourelles (colonne entière)
+    if (Array.isArray(snap.turrets)) {
+      const turretImg = getLoadedImage(BOARD_ITEM_IMG.turret);
+      for (const t of snap.turrets) {
+        for (let y = 0; y < size; y++) {
+          ctx.fillStyle = 'rgba(255, 82, 82, 0.32)';
+          ctx.fillRect(margin + t.column * tile, margin + y * tile, tile, tile);
+        }
+        [0, Math.floor(size / 2), size - 1].forEach(function (y) {
+          const px = margin + t.column * tile + tile / 2;
+          const py = margin + y * tile + tile / 2;
+          const ds = tile * 0.5;
+          if (turretImg) {
+            ctx.drawImage(turretImg, px - ds / 2, py - ds / 2, ds, ds);
+          }
+        });
+      }
+    }
+
+    function drawBoardSprite(src, x, y, scale) {
+      const img = getLoadedImage(src);
+      const px = margin + x * tile + tile / 2;
+      const py = margin + y * tile + tile / 2;
+      const ds = tile * (scale || 0.55);
+      if (img) {
+        ctx.drawImage(img, px - ds / 2, py - ds / 2, ds, ds);
+      } else {
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(px - ds / 2, py - ds / 2, ds, ds);
+      }
+    }
+
+    // Tétriminos
+    if (Array.isArray(snap.tetriminos)) {
+      for (const t of snap.tetriminos) drawBoardSprite(BOARD_ITEM_IMG.tetrimino, t.x, t.y, 0.7);
+    }
+    // Bananes
+    if (Array.isArray(snap.bananas)) {
+      for (const b of snap.bananas) drawBoardSprite(BOARD_ITEM_IMG.banana, b.x, b.y, 0.55);
+    }
+    // Mines
+    if (Array.isArray(snap.proximityMines)) {
+      for (const m of snap.proximityMines) drawBoardSprite(BOARD_ITEM_IMG['proximity-mine'], m.x, m.y, 0.5);
+    }
+    // Portails
+    if (snap.portals) {
+      if (snap.portals.orange) drawBoardSprite(BOARD_ITEM_IMG['portal-orange'], snap.portals.orange.x, snap.portals.orange.y, 0.7);
+      if (snap.portals.blue) drawBoardSprite(BOARD_ITEM_IMG['portal-blue'], snap.portals.blue.x, snap.portals.blue.y, 0.7);
+    }
+
     const crateImg = getLoadedImage(CRATE_IMG);
+    const fakeCrateImg = getLoadedImage(FAKE_CRATE_IMG);
     if (Array.isArray(snap.itemCrates)) {
       for (const crate of snap.itemCrates) {
         const px = margin + crate.x * tile + tile / 2;
         const py = margin + crate.y * tile + tile / 2;
         const drawSize = tile * 0.6;
+        const img = crate.fake && fakeCrateImg ? fakeCrateImg : crateImg;
         ctx.save();
         ctx.globalAlpha = crate.active ? 1 : 0.25;
-        if (crateImg) {
-          ctx.drawImage(crateImg, px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
+        if (img) {
+          ctx.drawImage(img, px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
         } else {
           ctx.fillStyle = '#ffd700';
           ctx.fillRect(px - drawSize / 2, py - drawSize / 2, drawSize, drawSize);
@@ -430,6 +529,13 @@
     }
 
     if (!Array.isArray(snap.pieces)) return;
+
+    const cardboardSet = {};
+    if (Array.isArray(snap.cardboardPieces)) {
+      for (const c of snap.cardboardPieces) {
+        if (c.x != null && c.y != null) cardboardSet[c.x + ',' + c.y] = true;
+      }
+    }
 
     for (const piece of snap.pieces) {
       const px = margin + piece.x * tile + tile / 2;
@@ -461,6 +567,11 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(label, px, py);
+      }
+
+      // Indicateur carton
+      if (cardboardSet[piece.x + ',' + piece.y]) {
+        drawBoardSprite(BOARD_ITEM_IMG.cardboard, piece.x, piece.y, 0.28);
       }
     }
 
