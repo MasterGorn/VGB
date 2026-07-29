@@ -325,6 +325,14 @@
   color: var(--text-muted);
   margin-bottom: var(--spacing-md);
 }
+.ad-info a {
+  color: var(--accent-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ad-info a:hover {
+  opacity: 0.9;
+}
 
 .draft-controls {
   margin-top: var(--spacing-md);
@@ -2246,7 +2254,7 @@ body.end-game-open {
       <div id="ads-title" class="ads-title" data-t="advertisements">Publicités</div>
       <div id="ad-slot-1" class="ad-slot" data-t="ad-1">Annonce 1</div>
       <div id="ad-slot-2" class="ad-slot" data-t="ad-2">Annonce 2</div>
-      <div id="ad-info" class="ad-info" data-t="ad-update">Mise à jour toutes les 5 actions</div>
+      <div id="ad-info" class="ad-info" data-t="ad-update">Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a></div>
     </div>
   </div>
 </div>
@@ -10276,12 +10284,12 @@ function rotateAds() {
   updateAdInfo(true);
 }
 
-function updateAdInfo(reset = false) {
+function updateAdInfo() {
   const info = document.getElementById('ad-info');
   if (!info) return;
-  const nextIn = reset ? 5 : (5 - (moveCount % 5));
-  const plural = nextIn >= 2 ? 's' : '';
-  info.textContent = `Mise à jour dans ${nextIn} action${plural} (toutes les 5 actions)`;
+  info.innerHTML = (typeof t === 'function')
+    ? t('ad-update')
+    : 'Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a>';
 }
 
 // ========================================
