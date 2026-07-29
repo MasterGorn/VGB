@@ -326,6 +326,7 @@
     </div>
     <div class="actions" style="margin-top:16px;">
       <button type="button" id="btn-play" style="background:linear-gradient(135deg,#e67e22,#f1c40f);color:#111;">Jouer</button>
+      <a id="btn-debug-mode" href="/debugMode.html" class="setup-btn secondary" hidden style="text-decoration:none;display:none;align-items:center;justify-content:center;width:auto;min-width:120px;background:#34495e;color:#fff;border:1px solid #7f8c8d;">Debug Mode</a>
       <button type="button" id="btn-logout" style="background:#c0392b;">Déconnexion</button>
     </div>
   </div>
@@ -521,6 +522,16 @@ function updateProfilePreview(user) {
       : '');
     titlePrev.textContent = t || '';
   }
+  syncDebugModeLink(u);
+}
+
+function syncDebugModeLink(user) {
+  const btn = document.getElementById('btn-debug-mode');
+  if (!btn) return;
+  const name = String((user && (user.username || user.name)) || '').trim();
+  const ok = name === 'Gorn';
+  btn.hidden = !ok;
+  btn.style.display = ok ? 'inline-flex' : 'none';
 }
 
 function buildProfileEditors(user, avatarList, titleList) {

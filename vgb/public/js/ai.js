@@ -1,5 +1,5 @@
 /**
- * IA locale Video Games Battle — facile / moyenne / difficile.
+ * IA locale Video Games Battle — facile / moyenne / difficile / expert.
  * S'appuie sur getReachablePositions / getPieceAt fournis par play.html.
  */
 (function (global) {
@@ -162,6 +162,27 @@
     }
     me += enumerateMoves(api, seat).length * 0.15;
     opp += enumerateMoves(api, oppSeat).length * 0.15;
+
+    // Bonus chasse au roi + sécurité du nôtre
+    var ek = enemyKing(api.pieces, seat);
+    var mk = enemyKing(api.pieces, oppSeat); // notre roi du point de vue adverse
+    if (ek) {
+      var ourMoves = enumerateMoves(api, seat);
+      var pressure = 0;
+      for (var j = 0; j < ourMoves.length; j++) {
+        if (ourMoves[j].to.x === ek.x && ourMoves[j].to.y === ek.y) pressure += 80;
+        else {
+          var d = Math.abs(ourMoves[j].to.x - ek.x) + Math.abs(ourMoves[j].to.y - ek.y);
+          if (d <= 2) pressure += 2;
+        }
+      }
+      me += pressure;
+    }
+    if (mk) {
+      var threats = bestCaptureValue(api, oppSeat);
+      if (threats >= 100000) me -= 500;
+    }
+
     return me - opp;
   }
 
@@ -189,29 +210,89 @@
     });
   }
 
-  function minimaxRoot(api, moves, seat, depth) {
+  function scoreExpert(api, move, seat) {
+    var immediate = scoreImmediate(api, move, seat);
+    var oppSeat = seat === 0 ? 1 : 0;
+
+    return withSimulatedMove(api, move, seat, function (removed) {
+      if (removed && removed.type === 'king') return 200000;
+      var reply = bestCaptureValue(api, oppSeat) * 14;
+      var hanging = 0;
+      var after = api.getPieceAt(move.to);
+      if (after && after.player === seat) {
+        var oppMoves = enumerateMoves(api, oppSeat);
+        for (var i = 0; i < oppMoves.length; i++) {
+          if (oppMoves[i].to.x === move.to.x && oppMoves[i].to.y === move.to.y) {
+            hanging = pieceValue(after) * 14;
+            break;
+          }
+        }
+      }
+      // Pénaliser les coups qui exposent notre roi
+      var kingDanger = 0;
+      var myKing = enemyKing(api.pieces, oppSeat);
+      if (myKing) {
+        var threatsOnKing = enumerateMoves(api, oppSeat);
+        for (var k = 0; k < threatsOnKing.length; k++) {
+          if (threatsOnKing[k].to.x === myKing.x && threatsOnKing[k].to.y === myKing.y) {
+            kingDanger = 900;
+            break;
+          }
+        }
+      }
+      var staticEval = evaluateBoard(api, seat);
+      return immediate * 1.15 + staticEval * 1.1 - reply - hanging - kingDanger;
+    });
+  }
+
+  function minimaxRoot(api, moves, seat, depth, opts) {
+    opts = opts || {};
     var oppSeat = seat === 0 ? 1 : 0;
     var best = null;
     var bestScore = -Infinity;
+    var replyLimit = opts.replyLimit || 40;
+    var scoreFn = opts.scoreFn || scoreImmediate;
+
+    // Ordonner les coups (captures / proximité roi d'abord)
+    moves = moves.slice().sort(function (a, b) {
+      return scoreFn(api, b, seat) - scoreFn(api, a, seat);
+    });
 
     for (var i = 0; i < moves.length; i++) {
       var move = moves[i];
       var score = withSimulatedMove(api, move, seat, function (removed) {
-        if (removed && removed.type === 'king') return 100000;
+        if (removed && removed.type === 'king') return 200000;
         if (depth <= 1) {
-          return evaluateBoard(api, seat) - bestCaptureValue(api, oppSeat) * 8;
+          return evaluateBoard(api, seat) - bestCaptureValue(api, oppSeat) * (opts.quietFactor || 8);
         }
         var replies = enumerateMoves(api, oppSeat);
-        if (!replies.length) return evaluateBoard(api, seat);
+        if (!replies.length) return evaluateBoard(api, seat) + 50;
         var worst = Infinity;
-        var limit = Math.min(replies.length, 40);
-        // échantillonner les meilleures réponses adverses
+        var limit = Math.min(replies.length, replyLimit);
         replies.sort(function (a, b) {
           return scoreImmediate(api, b, oppSeat) - scoreImmediate(api, a, oppSeat);
         });
         for (var r = 0; r < limit; r++) {
           var rs = withSimulatedMove(api, replies[r], oppSeat, function (cap) {
-            if (cap && cap.type === 'king') return -100000;
+            if (cap && cap.type === 'king') return -200000;
+            if (depth >= 3) {
+              // Un demi-ply supplémentaire : meilleure riposte IA
+              var ourReplies = enumerateMoves(api, seat);
+              if (!ourReplies.length) return evaluateBoard(api, seat) - 30;
+              ourReplies.sort(function (a, b) {
+                return scoreImmediate(api, b, seat) - scoreImmediate(api, a, seat);
+              });
+              var bestReply = -Infinity;
+              var lim2 = Math.min(ourReplies.length, 18);
+              for (var o = 0; o < lim2; o++) {
+                var os = withSimulatedMove(api, ourReplies[o], seat, function (c2) {
+                  if (c2 && c2.type === 'king') return 200000;
+                  return evaluateBoard(api, seat);
+                });
+                if (os > bestReply) bestReply = os;
+              }
+              return bestReply;
+            }
             return evaluateBoard(api, seat);
           });
           if (rs < worst) worst = rs;
@@ -219,7 +300,7 @@
         return worst;
       });
 
-      score += scoreImmediate(api, move, seat) * 0.05;
+      score += scoreImmediate(api, move, seat) * (opts.immediateWeight || 0.05);
       if (score > bestScore) {
         bestScore = score;
         best = move;
@@ -242,6 +323,24 @@
       return pickBest(moves, function (m) { return scoreImmediate(api, m, seat); }, 25);
     }
 
+    if (difficulty === 'expert') {
+      // Pré-filtre agressif puis minimax profond, sans bruit
+      if (moves.length > 60) {
+        moves.sort(function (a, b) {
+          return scoreExpert(api, b, seat) - scoreExpert(api, a, seat);
+        });
+        moves = moves.slice(0, 36);
+      }
+      return minimaxRoot(api, moves, seat, 3, {
+        replyLimit: 28,
+        quietFactor: 12,
+        immediateWeight: 0.12,
+        scoreFn: scoreExpert
+      }) || pickBest(moves, function (m) {
+        return scoreExpert(api, m, seat);
+      }, 0);
+    }
+
     if (difficulty === 'hard') {
       if (moves.length > 80) {
         // pré-filtre sur score immédiat pour limiter le branching
@@ -250,7 +349,12 @@
         });
         moves = moves.slice(0, 50);
       }
-      return minimaxRoot(api, moves, seat, 2) || pickBest(moves, function (m) {
+      return minimaxRoot(api, moves, seat, 2, {
+        replyLimit: 40,
+        quietFactor: 8,
+        immediateWeight: 0.05,
+        scoreFn: scoreHard
+      }) || pickBest(moves, function (m) {
         return scoreHard(api, m, seat);
       }, 2);
     }

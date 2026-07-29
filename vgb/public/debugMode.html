@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Debug Mode — Poids des objets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="stylesheet" href="/css/common.css" />
+<link rel="stylesheet" href="/css/global.css" />
+<style>
+.debug-page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 120px 16px 48px;
+}
+.debug-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--shadow-light);
+}
+.debug-card h1 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 22px;
+}
+.debug-card .sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+.debug-denied {
+  text-align: center;
+  padding: 40px 16px;
+}
+.debug-denied h1 {
+  color: #e74c3c;
+  margin: 0 0 12px;
+}
+.debug-denied p {
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+.debug-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.debug-toolbar .setup-btn {
+  width: auto;
+  min-width: 120px;
+  max-width: none;
+}
+.debug-status {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.debug-status.ok { color: #2ecc71; }
+.debug-status.warn { color: #f1c40f; }
+.items-weight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.item-weight-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+}
+.item-weight-row img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.item-weight-row .meta {
+  flex: 1;
+  min-width: 0;
+}
+.item-weight-row .meta .name {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-weight-row .meta .key {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.item-weight-row input[type="number"] {
+  width: 64px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 14px;
+}
+.item-weight-row.zero {
+  opacity: 0.55;
+}
+</style>
+</head>
+<body>
+<div id="header-root"></div>
+<script src="/js/header.js"></script>
+<script src="/js/online.js?v=20260720b"></script>
+<script src="/data/items.js"></script>
+<script>VGBHeader.injectHeader('login');</script>
+
+<main class="debug-page">
+  <div class="debug-card" id="debug-denied" hidden>
+    <div class="debug-denied">
+      <h1>Accès refusé</h1>
+      <p>Cette page est réservée au compte <strong>Gorn</strong>.</p>
+      <a class="setup-btn" href="/login.html" style="display:inline-flex;text-decoration:none;width:auto;min-width:140px;">Retour au compte</a>
+    </div>
+  </div>
+
+  <div class="debug-card" id="debug-panel" hidden>
+    <h1>Debug Mode — Poids des objets</h1>
+    <p class="sub">
+      Modifiez les poids pour tester les drop rates en partie.
+      Les valeurs sont stockées dans <code>localStorage</code> et appliquées automatiquement sur <code>play.html</code>.
+      Un poids à <strong>0</strong> empêche l’objet d’apparaître (sauf la fausse caisse, gérée à part).
+    </p>
+
+    <div class="debug-toolbar">
+      <button type="button" class="setup-btn" id="btn-save">Enregistrer</button>
+      <button type="button" class="setup-btn secondary" id="btn-reset">Réinitialiser</button>
+      <button type="button" class="setup-btn secondary" id="btn-boost-all">Tout à 10</button>
+      <span class="debug-status" id="debug-status"></span>
+    </div>
+
+    <div class="items-weight-grid" id="items-grid"></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'vgb_debug_item_weights';
+  const ALLOWED_USER = 'Gorn';
+
+  const deniedEl = document.getElementById('debug-denied');
+  const panelEl = document.getElementById('debug-panel');
+  const gridEl = document.getElementById('items-grid');
+  const statusEl = document.getElementById('debug-status');
+
+  function setStatus(msg, kind) {
+    if (!statusEl) return;
+    statusEl.textContent = msg || '';
+    statusEl.className = 'debug-status' + (kind ? ' ' + kind : '');
+  }
+
+  function currentUser() {
+    try {
+      VGBOnline.loadSession();
+    } catch (e) {}
+    return (VGBOnline && VGBOnline.user) || null;
+  }
+
+  function isAllowed(user) {
+    if (!user) return false;
+    const name = String(user.username || user.name || '').trim();
+    return name === ALLOWED_USER;
+  }
+
+  function imageUrl(item) {
+    if (typeof getItemImageUrl === 'function') return getItemImageUrl(item.image);
+    if (!item.image) return '';
+    if (item.image.startsWith('/')) return item.image;
+    if (item.image.startsWith('public/')) return '/' + item.image.slice(7);
+    return item.image;
+  }
+
+  function loadOverrides() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      const data = JSON.parse(raw);
+      return (data && typeof data === 'object') ? data : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function defaultWeights() {
+    const map = {};
+    (window.itemsData || []).forEach(function (item) {
+      map[item.key] = Number(item.weight) || 0;
+    });
+    return map;
+  }
+
+  function render() {
+    const defaults = defaultWeights();
+    const overrides = loadOverrides();
+    const items = (window.itemsData || []).slice().sort(function (a, b) {
+      return String(a.name).localeCompare(String(b.name), 'fr');
+    });
+
+    gridEl.innerHTML = items.map(function (item) {
+      const value = Object.prototype.hasOwnProperty.call(overrides, item.key)
+        ? Number(overrides[item.key])
+        : defaults[item.key];
+      const w = Number.isFinite(value) ? value : 0;
+      return '<div class="item-weight-row' + (w === 0 ? ' zero' : '') + '" data-key="' + item.key + '">' +
+        '<img src="' + imageUrl(item) + '" alt="">' +
+        '<div class="meta">' +
+          '<div class="name">' + (item.name || item.key) + '</div>' +
+          '<div class="key">' + item.key + ' · défaut ' + defaults[item.key] + '</div>' +
+        '</div>' +
+        '<input type="number" min="0" max="100" step="1" value="' + w + '" data-key="' + item.key + '" />' +
+      '</div>';
+    }).join('');
+
+    gridEl.querySelectorAll('input[type="number"]').forEach(function (input) {
+      input.addEventListener('change', function () {
+        const row = input.closest('.item-weight-row');
+        if (row) row.classList.toggle('zero', Number(input.value) === 0);
+      });
+    });
+
+    const hasOverrides = Object.keys(overrides).length > 0;
+    setStatus(hasOverrides ? 'Overrides actifs (' + Object.keys(overrides).length + ')' : 'Poids par défaut', hasOverrides ? 'warn' : '');
+  }
+
+  function collectWeights() {
+    const map = {};
+    gridEl.querySelectorAll('input[type="number"]').forEach(function (input) {
+      const key = input.getAttribute('data-key');
+      const w = Math.max(0, Math.min(100, Number(input.value) || 0));
+      map[key] = w;
+      input.value = String(w);
+    });
+    return map;
+  }
+
+  function save() {
+    const defaults = defaultWeights();
+    const current = collectWeights();
+    // Ne stocker que les écarts par rapport au défaut (plus propre)
+    const overrides = {};
+    Object.keys(current).forEach(function (key) {
+      if (current[key] !== defaults[key]) overrides[key] = current[key];
+    });
+    if (Object.keys(overrides).length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+      setStatus('Enregistré — ' + Object.keys(overrides).length + ' override(s). Rechargez une partie pour appliquer.', 'ok');
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      setStatus('Aucun écart — poids par défaut (overrides effacés).', 'ok');
+    }
+  }
+
+  function reset() {
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+    setStatus('Réinitialisé aux poids par défaut.', 'ok');
+  }
+
+  function boostAll() {
+    gridEl.querySelectorAll('input[type="number"]').forEach(function (input) {
+      // fake-crate reste à 0 (pas un loot inventaire)
+      if (input.getAttribute('data-key') === 'fake-crate') {
+        input.value = '0';
+      } else {
+        input.value = '10';
+      }
+      const row = input.closest('.item-weight-row');
+      if (row) row.classList.toggle('zero', Number(input.value) === 0);
+    });
+    setStatus('Tous les poids mis à 10 (sauf fausse caisse). Pensez à Enregistrer.', 'warn');
+  }
+
+  document.getElementById('btn-save').addEventListener('click', save);
+  document.getElementById('btn-reset').addEventListener('click', reset);
+  document.getElementById('btn-boost-all').addEventListener('click', boostAll);
+
+  const user = currentUser();
+  if (!isAllowed(user)) {
+    deniedEl.hidden = false;
+    panelEl.hidden = true;
+  } else {
+    deniedEl.hidden = true;
+    panelEl.hidden = false;
+    render();
+  }
+})();
+</script>
+</body>
+</html>

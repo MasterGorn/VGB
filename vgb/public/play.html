@@ -1107,6 +1107,67 @@
   z-index: 1;
 }
 
+.culture-games-blurb {
+  position: relative;
+  z-index: 1;
+  max-width: 820px;
+  margin: 10px auto 0;
+  color: var(--text-secondary);
+  font-size: clamp(13px, 2.8vw, 15px);
+  line-height: 1.45;
+  text-align: center;
+}
+.culture-games-blurb a {
+  color: var(--accent-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.culture-games-blurb a.cg-logo-link {
+  text-decoration: none;
+  display: inline;
+  vertical-align: baseline;
+  margin: 0 2px;
+}
+.culture-games-blurb .cg-logo {
+  height: 1.15em;
+  width: auto;
+  display: inline;
+  vertical-align: -0.2em;
+}
+.culture-games-blurb a:hover {
+  opacity: 0.9;
+}
+.culture-games-blurb .cg-more {
+  display: none;
+  margin-top: 6px;
+}
+.culture-games-blurb.is-expanded .cg-more {
+  display: block;
+}
+.culture-games-blurb .cg-blurb-lead {
+  margin: 0;
+  display: inline;
+}
+.culture-games-blurb .cg-inline-end {
+  white-space: nowrap;
+}
+.culture-games-blurb .cg-toggle {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-gold);
+  font: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  vertical-align: baseline;
+}
+
 /* Tablette+ */
 @media (min-width: 768px) {
   .game-container {
@@ -1984,6 +2045,14 @@ body.end-game-open {
 <!-- Accroche principale -->
 <div class="tagline">
   <h1 data-t="tagline">Oubliez les échecs classiques, ici les héros de jeux vidéo font les règles !</h1>
+  <div class="culture-games-blurb" id="culture-games-blurb">
+    <span class="cg-blurb-lead" id="cg-blurb-lead"></span>
+    <div class="cg-more">
+      <p style="margin:0;" data-t="cg-blurb-more">
+        La liste des pièces propose des liens vers des fiches pour approfondir vos connaissances sur chaque personnage. Un mini-jeu pensé pour promouvoir la culture vidéoludique tout en s’amusant.
+      </p>
+    </div>
+  </div>
 </div>
 
 <div class="game-container">
@@ -2026,6 +2095,7 @@ body.end-game-open {
               <option value="easy">Facile</option>
               <option value="medium" selected>Moyenne</option>
               <option value="hard">Difficile</option>
+              <option value="expert">Expert</option>
             </select>
           </div>
         </div>
@@ -2188,7 +2258,7 @@ body.end-game-open {
 <script src="/js/piece-flavor.js?v=20260725b"></script>
 <script src="/js/chess-roles.js?v=20260724c"></script>
 <script src="/js/unique-abilities.js?v=20260720u"></script>
-<script src="/js/ai.js"></script>
+<script src="/js/ai.js?v=20260729e"></script>
 <script src="/js/online.js?v=20260726b"></script>
 <script>
 VGBHeader.injectHeader('index');
@@ -2224,6 +2294,9 @@ let GRID_SIZE = 9;
 let gameMode = 'vgb'; // 'vgb' | 'classic'
 let boardFlipped = false;
 let lastMove = null; // { from:{x,y}, to:{x,y}, player }
+let lastMoveUndo = null; // snapshot pour Objection
+let objectionBlock = null; // { playerId, from:{x,y}, to:{x,y} } — coup interdit le tour suivant
+let sonicShoesState = null; // { playerId, phase: 'await_first'|'await_second', piece }
 let lastMoveOverlays = [];
 let onlineLivePushTimer = null;
 let onlineTimerSyncAcc = 0;
@@ -2414,6 +2487,15 @@ let starTileOverlays = new Map(); // key "x,y" -> Image overlay arc-en-ciel
 let tetriminos = []; // array de { x, y, sprite } pour les murs tetrimino
 // Bananes (pièges)
 let bananas = []; // array de { x, y, sprite } pour les bananes
+let turrets = []; // { column, playerId, overlays: [] }
+let paintCells = []; // { x, y, sprite }
+let proximityMines = []; // { x, y, playerId, sprite }
+let cardboardPieces = []; // { piece, viewerId, untilRound }
+const POKE_SUMMON_KEYS = ['pikachu', 'rondoudou'];
+let cherryDoubleNext = {}; // { [playerId]: true } — prochain objet doublé
+let stormWallActive = false;
+let stormWallShrink = 0; // nombre de cases retirées de chaque côté
+let stormWallOverlays = []; // sprites visuels de la zone de tempête
 // Pièces perdues par joueur (pour la queue de phoenix)
 let playerLostPieces = []; // array de { playerId, piece } pour chaque joueur
 // Pièces possédées par le curseur Sims
@@ -2449,20 +2531,92 @@ function initItemWeights() {
       'heart': 2,
       'sandglass': 3,
       'mask': 4,
-      'ocarina': 3
+      'ocarina': 3,
+      'objection': 3,
+      'sonic-shoes': 2,
+      'turret': 3,
+      'paint-bomb': 3,
+      'pokeball': 2,
+      'cardboard': 3,
+      'proximity-mine': 3,
+      'cherry': 3,
+      'storm-wall': 2,
+      'golden-gun': 1,
+      'crowbar': 3,
+      'mana-potion': 3
     };
   }
+  // Overrides debug (page /debugMode.html — compte Gorn)
+  try {
+    const raw = localStorage.getItem('vgb_debug_item_weights');
+    if (raw) {
+      const overrides = JSON.parse(raw);
+      if (overrides && typeof overrides === 'object') {
+        Object.keys(overrides).forEach(function (key) {
+          const w = Number(overrides[key]);
+          if (Number.isFinite(w) && w >= 0) ITEM_WEIGHTS[key] = w;
+        });
+        console.log('ITEM_WEIGHTS debug overrides appliqués:', overrides);
+      }
+    }
+  } catch (e) {}
 }
 
 // Initialiser immédiatement au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
   initItemWeights();
   initTranslation();
+  renderCultureGamesBlurb();
   setTimeout(function() {
     if (typeof buildItemsRefPanel === 'function') buildItemsRefPanel();
     if (typeof initQuickChatUi === 'function') initQuickChatUi();
   }, 50);
 });
+
+/** Phrase Culture Games + « Voir plus » collés (nowrap sur la fin de phrase). */
+function renderCultureGamesBlurb() {
+  const blurb = document.getElementById('culture-games-blurb');
+  const lead = document.getElementById('cg-blurb-lead');
+  if (!blurb || !lead) return;
+  let shortHtml = (typeof t === 'function')
+    ? t('cg-blurb-short')
+    : 'Une initiative de <a class="cg-logo-link" href="https://www.culture-games.com" target="_blank" rel="noopener noreferrer"><img class="cg-logo" src="/images/site/logo-header-culture-games-v5.svg" alt="Culture Games" /></a> pour faire connaître les mascottes du jeu vidéo — et apprendre en s’amusant.';
+  const open = blurb.classList.contains('is-expanded');
+  const toggleLabel = (typeof t === 'function')
+    ? t(open ? 'cg-see-less' : 'cg-see-more')
+    : (open ? 'Voir moins' : 'Voir plus');
+  // Coller le point final + le lien dans un nowrap pour qu'ils restent sur la même ligne
+  shortHtml = shortHtml.replace(/\.\s*$/, '');
+  lead.innerHTML = shortHtml +
+    '<span class="cg-inline-end">.\u00a0<span class="cg-toggle" role="button" tabindex="0" id="cg-blurb-toggle" aria-expanded="' +
+    (open ? 'true' : 'false') + '">' + toggleLabel + '</span></span>';
+  const cgToggle = document.getElementById('cg-blurb-toggle');
+  if (cgToggle) {
+    const toggle = function() {
+      const isOpen = blurb.classList.toggle('is-expanded');
+      cgToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      cgToggle.textContent = (typeof t === 'function')
+        ? t(isOpen ? 'cg-see-less' : 'cg-see-more')
+        : (isOpen ? 'Voir moins' : 'Voir plus');
+    };
+    cgToggle.addEventListener('click', toggle);
+    cgToggle.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  }
+}
+
+// Garder le bouton collé au texte après un changement de langue
+if (typeof window.updateAllTexts === 'function') {
+  const _updateAllTexts = window.updateAllTexts;
+  window.updateAllTexts = function() {
+    _updateAllTexts.apply(this, arguments);
+    renderCultureGamesBlurb();
+  };
+}
 // Timers
 let playerTimersMs = [];
 let timerTexts = [];
@@ -2770,6 +2924,19 @@ function preload() {
   this.load.image('sandglass', 'hourglass.png');
   this.load.image('mask', 'mask-majora.png');
   this.load.image('ocarina', 'oracina.png');
+  this.load.image('objection', 'objection.png');
+  this.load.image('sonic-shoes', 'Sonic-shoe.png');
+  this.load.image('turret', 'turret.png');
+  this.load.image('paint-bomb', 'spray-paint-can.png');
+  this.load.image('pokeball', 'pokeball.png');
+  this.load.image('cardboard', 'cardboard.png');
+  this.load.image('proximity-mine', 'local-mine.png');
+  this.load.image('fake-crate', 'false-box-item-mario-kart.png');
+  this.load.image('cherry', 'cherry.png');
+  this.load.image('storm-wall', 'storm-wall.png');
+  this.load.image('golden-gun', 'golden-gun.png');
+  this.load.image('crowbar', 'crowbar.png');
+  this.load.image('mana-potion', 'mana-potion.png');
   // Sons (par item)
   this.load.setPath('/sounds/items/');
   this.load.audio('bobomb', 'bobomb.mp3');
@@ -2999,6 +3166,8 @@ function hideSetupAndShowBoard() {
   if (gameSetup) gameSetup.style.display = 'none';
   const gameContainer = document.querySelector('.game-container');
   if (gameContainer) gameContainer.classList.add('game-active');
+  const tagline = document.querySelector('.tagline');
+  if (tagline) tagline.style.display = 'none';
   characterSelectionMode = false;
   syncItemsRefPanel();
 }
@@ -3220,6 +3389,7 @@ function getUniqueAbilityCtx() {
     listItemKeys: function () {
       let keys = Object.keys(ITEM_WEIGHTS || {});
       if (GRID_SIZE !== 9) keys = keys.filter(function (k) { return k !== 'sandglass'; });
+      if (!timerEnabled) keys = keys.filter(function (k) { return k !== 'sandglass'; });
       return keys.length ? keys : ['bobomb', 'portals', 'banana', 'star', 'tornado', 'cursor'];
     },
     giveItem: function (playerId, itemKey, opts) {
@@ -4101,7 +4271,7 @@ function showItemHelpPopin(item, anchorEl, pinned) {
   popin.innerHTML =
     '<button type="button" class="item-help-close" aria-label="Fermer">×</button>' +
     '<div class="item-help-head">' +
-      '<img src="' + item.image + '" alt="">' +
+      '<img src="' + (typeof getItemImageUrl === 'function' ? getItemImageUrl(item.image) : item.image) + '" alt="">' +
       '<strong></strong>' +
     '</div>' +
     '<p class="item-help-desc"></p>' +
@@ -4133,6 +4303,8 @@ function buildItemsRefPanel() {
   if (!grid || typeof itemsData === 'undefined' || !itemsData.length) return;
   grid.innerHTML = '';
   itemsData.forEach(function(item) {
+    // Piège de plateau (pas un objet d'inventaire) : masqué du panneau latéral
+    if (!item || item.key === 'fake-crate') return;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'items-ref-btn';
@@ -4140,7 +4312,7 @@ function buildItemsRefPanel() {
     const label = itemHelpTranslate(item.nameKey || (item.key + '-name'), item.name);
     btn.setAttribute('aria-label', label);
     btn.title = label;
-    btn.innerHTML = '<img src="' + item.image + '" alt="">';
+    btn.innerHTML = '<img src="' + (typeof getItemImageUrl === 'function' ? getItemImageUrl(item.image) : item.image) + '" alt="">';
     btn.addEventListener('mouseenter', function() {
       if (itemHelpPinned) return;
       showItemHelpPopin(item, btn, false);
@@ -4263,6 +4435,9 @@ function startGame(scene) {
   computeBoardLayout();
   syncBoardFlip();
   lastMove = null;
+  lastMoveUndo = null;
+  objectionBlock = null;
+  sonicShoesState = null;
   clearLastMoveOverlays();
 
   // En ligne : chronomètre fixe 5 min (options locales uniquement)
@@ -4291,6 +4466,19 @@ function startGame(scene) {
   syncMobilePauseButton();
   currentPlayer = 0;
   moveCount = 0;
+  roundCounter = 0;
+  eliminationOrder = []; // critique : sinon la 2e partie saute le joueur déjà éliminé
+  itemUsedThisTurn = false;
+  secondaryMode = false;
+  secondaryModeUsed = false;
+  currentItemAction = null;
+  remoteItemHint = null;
+  starInvincible = { playerId: -1, untilRound: -1, untilPlayerTurn: false };
+  try { clearStarOverlays(); } catch (e) {}
+  try {
+    const s = scene && scene.sound;
+    if (s && s.stopByKey) s.stopByKey('star');
+  } catch (e) {}
   moveLog = [];
   lastLoggedMoveCount = -1;
   timersArmed = false;
@@ -4350,6 +4538,28 @@ function startGame(scene) {
     if (b.sprite) b.sprite.destroy();
   }
   bananas = [];
+
+  for (const t of turrets) {
+    if (t.overlays) t.overlays.forEach(o => o && o.destroy && o.destroy());
+  }
+  turrets = [];
+  for (const pc of paintCells) {
+    if (pc.sprite) pc.sprite.destroy();
+  }
+  paintCells = [];
+  for (const m of proximityMines) {
+    if (m.sprite) m.sprite.destroy();
+  }
+  proximityMines = [];
+  for (const entry of cardboardPieces) {
+    if (entry.indicatorSprite) entry.indicatorSprite.destroy();
+  }
+  cardboardPieces = [];
+  cherryDoubleNext = {};
+  stormWallActive = false;
+  stormWallShrink = 0;
+  for (const o of stormWallOverlays) { if (o && o.destroy) o.destroy(); }
+  stormWallOverlays = [];
   
   // reset pièces perdues
   playerLostPieces = [];
@@ -4465,10 +4675,11 @@ function startGame(scene) {
       }
     }
     for (const pos of cratePositions) {
+      const isFake = Math.random() < 0.05;
       const sprite = scene.add.image(0,0,'item-crate');
       sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
       sprite.setAlpha(1);
-      itemCrates.push({ x: pos.x, y: pos.y, sprite, active: true, lastRound: roundCounter });
+      itemCrates.push({ x: pos.x, y: pos.y, sprite, active: true, lastRound: roundCounter, fake: isFake });
     }
   }
 
@@ -4746,6 +4957,7 @@ function startGame(scene) {
   if (timerEnabled) {
     timerEvent = scene.time.addEvent({ delay: 250, loop: true, callback: () => tickTimer(scene) });
   }
+  purgeSandglassFromInventories();
 
   // Reprise d'une sauvegarde locale : réappliquer l'état du plateau
   if (pendingResumeSave) {
@@ -5003,8 +5215,10 @@ function updatePieces() {
   updateMaskPosition();
   // Mettre à jour les positions des ocarinas
   updateOcarinaPositions();
+  updateCardboardIndicators();
   // Mettre à jour l'indicateur de mode secondaire
   updateSecondaryModeIndicator();
+  applyItemVisibilityEffects();
   if (typeof syncAllHtmlHudItems === 'function') syncAllHtmlHudItems();
   updateRulesSidebar();
 }
@@ -5052,8 +5266,9 @@ function isStarActive() {
   return !!(starInvincible && starInvincible.untilPlayerTurn && starInvincible.playerId >= 0);
 }
 
-function isPieceStarProtected(/* piece */) {
-  return isStarActive();
+function isPieceStarProtected(piece) {
+  if (!piece || !isStarActive()) return false;
+  return piece.player === starInvincible.playerId;
 }
 
 function updateStarOverlays(scene) {
@@ -5066,6 +5281,7 @@ function updateStarOverlays(scene) {
   const hue = (starPhase * 50) % 360;
   
   for (const p of pieces) {
+    if (p.player !== starInvincible.playerId) continue;
     const k = p.x + ',' + p.y;
     desired.add(k);
     if (!starTileOverlays.has(k)) {
@@ -5413,6 +5629,53 @@ function handleClick(scene, pos) {
       updatePieces();
       return;
     }
+    if (currentItemAction.type === 'turret') {
+      if (!canPlaceTurretOnColumn(pos.x)) return;
+      placeTurretColumn(pos.x, currentPlayer);
+      finishItemPlacement(currentItemAction.inventoryIndex, 'turret');
+      return;
+    }
+    if (currentItemAction.type === 'paint-bomb') {
+      placePaintBomb(pos, currentPlayer);
+      finishItemPlacement(currentItemAction.inventoryIndex, 'paint-bomb');
+      return;
+    }
+    if (currentItemAction.type === 'proximity-mine') {
+      if (!canPlaceProximityMineAt(pos.x, pos.y)) return;
+      placeProximityMine(pos, currentPlayer);
+      finishItemPlacement(currentItemAction.inventoryIndex, 'proximity-mine');
+      return;
+    }
+    if (currentItemAction.type === 'cardboard') {
+      if (!clickedPiece) return;
+      applyCardboardToPiece(clickedPiece, currentPlayer);
+      finishItemPlacement(currentItemAction.inventoryIndex, 'cardboard');
+      return;
+    }
+    if (currentItemAction.type === 'golden-gun') {
+      if (!clickedPiece) return;
+      consumeInventoryItemAt(currentItemAction.playerId, currentItemAction.inventoryIndex);
+      currentItemAction = null;
+      clearHighlights();
+      showInfoMessage('Golden Gun ! ' + (clickedPiece.name || clickedPiece.type) + ' éliminé(e) !', 3000);
+      forceDestroyPiece(clickedPiece);
+      itemUsedThisTurn = true;
+      updatePieces();
+      pushOnlineStateLive('item-golden-gun');
+      return;
+    }
+    if (currentItemAction.type === 'crowbar') {
+      const removed = removeCrowbarTargetAt(pos.x, pos.y);
+      if (!removed) return;
+      consumeInventoryItemAt(currentItemAction.playerId, currentItemAction.inventoryIndex);
+      currentItemAction = null;
+      clearHighlights();
+      showInfoMessage('Pied de biche ! Obstacle détruit !', 2500);
+      itemUsedThisTurn = true;
+      updatePieces();
+      pushOnlineStateLive('item-crowbar');
+      return;
+    }
   }
 
   // Si le joueur a une pièce forcée, empêcher la sélection d'autres pièces
@@ -5428,6 +5691,20 @@ function handleClick(scene, pos) {
   if (canControlClicked) {
     // Désélectionner toute pièce adverse
     selectedEnemyPiece = null;
+
+    if (sonicShoesState && sonicShoesState.playerId === currentPlayer) {
+      if (sonicShoesState.phase === 'await_second') {
+        if (!sonicShoesState.piece) {
+          sonicShoesState.phase = 'await_first';
+        } else if (clickedPiece !== sonicShoesState.piece) {
+          showInfoMessage('Second coup Sonic : même pièce uniquement', 2200);
+          return;
+        }
+      } else if (sonicShoesState.phase === 'await_first' && !isSonicShoesEligible(clickedPiece)) {
+        showInfoMessage('Chaussures de Sonic : pion, cavalier ou fou uniquement', 2500);
+        return;
+      }
+    }
     
     // Si c'est la même pièce déjà sélectionnée : Action (double-clic), Joanna, ou désélection
     if (selectedPiece && selectedPiece === clickedPiece) {
@@ -5541,6 +5818,8 @@ function handleClick(scene, pos) {
         const capturedKing = target.type === 'king';
         const attackerForAbility = selectedPiece;
         const hasHeart = heartPieces.some(hp => hp.piece === target);
+        let capturedSnapshot = null;
+        let captureUndoable = true;
         if (hasHeart) {
           // La pièce a un cœur : elle reste en place mais perd son cœur
           removeHeartFromPiece(target);
@@ -5549,6 +5828,7 @@ function handleClick(scene, pos) {
           clearHighlights();
           selectedPiece = null;
           selectedEnemyPiece = null;
+          sonicShoesState = null;
           
           // Compter comme un tour et passer au joueur suivant (logique de jeu)
           moveCount++;
@@ -5576,6 +5856,11 @@ function handleClick(scene, pos) {
           return;
         } else {
           // Pas de cœur : capture normale
+          capturedSnapshot = snapshotPieceData(target);
+          const tk = String(target.type || target.nameKey || '').toLowerCase();
+          if (capturedKing || tk.includes('viva-pinata') || tk.includes('viva-piñata')) {
+            captureUndoable = false;
+          }
           // Enregistrer la pièce perdue pour la queue de phoenix
           playerLostPieces.push({ playerId: target.player, piece: { ...target } });
           // Nettoyer l'exposant du curseur Sims si la pièce était possédée
@@ -5593,6 +5878,8 @@ function handleClick(scene, pos) {
         // Vérifier si la pièce trébuche sur une banane
         if (checkBananaTrip(selectedPiece, pos)) {
           // La pièce trébuche, elle est déplacée sur la case de la banane
+          sonicShoesState = null;
+          lastMoveUndo = null;
           updatePieces();
         clearHighlights();
         selectedPiece = null;
@@ -5605,11 +5892,48 @@ function handleClick(scene, pos) {
           return;
         }
         // Déplacer la pièce du joueur sur la case capturée
-        setLastMove({ x: selectedPiece.x, y: selectedPiece.y }, pos, currentPlayer);
+        const fromPosCap = { x: selectedPiece.x, y: selectedPiece.y };
+        setLastMove(fromPosCap, pos, currentPlayer);
         selectedPiece.x = pos.x;
         selectedPiece.y = pos.y;
+        if (handlePostMoveTraps(selectedPiece, fromPosCap, pos)) {
+          sonicShoesState = null;
+          lastMoveUndo = null;
+          clearHighlights();
+          selectedPiece = null;
+          selectedEnemyPiece = null;
+          moveCount++;
+          if (moveCount % 5 === 0) rotateAds();
+          updateAdInfo();
+          let oldRoundTrap = roundCounter;
+          if (shouldIncrementRoundCounter()) { roundCounter++; tickCardboardExpiry(); tickPaintExpiry(); }
+          currentPlayer = getNextActivePlayer();
+          if (roundCounter !== oldRoundTrap) decrementLightningCharges();
+          itemUsedThisTurn = false;
+          secondaryMode = false;
+          secondaryModeUsed = false;
+          hideSecondaryModeIndicator();
+          maybeRespawnCrate(scene);
+          updateTurnUI();
+          if (timerTexts && playerNameTexts) {
+            for (let i=0;i<timerTexts.length;i++) {
+              if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+            }
+          }
+          evaluateClassicEndOfTurn();
+          return;
+        }
         // Récupération de la caisse
-        maybePickupItem(selectedPiece);
+        const pickedCap = maybePickupItem(selectedPiece);
+        recordLastMoveUndo({
+          from: fromPosCap,
+          to: { x: pos.x, y: pos.y },
+          player: currentPlayer,
+          captured: capturedSnapshot,
+          pickedItem: pickedCap ? { item: pickedCap, playerId: selectedPiece.player } : null,
+          undoable: captureUndoable
+        });
+        const movedPieceCap = selectedPiece;
         updatePieces();
         clearHighlights();
         if (capturedKing) {
@@ -5619,6 +5943,8 @@ function handleClick(scene, pos) {
         selectedEnemyPiece = null;
         // Gestion élimination et condition de fin
         if (capturedKing) {
+          sonicShoesState = null;
+          lastMoveUndo = null;
           if (isClassicRulesActive()) {
             // Sécurité : en classique le roi ne doit pas être capturable
             lastEndGameReason = 'checkmate';
@@ -5671,11 +5997,22 @@ function handleClick(scene, pos) {
         updateAdInfo();
         
         // Supprimer le masque de Majora si la pièce forcée a été jouée
-        if (forcedPiece && forcedPiece.piece === selectedPiece) {
+        if (forcedPiece && forcedPiece.piece === movedPieceCap) {
           if (forcedPiece.maskSprite) {
             forcedPiece.maskSprite.destroy();
           }
           forcedPiece = null;
+        }
+
+        if (keepTurnAfterSonicMove(movedPieceCap)) {
+          updateTurnUI();
+          if (timerTexts && playerNameTexts) {
+            for (let i=0;i<timerTexts.length;i++) {
+              if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+            }
+          }
+          evaluateClassicEndOfTurn();
+          return;
         }
         
         // fin de tour
@@ -5705,6 +6042,8 @@ function handleClick(scene, pos) {
       // Vérifier si la pièce trébuche sur une banane
       if (checkBananaTrip(selectedPiece, pos)) {
         // La pièce trébuche, elle est déplacée sur la case de la banane
+        sonicShoesState = null;
+        lastMoveUndo = null;
         updatePieces();
         clearHighlights();
         
@@ -5726,16 +6065,57 @@ function handleClick(scene, pos) {
         return;
       }
       // Case vide
-      setLastMove({ x: selectedPiece.x, y: selectedPiece.y }, pos, currentPlayer);
+      const fromPosMove = { x: selectedPiece.x, y: selectedPiece.y };
+      setLastMove(fromPosMove, pos, currentPlayer);
       selectedPiece.x = pos.x;
       selectedPiece.y = pos.y;
+      if (handlePostMoveTraps(selectedPiece, fromPosMove, pos)) {
+        sonicShoesState = null;
+        lastMoveUndo = null;
+        clearHighlights();
+        if (forcedPiece && forcedPiece.piece === selectedPiece) {
+          if (forcedPiece.maskSprite) forcedPiece.maskSprite.destroy();
+          forcedPiece = null;
+        }
+        selectedPiece = null;
+        selectedEnemyPiece = null;
+        moveCount++;
+        if (moveCount % 5 === 0) rotateAds();
+        updateAdInfo();
+        let oldRoundTrap = roundCounter;
+        if (shouldIncrementRoundCounter()) { roundCounter++; tickCardboardExpiry(); tickPaintExpiry(); }
+        currentPlayer = getNextActivePlayer();
+        if (roundCounter !== oldRoundTrap) decrementLightningCharges();
+        itemUsedThisTurn = false;
+        secondaryMode = false;
+        secondaryModeUsed = false;
+        hideSecondaryModeIndicator();
+        maybeRespawnCrate(scene);
+        updateTurnUI();
+        if (timerTexts && playerNameTexts) {
+          for (let i=0;i<timerTexts.length;i++) {
+            if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+          }
+        }
+        evaluateClassicEndOfTurn();
+        return;
+      }
       // Récupération de la caisse
-      maybePickupItem(selectedPiece);
+      const pickedMove = maybePickupItem(selectedPiece);
+      recordLastMoveUndo({
+        from: fromPosMove,
+        to: { x: pos.x, y: pos.y },
+        player: currentPlayer,
+        captured: null,
+        pickedItem: pickedMove ? { item: pickedMove, playerId: selectedPiece.player } : null,
+        undoable: true
+      });
+      const movedPieceEmpty = selectedPiece;
       updatePieces();
       clearHighlights();
       
       // Supprimer le masque de Majora si la pièce forcée a été jouée
-      if (forcedPiece && forcedPiece.piece === selectedPiece) {
+      if (forcedPiece && forcedPiece.piece === movedPieceEmpty) {
         if (forcedPiece.maskSprite) {
           forcedPiece.maskSprite.destroy();
         }
@@ -5747,6 +6127,18 @@ function handleClick(scene, pos) {
       moveCount++;
       if (moveCount % 5 === 0) rotateAds();
       updateAdInfo();
+
+      if (keepTurnAfterSonicMove(movedPieceEmpty)) {
+        updateTurnUI();
+        if (timerTexts && playerNameTexts) {
+          for (let i=0;i<timerTexts.length;i++) {
+            if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+          }
+        }
+        evaluateClassicEndOfTurn();
+        return;
+      }
+
       // fin de tour
       let oldRound = roundCounter;
       if (shouldIncrementRoundCounter()) { roundCounter++; }
@@ -5772,6 +6164,9 @@ function handleClick(scene, pos) {
       evaluateClassicEndOfTurn();
     } else {
       // Clic non valide: nettoyer la sélection pour éviter la confusion
+      if (selectedPiece && isObjectionBlockedMove(selectedPiece, pos)) {
+        showInfoMessage('Objection : ce coup est interdit ce tour !', 2200);
+      }
       clearHighlights();
       selectedPiece = null;
       selectedEnemyPiece = null;
@@ -5924,7 +6319,31 @@ function getReachablePositions(piece) {
       return !classicMoveLeavesKingInCheck(piece, pos);
     });
   }
+  // Objection : interdire de rejouer le coup annulé durant le tour suivant
+  if (objectionBlock && piece && piece.player === objectionBlock.playerId) {
+    positions = positions.filter(function (pos) {
+      return !isObjectionBlockedMove(piece, pos);
+    });
+  }
   return positions;
+}
+
+function isObjectionBlockedMove(piece, to) {
+  if (!objectionBlock || !piece || !to) return false;
+  if (piece.player !== objectionBlock.playerId) return false;
+  return piece.x === objectionBlock.from.x &&
+    piece.y === objectionBlock.from.y &&
+    to.x === objectionBlock.to.x &&
+    to.y === objectionBlock.to.y;
+}
+
+function clearObjectionBlockAfterTurn(prevPlayer) {
+  if (!objectionBlock) return;
+  if (typeof prevPlayer === 'number' &&
+      prevPlayer === objectionBlock.playerId &&
+      currentPlayer !== objectionBlock.playerId) {
+    objectionBlock = null;
+  }
 }
 
 function getRuleForPiece(piece) {
@@ -5957,8 +6376,20 @@ function maybePickupItem(piece) {
   for (const c of itemCrates) {
     if (!c.active) continue;
     if (piece.x === c.x && piece.y === c.y) {
+      if (c.fake) {
+        showInfoMessage('Fausse caisse ! La pièce est détruite !', 3000);
+        tryDestroyPieceFromTrap(piece);
+        c.fake = false;
+        c.lastRound = roundCounter;
+        return '__fake__';
+      }
       const item = rollDeterministicItem(moveCount + 1, c.x, c.y);
       giveItemToPlayer(piece.player, item);
+      if (cherryDoubleNext[piece.player]) {
+        giveItemToPlayer(piece.player, item);
+        delete cherryDoubleNext[piece.player];
+        showInfoMessage('Cerise : objet doublé !', 2000);
+      }
       c.active = false;
       if (c.sprite) { c.sprite.setAlpha(0.25); }
       c.lastRound = roundCounter;
@@ -5968,9 +6399,29 @@ function maybePickupItem(piece) {
   return null;
 }
 
+function isSandglassAvailable() {
+  return GRID_SIZE === 9 && !!timerEnabled;
+}
+
+function purgeSandglassFromInventories() {
+  if (isSandglassAvailable()) return;
+  for (let pid = 0; pid < (playerItemIcons || []).length; pid++) {
+    const arr = playerItemIcons[pid] || [];
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] && arr[i].item === 'sandglass') {
+        const removed = arr.splice(i, 1)[0];
+        if (removed && removed.sprite) removed.sprite.destroy();
+      }
+    }
+  }
+  if (typeof syncAllHtmlHudItems === 'function') syncAllHtmlHudItems();
+}
+
 function giveItemToPlayer(playerId, itemKey, chargeTurns, opts) {
   const scene = infoText && infoText.scene;
   if (!scene) return;
+  if (itemKey === 'sandglass' && !isSandglassAvailable()) return;
+  if (itemKey === 'fake-crate') return; // piège de plateau, pas un objet d'inventaire
   if (!playerItemIcons[playerId]) playerItemIcons[playerId] = [];
   const force = opts && opts.force;
   if (force) {
@@ -5988,6 +6439,26 @@ function giveItemToPlayer(playerId, itemKey, chargeTurns, opts) {
   playerItemIcons[playerId].push(entry);
   syncAllHtmlHudItems();
   updatePieces();
+}
+
+/** Potion de mana : remet à zéro les cooldowns d'objets (éclair…) et capacités Unique. */
+function resetItemAndAbilityCooldowns(playerId) {
+  const arr = playerItemIcons[playerId] || [];
+  for (const e of arr) {
+    if (!e) continue;
+    if (typeof e.chargeTurns === 'number' && e.chargeTurns > 0) {
+      e.chargeTurns = 0;
+    }
+  }
+  if (typeof VGBUniqueAbilities !== 'undefined' && VGBUniqueAbilities.state) {
+    const st = VGBUniqueAbilities.state;
+    const clearReadyMap = function (map) {
+      if (!map || typeof map !== 'object') return;
+      Object.keys(map).forEach(function (k) { map[k] = 0; });
+    };
+    clearReadyMap(st.linkArrowReadyAt);
+    clearReadyMap(st.pikachuReadyAt);
+  }
 }
 
 function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
@@ -6027,7 +6498,10 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
   }
   if (icon.item === 'lightning') {
     // Non utilisable tant que charge > 0
-    if (icon.chargeTurns && icon.chargeTurns > 0) return;
+    if (icon.chargeTurns && icon.chargeTurns > 0) {
+      showInfoMessage(`Éclair en charge : encore ${icon.chargeTurns} tour${icon.chargeTurns > 1 ? 's' : ''} (ou utilisez une potion de mana)`, 2800);
+      return;
+    }
     // Déclencher effet éclair
     triggerLightningEffect();
     // Tuer toutes les pièces sur cases blanches
@@ -6039,6 +6513,7 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
       if (used && used.sprite) used.sprite.destroy();
       if (used && used.counterText) used.counterText.destroy();
     }
+    syncAllHtmlHudItems();
     itemUsedThisTurn = true;
     updatePieces();
     // Fin de tour après usage de l'éclair
@@ -6062,9 +6537,10 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
         if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
       }
     }
+    pushOnlineStateLive('item-lightning');
   }
   if (icon.item === 'star') {
-    // Invincibilité de toutes les pièces jusqu'au prochain tour du joueur qui l'utilise
+    // Invincibilité des pièces du joueur jusqu'à son prochain tour
     starInvincible = { playerId, untilRound: -1, untilPlayerTurn: true };
     startStarBlink(playerId);
     try {
@@ -6144,7 +6620,7 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
       updatePieces();
     } else {
       // Aucune pièce à ressusciter
-      showInfoMessage(`${t('player')} ${playerId+1}: ${t('phoenix-desc')}`, 2000);
+      showInfoMessage(`${t('player')} ${playerId+1}: ${t('phoenix-no-piece')}`, 2000);
     }
   }
   if (icon.item === 'cursor') {
@@ -6172,9 +6648,12 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
     pushOnlineStateLive('item-aim');
   }
   if (icon.item === 'sandglass') {
-    // Sablier : uniquement en 9×9, réduit le chrono de l'adversaire
     if (GRID_SIZE !== 9) {
       showInfoMessage('Le Sablier ne fonctionne qu\'en plateau 9×9', 2200);
+      return;
+    }
+    if (!timerEnabled || !playerTimersMs.length) {
+      showInfoMessage('Le Sablier nécessite le chronomètre activé', 2200);
       return;
     }
     if (timerEnabled && playerTimersMs.length > 0) {
@@ -6238,6 +6717,232 @@ function tryUseItem(playerId, clickedIconSprite, inventoryIndex) {
     highlightPieces(pieces, 0x9c27b0); // violet
     pushOnlineStateLive('item-aim');
   }
+  if (icon.item === 'objection') {
+    if (!lastMoveUndo || !lastMove) {
+      showInfoMessage('Objection : aucun coup à annuler', 2200);
+      return;
+    }
+    const undoSnap = {
+      player: lastMoveUndo.player,
+      from: { x: lastMoveUndo.from.x, y: lastMoveUndo.from.y },
+      to: { x: lastMoveUndo.to.x, y: lastMoveUndo.to.y }
+    };
+    if (!tryUndoLastMove()) {
+      showInfoMessage('Objection : impossible d\'annuler ce coup', 2200);
+      return;
+    }
+    // Interdit de rejouer exactement ce coup au tour suivant de l'adversaire
+    objectionBlock = {
+      playerId: undoSnap.player,
+      from: undoSnap.from,
+      to: undoSnap.to
+    };
+    consumeInventoryItemAt(playerId, idx);
+    itemUsedThisTurn = true;
+    showInfoMessage('Objection ! Coup annulé — ce déplacement est interdit le tour suivant.', 3200);
+    endTurnAfterItemConsume();
+    pushOnlineStateLive('item-objection');
+  }
+  if (icon.item === 'sonic-shoes') {
+    const eligible = pieces.filter(p => p.player === playerId && isSonicShoesEligible(p));
+    if (!eligible.length) {
+      showInfoMessage('Chaussures de Sonic : aucun pion, cavalier ou fou disponible', 2500);
+      return;
+    }
+    if (sonicShoesState && sonicShoesState.playerId === playerId) {
+      showInfoMessage('Chaussures de Sonic déjà actives ce tour', 2000);
+      return;
+    }
+    consumeInventoryItemAt(playerId, idx);
+    sonicShoesState = { playerId, phase: 'await_first', piece: null };
+    itemUsedThisTurn = true;
+    showInfoMessage('Chaussures de Sonic : deux coups avec un pion, cavalier ou fou !', 3000);
+    highlightPieces(eligible, 0x29b6f6);
+    pushOnlineStateLive('item-sonic-shoes');
+  }
+  if (icon.item === 'turret') {
+    if (maybeToggleItemCancel('turret', 'Tourelle annulée')) return;
+    currentItemAction = { playerId, type: 'turret', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: choisissez une colonne pour la tourelle (recliquez pour annuler)`, 5000);
+    const allowed = getTurretPlacablePositions();
+    highlightPositions(allowed, 0xff5252);
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'paint-bomb') {
+    if (maybeToggleItemCancel('paint-bomb', 'Bombe de peinture annulée')) return;
+    currentItemAction = { playerId, type: 'paint-bomb', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: choisissez le centre de la zone à peindre (recliquez pour annuler)`, 5000);
+    const allowed = getPaintBombPlacablePositions();
+    highlightPositions(allowed, 0xFFE600);
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'pokeball') {
+    if (trySummonPokemon(playerId)) {
+      consumeInventoryItemAt(playerId, idx);
+      itemUsedThisTurn = true;
+      showInfoMessage(`${t('player')} ${playerId+1}: un Pokémon apparaît près de votre roi !`, 2500);
+      updatePieces();
+      pushOnlineStateLive('item-pokeball');
+    } else {
+      showInfoMessage(`${t('player')} ${playerId+1}: aucune case libre près du roi`, 2200);
+    }
+  }
+  if (icon.item === 'cardboard') {
+    if (maybeToggleItemCancel('cardboard', 'Carton annulé')) return;
+    currentItemAction = { playerId, type: 'cardboard', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: choisissez une pièce à camoufler (recliquez pour annuler)`, 5000);
+    highlightPieces(pieces, 0xc8b896);
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'proximity-mine') {
+    if (maybeToggleItemCancel('proximity-mine', 'Mine annulée')) return;
+    currentItemAction = { playerId, type: 'proximity-mine', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: ${t('select-position')} la mine (recliquez pour annuler)`, 5000);
+    const allowed = getProximityMinePlacablePositions();
+    highlightPositions(allowed, 0xff7043);
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'cherry') {
+    consumeInventoryItemAt(playerId, idx);
+    itemUsedThisTurn = true;
+    cherryDoubleNext[playerId] = true;
+    showInfoMessage(`${t('player')} ${playerId+1}: Cerise Pac-Man ! Le prochain objet sera doublé !`, 3000);
+    pushOnlineStateLive('item-cherry');
+    return;
+  }
+  if (icon.item === 'storm-wall') {
+    if (roundCounter < 10) {
+      showInfoMessage('Le Mur de la Tempête ne peut être activé qu\'après 10 tours !', 3000);
+      return;
+    }
+    if (stormWallActive) {
+      showInfoMessage('Le Mur de la Tempête est déjà actif !', 2000);
+      return;
+    }
+    consumeInventoryItemAt(playerId, idx);
+    itemUsedThisTurn = true;
+    stormWallActive = true;
+    stormWallShrink = 0;
+    showInfoMessage(`${t('player')} ${playerId+1}: Mur de la Tempête activé ! Le plateau va rétrécir chaque tour.`, 4000);
+    updateStormWallVisuals(infoText && infoText.scene);
+    pushOnlineStateLive('item-storm-wall');
+    return;
+  }
+  if (icon.item === 'golden-gun') {
+    if (maybeToggleItemCancel('golden-gun', 'Golden Gun annulé')) return;
+    currentItemAction = { playerId, type: 'golden-gun', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: Golden Gun ! Cliquez sur n'importe quelle pièce pour l'éliminer.`, 5000);
+    highlightPieces(pieces, 0xffd700);
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'crowbar') {
+    if (maybeToggleItemCancel('crowbar', 'Pied de biche annulé')) return;
+    currentItemAction = { playerId, type: 'crowbar', active: true, inventoryIndex: idx };
+    showInfoMessage(`${t('player')} ${playerId+1}: Pied de biche ! Cliquez sur un obstacle à détruire.`, 5000);
+    highlightCrowbarTargets();
+    pushOnlineStateLive('item-aim');
+  }
+  if (icon.item === 'mana-potion') {
+    // Ne consomme pas le slot « un objet par tour » : le but est de pouvoir
+    // enchaîner immédiatement avec l'éclair (ou une autre capacité rechargée).
+    consumeInventoryItemAt(playerId, idx);
+    resetItemAndAbilityCooldowns(playerId);
+    showInfoMessage(`${t('player')} ${playerId+1}: Potion de mana ! Les délais d'attente sont réinitialisés — vous pouvez jouer un objet.`, 3200);
+    syncAllHtmlHudItems();
+    updatePieces();
+    pushOnlineStateLive('item-mana-potion');
+    return;
+  }
+}
+
+function highlightCrowbarTargets() {
+  const targets = [];
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      if (hasCrowbarTargetAt(x, y)) targets.push({ x, y });
+    }
+  }
+  highlightPositions(targets, 0xff6600);
+}
+
+function hasCrowbarTargetAt(x, y) {
+  if ((typeof bananas !== 'undefined') && bananas.some(b => b.x === x && b.y === y)) return true;
+  if ((typeof tetriminos !== 'undefined') && tetriminos.some(t => t.x === x && t.y === y)) return true;
+  if ((typeof paintCells !== 'undefined') && paintCells.some(p => p.x === x && p.y === y)) return true;
+  if ((typeof proximityMines !== 'undefined') && proximityMines.some(m => m.x === x && m.y === y)) return true;
+  if ((typeof turrets !== 'undefined') && turrets.some(t => t.column === x)) return true;
+  return false;
+}
+
+function removeCrowbarTargetAt(x, y) {
+  if ((typeof bananas !== 'undefined')) {
+    const idx = bananas.findIndex(b => b.x === x && b.y === y);
+    if (idx >= 0) { if (bananas[idx].sprite) bananas[idx].sprite.destroy(); bananas.splice(idx, 1); return true; }
+  }
+  if ((typeof tetriminos !== 'undefined')) {
+    const idx = tetriminos.findIndex(t => t.x === x && t.y === y);
+    if (idx >= 0) { if (tetriminos[idx].sprite) tetriminos[idx].sprite.destroy(); tetriminos.splice(idx, 1); return true; }
+  }
+  if ((typeof paintCells !== 'undefined')) {
+    const idx = paintCells.findIndex(p => p.x === x && p.y === y);
+    if (idx >= 0) {
+      const cell = paintCells[idx];
+      if (cell.sprite) cell.sprite.destroy();
+      if (cell.overlay) cell.overlay.destroy();
+      paintCells.splice(idx, 1);
+      return true;
+    }
+  }
+  if ((typeof proximityMines !== 'undefined')) {
+    const found = proximityMines.find(m => m.x === x && m.y === y);
+    if (found) { removeProximityMine(found); return true; }
+  }
+  if ((typeof turrets !== 'undefined')) {
+    const found = turrets.find(t => t.column === x);
+    if (found) { removeTurret(found); return true; }
+  }
+  return false;
+}
+
+function updateStormWallVisuals(scene) {
+  for (const o of stormWallOverlays) { if (o && o.destroy) o.destroy(); }
+  stormWallOverlays = [];
+  if (!stormWallActive || !scene || stormWallShrink <= 0) return;
+  const s = stormWallShrink;
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      if (x < s || x >= GRID_SIZE - s || y < s || y >= GRID_SIZE - s) {
+        const c = cellCenter(x, y);
+        const r = scene.add.rectangle(c.x, c.y, TILE_SIZE, TILE_SIZE, 0x6a0dad, 0.45);
+        r.setDepth(1500);
+        stormWallOverlays.push(r);
+      }
+    }
+  }
+}
+
+function tickStormWall() {
+  if (!stormWallActive) return;
+  stormWallShrink++;
+  if (stormWallShrink >= Math.floor(GRID_SIZE / 2)) {
+    stormWallActive = false;
+    showInfoMessage('La tempête a englouti tout le plateau !', 3000);
+  }
+  const s = stormWallShrink;
+  const toRemove = [];
+  for (let i = pieces.length - 1; i >= 0; i--) {
+    const p = pieces[i];
+    if (p.x < s || p.x >= GRID_SIZE - s || p.y < s || p.y >= GRID_SIZE - s) {
+      toRemove.push(i);
+    }
+  }
+  for (const i of toRemove) {
+    const victim = pieces[i];
+    if (!victim) continue;
+    showInfoMessage((victim.name || victim.type) + ' perdu(e) dans la tempête !', 2000);
+    tryDestroyPieceFromTrap(victim);
+  }
+  updateStormWallVisuals(infoText && infoText.scene);
 }
 
 function getBananaPlacablePositions() {
@@ -6333,6 +7038,442 @@ function getPathBetween(x1, y1, x2, y2) {
   }
   
   return path;
+}
+
+function finishItemPlacement(inventoryIndex, itemKey) {
+  const inventoryIdx = inventoryIndex;
+  currentItemAction.active = false;
+  currentItemAction = null;
+  itemUsedThisTurn = true;
+  clearHighlights();
+  hideInfoMessage();
+  if (playerItemIcons[currentPlayer] && playerItemIcons[currentPlayer].length) {
+    const useIdx = (typeof inventoryIdx === 'number') ? inventoryIdx : playerItemIcons[currentPlayer].findIndex(e => e && e.item === itemKey);
+    if (useIdx >= 0) {
+      const used = playerItemIcons[currentPlayer].splice(useIdx, 1)[0];
+      if (used && used.sprite) used.sprite.destroy();
+    }
+  }
+  updatePieces();
+  pushOnlineStateLive('item-' + itemKey);
+}
+
+function getCatalogPieceByType(typeKey) {
+  if (typeof piecesData === 'undefined' || !typeKey) return null;
+  return piecesData.find(p => p.type === typeKey) || null;
+}
+
+function getTurretPlacablePositions() {
+  const positions = [];
+  for (let x = 0; x < GRID_SIZE; x++) {
+    if (canPlaceTurretOnColumn(x)) {
+      for (let y = 0; y < GRID_SIZE; y++) positions.push({ x, y });
+    }
+  }
+  return positions;
+}
+
+function canPlaceTurretOnColumn(column) {
+  if (column < 0 || column >= GRID_SIZE) return false;
+  return !turrets.some(t => t.column === column);
+}
+
+function createTurretColumnVisuals(column) {
+  const scene = infoText && infoText.scene;
+  if (!scene) return [];
+  const overlays = [];
+  // Colonne entière (des deux côtés du plateau)
+  for (let y = 0; y < GRID_SIZE; y++) {
+    const c = cellCenter(column, y);
+    const rect = scene.add.rectangle(c.x, c.y, TILE_SIZE - 2, TILE_SIZE - 2, 0xff5252, 0.32).setDepth(90);
+    overlays.push(rect);
+  }
+  // Icônes aux deux extrémités + centre pour bien marquer la colonne
+  const iconYs = [0, Math.floor(GRID_SIZE / 2), GRID_SIZE - 1];
+  for (const iconY of iconYs) {
+    const iconPos = cellCenter(column, iconY);
+    const icon = scene.add.image(iconPos.x, iconPos.y, 'turret')
+      .setDisplaySize(TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+      .setDepth(151)
+      .setAlpha(0.95);
+    overlays.push(icon);
+  }
+  return overlays;
+}
+
+function placeTurretColumn(column, playerId) {
+  const overlays = createTurretColumnVisuals(column);
+  turrets.push({ column, playerId, overlays });
+  showInfoMessage(`Tourelle activée sur la colonne ${column + 1}`, 2200);
+}
+
+function removeTurret(turret) {
+  if (!turret) return;
+  if (turret.overlays) turret.overlays.forEach(o => o && o.destroy && o.destroy());
+  const idx = turrets.indexOf(turret);
+  if (idx > -1) turrets.splice(idx, 1);
+}
+
+function getPaintBombCells(center) {
+  const cells = [];
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      const x = center.x + dx;
+      const y = center.y + dy;
+      if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) cells.push({ x, y });
+    }
+  }
+  return cells;
+}
+
+function getPaintBombPlacablePositions() {
+  const positions = [];
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) positions.push({ x, y });
+  }
+  return positions;
+}
+
+function createPaintOverlay(x, y) {
+  const scene = infoText && infoText.scene;
+  if (!scene) return null;
+  const c = cellCenter(x, y);
+  // Jaune & vert lime — palette Jet Set Radio
+  const colors = [0xFFE600, 0x7CFC00];
+  const color = colors[(x + y) % colors.length];
+  return scene.add.rectangle(c.x, c.y, TILE_SIZE, TILE_SIZE, color, 0.93).setDepth(850);
+}
+
+function placePaintBomb(center) {
+  const untilRound = roundCounter + 5;
+  const cells = getPaintBombCells(center);
+  for (const cell of cells) {
+    const existing = paintCells.find(p => p.x === cell.x && p.y === cell.y);
+    if (existing) {
+      existing.untilRound = Math.max(existing.untilRound || 0, untilRound);
+      continue;
+    }
+    const sprite = createPaintOverlay(cell.x, cell.y);
+    paintCells.push({ x: cell.x, y: cell.y, sprite, untilRound });
+  }
+  showInfoMessage('Bombe de peinture : zone masquée pendant 5 tours !', 2200);
+}
+
+function getProximityMinePlacablePositions() {
+  const positions = [];
+  for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+      if (canPlaceProximityMineAt(x, y)) positions.push({ x, y });
+    }
+  }
+  return positions;
+}
+
+function canPlaceProximityMineAt(x, y) {
+  if (!isPositionEmpty(x, y)) return false;
+  if (proximityMines.some(m => m.x === x && m.y === y)) return false;
+  return true;
+}
+
+function placeProximityMine(pos, playerId) {
+  const scene = infoText && infoText.scene;
+  if (!scene) return;
+  const c = cellCenter(pos.x, pos.y);
+  const sprite = scene.add.image(c.x, c.y, 'proximity-mine').setDisplaySize(TILE_SIZE * 0.65, TILE_SIZE * 0.65).setDepth(150).setAlpha(0.95);
+  proximityMines.push({ x: pos.x, y: pos.y, playerId, sprite });
+  applyProximityMineVisibility();
+  showInfoMessage('Mine de proximité posée', 2000);
+}
+
+function removeProximityMine(mine) {
+  if (!mine) return;
+  if (mine.sprite) mine.sprite.destroy();
+  const idx = proximityMines.indexOf(mine);
+  if (idx > -1) proximityMines.splice(idx, 1);
+}
+
+function canSeeProximityMine(mine) {
+  if (!mine) return false;
+  const ctx = getUniqueAbilityCtx();
+  const online = ctx.online;
+  const mySeat = ctx.mySeat;
+  // En ligne : seul le poseur voit sa mine. En local hotseat : visible au tour du poseur.
+  if (online) {
+    return mySeat != null && mySeat === mine.playerId;
+  }
+  return currentPlayer === mine.playerId;
+}
+
+function applyProximityMineVisibility() {
+  for (const mine of proximityMines) {
+    if (!mine.sprite) continue;
+    const visible = canSeeProximityMine(mine);
+    mine.sprite.setVisible(visible);
+    mine.sprite.setAlpha(visible ? 0.95 : 0.001);
+  }
+}
+
+function canSeeCardboardEntry(entry) {
+  if (!entry) return false;
+  const ctx = getUniqueAbilityCtx();
+  const online = ctx.online;
+  const mySeat = ctx.mySeat;
+  if (online) return mySeat == null || mySeat === entry.viewerId;
+  return currentPlayer === entry.viewerId;
+}
+
+function applyCardboardToPiece(piece, viewerId) {
+  removeCardboardForPiece(piece);
+  const scene = infoText && infoText.scene;
+  let indicatorSprite = null;
+  if (scene && piece) {
+    const pos = cellCenter(piece.x, piece.y);
+    indicatorSprite = scene.add.image(pos.x + 15, pos.y - 20, 'cardboard')
+      .setDisplaySize(20, 20)
+      .setDepth(1500);
+  }
+  cardboardPieces.push({
+    piece,
+    viewerId,
+    untilRound: roundCounter + 5,
+    indicatorSprite
+  });
+  updateCardboardIndicators();
+  showInfoMessage('Carton : pièce camouflagée pendant 5 tours', 2500);
+}
+
+function tickCardboardExpiry() {
+  cardboardPieces = cardboardPieces.filter(entry => {
+    if (!entry.piece || roundCounter >= entry.untilRound) {
+      if (entry.indicatorSprite) entry.indicatorSprite.destroy();
+      return false;
+    }
+    return true;
+  });
+}
+
+function tickPaintExpiry() {
+  for (let i = paintCells.length - 1; i >= 0; i--) {
+    const pc = paintCells[i];
+    if (roundCounter >= (pc.untilRound || 0)) {
+      if (pc.sprite) pc.sprite.destroy();
+      paintCells.splice(i, 1);
+    }
+  }
+}
+
+function removeCardboardForPiece(piece) {
+  for (const entry of cardboardPieces) {
+    if (entry.piece === piece && entry.indicatorSprite) {
+      entry.indicatorSprite.destroy();
+    }
+  }
+  cardboardPieces = cardboardPieces.filter(entry => entry.piece !== piece);
+}
+
+function updateCardboardIndicators() {
+  for (const entry of cardboardPieces) {
+    if (!entry.indicatorSprite || !entry.piece) continue;
+    const p = entry.piece;
+    if (p.sprite) {
+      entry.indicatorSprite.x = p.sprite.x + 15;
+      entry.indicatorSprite.y = p.sprite.y - 20;
+    } else {
+      const c = cellCenter(p.x, p.y);
+      entry.indicatorSprite.x = c.x + 15;
+      entry.indicatorSprite.y = c.y - 20;
+    }
+    const visible = canSeeCardboardEntry(entry);
+    entry.indicatorSprite.setVisible(visible);
+    entry.indicatorSprite.setAlpha(visible ? 1 : 0.001);
+  }
+}
+
+function applyItemVisibilityEffects() {
+  const painted = new Set(paintCells.map(p => p.x + ',' + p.y));
+  const cardboardMap = new Map();
+  for (const entry of cardboardPieces) {
+    if (entry.piece) cardboardMap.set(entry.piece, entry.viewerId);
+  }
+  const ctx = getUniqueAbilityCtx();
+  const mySeat = ctx.mySeat;
+  const online = ctx.online;
+
+  for (const p of pieces) {
+    if (!p.sprite) continue;
+    let visible = true;
+    if (painted.has(p.x + ',' + p.y)) visible = false;
+    if (visible && cardboardMap.has(p)) {
+      const viewerId = cardboardMap.get(p);
+      const canSee = !online || mySeat == null || mySeat === viewerId;
+      if (!canSee) visible = false;
+    }
+    p.sprite.setVisible(visible);
+    p.sprite.setAlpha(visible ? 1 : 0.001);
+    if (p.letterText) p.letterText.setVisible(visible);
+    if (p.backgroundSprite) p.backgroundSprite.setVisible(visible);
+  }
+  applyProximityMineVisibility();
+}
+
+function forceDestroyPiece(victim) {
+  if (!victim) return;
+  const wasKing = victim.type === 'king';
+  const victimPlayer = victim.player;
+  playerLostPieces.push({ playerId: victim.player, piece: { ...victim } });
+  cleanupCursorForPiece(victim);
+  removeOcarinaFromPiece(victim);
+  removeCardboardForPiece(victim);
+  removeHeartFromPiece(victim);
+  if (victim.sprite) victim.sprite.destroy();
+  if (victim.letterText) victim.letterText.destroy();
+  if (victim.backgroundSprite) victim.backgroundSprite.destroy();
+  pieces = pieces.filter(p => p !== victim);
+  updatePieces();
+  if (wasKing) {
+    if (isClassicRulesActive()) {
+      lastEndGameReason = 'checkmate';
+      endGameWithRanking([currentPlayer, victimPlayer]);
+      return;
+    }
+    if (!eliminationOrder.includes(victimPlayer)) {
+      eliminationOrder.push(victimPlayer);
+      const piecesToRemove = pieces.filter(p => p.player === victimPlayer);
+      for (const p of piecesToRemove) {
+        if (p.sprite) p.sprite.destroy();
+        if (p.letterText) p.letterText.destroy();
+        if (p.backgroundSprite) p.backgroundSprite.destroy();
+      }
+      pieces = pieces.filter(p => p.player !== victimPlayer);
+    }
+    const remaining = [...new Set(pieces.map(p => p.player))];
+    if (remaining.length <= 1) {
+      lastEndGameReason = 'checkmate';
+      const ranking = remaining.concat(eliminationOrder.filter(id => !remaining.includes(id)).reverse());
+      endGameWithRanking(ranking);
+    }
+  }
+}
+
+function tryDestroyPieceFromTrap(victim) {
+  if (!victim) return { removed: false, kingEliminated: false, gameEnded: false };
+  const hasHeart = heartPieces.some(hp => hp.piece === victim);
+  if (hasHeart) {
+    removeHeartFromPiece(victim);
+    showInfoMessage('La pièce a perdu son cœur !', 2000);
+    return { removed: false, kingEliminated: false, gameEnded: false };
+  }
+  const wasKing = victim.type === 'king';
+  const victimPlayer = victim.player;
+  playerLostPieces.push({ playerId: victim.player, piece: { ...victim } });
+  cleanupCursorForPiece(victim);
+  removeOcarinaFromPiece(victim);
+  removeCardboardForPiece(victim);
+  if (victim.sprite) victim.sprite.destroy();
+  if (victim.letterText) victim.letterText.destroy();
+  if (victim.backgroundSprite) victim.backgroundSprite.destroy();
+  pieces = pieces.filter(p => p !== victim);
+  updatePieces();
+
+  if (!wasKing) return { removed: true, kingEliminated: false, gameEnded: false };
+
+  if (isClassicRulesActive()) {
+    lastEndGameReason = 'checkmate';
+    endGameWithRanking([currentPlayer, victimPlayer]);
+    return { removed: true, kingEliminated: true, gameEnded: true };
+  }
+  if (!eliminationOrder.includes(victimPlayer)) {
+    eliminationOrder.push(victimPlayer);
+    const piecesToRemove = pieces.filter(p => p.player === victimPlayer);
+    for (const piece of piecesToRemove) {
+      cleanupCursorForPiece(piece);
+      removeHeartFromPiece(piece);
+      removeOcarinaFromPiece(piece);
+      removeCardboardForPiece(piece);
+      if (piece.sprite) piece.sprite.destroy();
+      if (piece.letterText) piece.letterText.destroy();
+      if (piece.backgroundSprite) piece.backgroundSprite.destroy();
+    }
+    pieces = pieces.filter(p => p.player !== victimPlayer);
+    const eliminatedPlayer = players[victimPlayer];
+    showInfoMessage(`⚔️ ${eliminatedPlayer.name} a été éliminé ! Toutes ses pièces ont disparu.`, 3000);
+  }
+  const remainingKings = pieces.filter(pp => pp.type === 'king').length;
+  if (remainingKings <= 1) {
+    let winnerId = null;
+    const kingPiece = pieces.find(pp => pp.type === 'king');
+    if (kingPiece) winnerId = kingPiece.player;
+    const ranking = [];
+    if (winnerId !== null) ranking.push(winnerId);
+    for (let pid of eliminationOrder.slice().reverse()) {
+      if (winnerId === null || pid !== winnerId) ranking.push(pid);
+    }
+    endGameWithRanking(ranking);
+    return { removed: true, kingEliminated: true, gameEnded: true };
+  }
+  return { removed: true, kingEliminated: true, gameEnded: false };
+}
+
+function checkItemTrapsAfterMove(piece, from, to) {
+  if (!piece || !to) return { triggered: false, pieceRemoved: false, gameEnded: false };
+
+  const mine = proximityMines.find(m => m.x === to.x && m.y === to.y);
+  if (mine) {
+    removeProximityMine(mine);
+    showInfoMessage('Mine de proximité : explosion !', 2500);
+    const result = tryDestroyPieceFromTrap(piece);
+    return { triggered: true, pieceRemoved: result.removed, gameEnded: result.gameEnded };
+  }
+
+  // Tourelle : toute pièce adverse qui se pose sur une case de la colonne disparaît,
+  // peu importe d'où elle vient (y compris un déplacement interne à la colonne).
+  const turret = turrets.find(t =>
+    t.column === to.x &&
+    piece.player !== t.playerId
+  );
+  if (turret) {
+    const result = tryDestroyPieceFromTrap(piece);
+    if (result.removed) {
+      removeTurret(turret);
+      showInfoMessage('Tourelle : pièce adverse détruite !', 2500);
+    } else {
+      showInfoMessage('Tourelle : la pièce a résisté (cœur) !', 2200);
+    }
+    return { triggered: true, pieceRemoved: result.removed, gameEnded: result.gameEnded };
+  }
+
+  return { triggered: false, pieceRemoved: false, gameEnded: false };
+}
+
+function handlePostMoveTraps(piece, from, to) {
+  const trap = checkItemTrapsAfterMove(piece, from, to);
+  if (trap.gameEnded) return true;
+  return trap.triggered;
+}
+
+function trySummonPokemon(playerId) {
+  const king = pieces.find(p => p.player === playerId && p.type === 'king');
+  if (!king) return false;
+  const spawnPos = findNearestEmptyPosition(king.x, king.y);
+  if (!spawnPos) return false;
+  const typeKey = POKE_SUMMON_KEYS[Math.floor(Math.random() * POKE_SUMMON_KEYS.length)];
+  const cat = getCatalogPieceByType(typeKey);
+  if (!cat) return false;
+  const ctx = getUniqueAbilityCtx();
+  const summoned = ctx.spawnNeutralOrMinion({
+    x: spawnPos.x,
+    y: spawnPos.y,
+    player: playerId,
+    type: cat.type,
+    name: cat.name,
+    nameKey: cat.nameKey,
+    role: cat.role,
+    fromCatalog: cat
+  });
+  if (summoned && !summoned.onlineId) {
+    summoned.onlineId = 'summon-' + playerId + '-' + typeKey + '-' + spawnPos.x + '-' + spawnPos.y + '-' + Date.now();
+  }
+  return !!summoned;
 }
 
 function tryResurrectLastPiece(playerId) {
@@ -6443,6 +7584,9 @@ function isPositionEmpty(x, y) {
   
   // Vérifier qu'il n'y a pas de banane sur cette case
   if (bananas.some(b => b.x === x && b.y === y)) return false;
+
+  // Vérifier qu'il n'y a pas de mine sur cette case
+  if (proximityMines.some(m => m.x === x && m.y === y)) return false;
   
   // Vérifier qu'il n'y a pas de portail sur cette case
   if ((portalOrange && portalOrange.x === x && portalOrange.y === y) ||
@@ -6516,6 +7660,205 @@ function setLastMove(from, to, player) {
   };
   const scene = infoText && infoText.scene;
   refreshLastMoveOverlays(scene);
+}
+
+function snapshotPieceData(piece) {
+  if (!piece) return null;
+  return {
+    type: piece.type,
+    role: piece.role,
+    name: piece.name,
+    nameKey: piece.nameKey,
+    player: piece.player,
+    tier: piece.tier,
+    moves: piece.moves ? piece.moves.map(m => Array.isArray(m) ? m.slice() : m) : undefined,
+    range: piece.range,
+    cost: piece.cost,
+    image: piece.image,
+    onlineId: piece.onlineId,
+    x: piece.x,
+    y: piece.y
+  };
+}
+
+function recordLastMoveUndo(opts) {
+  if (!opts || opts.undoable === false || !opts.from || !opts.to) {
+    lastMoveUndo = null;
+    return;
+  }
+  lastMoveUndo = {
+    from: { x: opts.from.x, y: opts.from.y },
+    to: { x: opts.to.x, y: opts.to.y },
+    player: opts.player,
+    captured: opts.captured || null,
+    pickedItem: opts.pickedItem || null
+  };
+}
+
+function isSonicShoesEligible(piece) {
+  if (!piece) return false;
+  const role = piece.role || piece.type;
+  return role === 'pawn' || role === 'knight' || role === 'bishop';
+}
+
+function recreatePieceFromSnapshot(data, x, y) {
+  if (!data || !infoText || !infoText.scene) return null;
+  const scene = infoText.scene;
+  const playerId = data.player;
+  const resurrectedPiece = {
+    ...data,
+    x: x,
+    y: y,
+    player: playerId,
+    name: data.name || data.type
+  };
+  const faction = players[playerId] && players[playerId].faction;
+  let spriteKey;
+  if (resurrectedPiece.type === 'king') {
+    spriteKey = `king-${faction}`;
+  } else {
+    spriteKey = resurrectedPiece.type;
+  }
+  const sprite = scene.add.image(
+    GRID_OFFSET_X + resurrectedPiece.x * TILE_SIZE + TILE_SIZE / 2,
+    GRID_OFFSET_Y + resurrectedPiece.y * TILE_SIZE + TILE_SIZE / 2,
+    spriteKey
+  );
+  sprite.setDisplaySize(TILE_SIZE - 2, TILE_SIZE - 2);
+  sprite.setDepth(200);
+  sprite.setInteractive();
+  sprite.on('pointerdown', () => handleClick(scene, { x: resurrectedPiece.x, y: resurrectedPiece.y }));
+  resurrectedPiece.sprite = sprite;
+  pieces.push(resurrectedPiece);
+  return resurrectedPiece;
+}
+
+function tryUndoLastMove() {
+  if (!lastMoveUndo || !lastMove) return false;
+  const undo = lastMoveUndo;
+  const mover = getPieceAt(undo.to);
+  if (!mover || mover.player !== undo.player) return false;
+  if (getPieceAt(undo.from)) return false;
+
+  mover.x = undo.from.x;
+  mover.y = undo.from.y;
+
+  if (undo.captured) {
+    recreatePieceFromSnapshot(undo.captured, undo.to.x, undo.to.y);
+    for (let i = playerLostPieces.length - 1; i >= 0; i--) {
+      const lp = playerLostPieces[i];
+      if (!lp || lp.playerId !== undo.captured.player) continue;
+      const p = lp.piece || {};
+      if ((p.type === undo.captured.type || p.name === undo.captured.name) &&
+          p.player === undo.captured.player) {
+        playerLostPieces.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  if (undo.pickedItem && undo.pickedItem.item != null) {
+    const pid = undo.pickedItem.playerId;
+    const arr = playerItemIcons[pid] || [];
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] && arr[i].item === undo.pickedItem.item) {
+        const removed = arr.splice(i, 1)[0];
+        if (removed && removed.sprite) removed.sprite.destroy();
+        if (removed && removed.counterText) removed.counterText.destroy();
+        break;
+      }
+    }
+    const crate = (itemCrates || []).find(c => c.x === undo.to.x && c.y === undo.to.y);
+    if (crate) {
+      crate.active = true;
+      if (crate.sprite) crate.sprite.setAlpha(1);
+    }
+    syncAllHtmlHudItems();
+  }
+
+  lastMove = null;
+  lastMoveUndo = null;
+  clearLastMoveOverlays();
+  updatePieces();
+  return true;
+}
+
+/** Après un coup sous Chaussures de Sonic : conserve le tour pour le 2e coup. */
+function resolveSonicShoesPiece(stateFragment) {
+  if (!stateFragment || stateFragment.pieceX == null || stateFragment.pieceY == null) return null;
+  return getPieceAt({ x: stateFragment.pieceX, y: stateFragment.pieceY });
+}
+
+function syncSonicShoesFromRemote(stateFragment) {
+  if (!stateFragment || typeof stateFragment.playerId !== 'number') {
+    sonicShoesState = null;
+    return;
+  }
+  let shoePiece = null;
+  if (stateFragment.phase === 'await_second') {
+    if (stateFragment.pieceOnlineId) {
+      shoePiece = pieces.find(p => p.onlineId === stateFragment.pieceOnlineId) || null;
+    }
+    if (!shoePiece) shoePiece = resolveSonicShoesPiece(stateFragment);
+    if (!shoePiece) {
+      // État distant incohérent : ne pas bloquer le joueur localement
+      sonicShoesState = null;
+      return;
+    }
+  }
+  sonicShoesState = {
+    playerId: stateFragment.playerId,
+    phase: stateFragment.phase || 'await_first',
+    piece: shoePiece
+  };
+}
+
+function keepTurnAfterSonicMove(movedPiece) {
+  if (!sonicShoesState || sonicShoesState.playerId !== currentPlayer) return false;
+  if (!isSonicShoesEligible(movedPiece)) {
+    sonicShoesState = null;
+    return false;
+  }
+  if (sonicShoesState.phase === 'await_first') {
+    sonicShoesState.phase = 'await_second';
+    sonicShoesState.piece = movedPiece;
+    showInfoMessage('Chaussures de Sonic : second coup avec la même pièce !', 2800);
+    return true;
+  }
+  sonicShoesState = null;
+  return false;
+}
+
+function consumeInventoryItemAt(playerId, idx) {
+  if (!playerItemIcons[playerId] || !playerItemIcons[playerId].length) return;
+  if (idx < 0 || idx >= playerItemIcons[playerId].length) return;
+  const used = playerItemIcons[playerId].splice(idx, 1)[0];
+  if (used && used.sprite) used.sprite.destroy();
+  if (used && used.counterText) used.counterText.destroy();
+  syncAllHtmlHudItems();
+}
+
+function endTurnAfterItemConsume() {
+  moveCount++;
+  if (moveCount % 5 === 0) rotateAds();
+  updateAdInfo();
+  let oldRound = roundCounter;
+  if (shouldIncrementRoundCounter()) { roundCounter++; }
+  currentPlayer = getNextActivePlayer();
+  if (roundCounter !== oldRound) {
+    decrementLightningCharges();
+  }
+  itemUsedThisTurn = false;
+  secondaryMode = false;
+  secondaryModeUsed = false;
+  hideSecondaryModeIndicator();
+  maybeRespawnCrate(infoText && infoText.scene);
+  updateTurnUI();
+  if (timerTexts && playerNameTexts) {
+    for (let i = 0; i < timerTexts.length; i++) {
+      if (timerTexts[i] && playerNameTexts[i]) positionTimerTextNearName(timerTexts[i], playerNameTexts[i]);
+    }
+  }
 }
 
 function refreshLastMoveOverlays(scene) {
@@ -7442,12 +8785,12 @@ function maybeRespawnCrate(scene) {
     if (c.active) continue;
     if ((roundCounter - c.lastRound) >= 3) {
       c.active = true;
+      c.fake = Math.random() < 0.05;
       if (!c.sprite) {
         c.sprite = scene.add.image(0,0,'item-crate');
         c.sprite.setDisplaySize(TILE_SIZE*0.6, TILE_SIZE*0.6);
       }
       c.sprite.setAlpha(1);
-      // pas besoin de recaler x/y ici, updatePieces() le fera
     }
   }
   updatePieces();
@@ -7459,9 +8802,19 @@ function rollRandomItem() {
 
 function rollDeterministicItem(seedA, seedB, seedC) {
   let entries = Object.entries(ITEM_WEIGHTS);
-  // Sablier réservé au plateau 9×9
+  // Sablier réservé au plateau 9×9 et au mode chrono activé
   if (GRID_SIZE !== 9) {
     entries = entries.filter(([key]) => key !== 'sandglass');
+  }
+  if (!timerEnabled) {
+    entries = entries.filter(([key]) => key !== 'sandglass');
+  }
+  entries = entries.filter(([key]) => key !== 'fake-crate');
+  if (roundCounter < 10) {
+    entries = entries.filter(([key]) => key !== 'storm-wall');
+  }
+  if (stormWallActive) {
+    entries = entries.filter(([key]) => key !== 'storm-wall');
   }
   const total = entries.reduce((s, [, w]) => s + (w || 0), 0);
   if (total <= 0) return 'bobomb';
@@ -7552,6 +8905,9 @@ function checkStarEffect() {
 
 function updateTurnUI() {
   const mid = getKingCenterIndex(GRID_SIZE);
+  const prevPlayerForObjection = (typeof updateTurnUI._prevPlayer === 'number')
+    ? updateTurnUI._prevPlayer
+    : null;
 
   // Capacités Unique en début de tour
   if (typeof VGBUniqueAbilities !== 'undefined') {
@@ -7576,10 +8932,17 @@ function updateTurnUI() {
 
   // Fin de possession Sims : expire quand le tour du possesseur est passé
   expirePossessedPiecesAfterTurn();
+
+  // Objection : le coup annulé n'est plus bloqué une fois le tour de l'adversaire terminé
+  clearObjectionBlockAfterTurn(prevPlayerForObjection);
+  updateTurnUI._prevPlayer = currentPlayer;
   
   // Annuler toute action d'objet en cours au changement de tour (sécurité anti soft-lock)
   if (currentItemAction && currentItemAction.active) {
     cancelCurrentItemAction();
+  }
+  if (sonicShoesState && sonicShoesState.playerId !== currentPlayer) {
+    sonicShoesState = null;
   }
   
   // Vérifier si l'effet de l'étoile doit se terminer
@@ -7638,7 +9001,58 @@ function updateTurnUI() {
 function aiDifficultyLabel(diff) {
   if (diff === 'easy') return 'Facile';
   if (diff === 'hard') return 'Difficile';
+  if (diff === 'expert') return 'Expert';
   return 'Moyenne';
+}
+
+function normalizePieceImageUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('/')) return path;
+  if (path.startsWith('public/')) return '/' + path.slice('public/'.length);
+  return path;
+}
+
+function pickRandomFrom(arr) {
+  if (!arr || !arr.length) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/** Avatar + titre + nom affiché pour l'IA selon la difficulté. */
+function assignAiPersona() {
+  const catalog = (typeof piecesData !== 'undefined' && Array.isArray(piecesData)) ? piecesData : [];
+  const byRole = function (role) {
+    return catalog.filter(function (p) { return p.role === role && p.image; });
+  };
+  let pool = [];
+  let title = '';
+  let name = '';
+  if (aiDifficulty === 'easy') {
+    pool = byRole('pawn');
+    title = 'Recrue du plateau';
+    name = 'IA — Recrue';
+  } else if (aiDifficulty === 'hard') {
+    pool = byRole('unique').concat(byRole('queen')).concat(byRole('rook'));
+    title = 'Fléau des rois';
+    name = 'IA — Légende';
+  } else if (aiDifficulty === 'expert') {
+    pool = byRole('king');
+    title = 'Souverain absolu';
+    name = 'IA — Expert';
+  } else {
+    // medium
+    pool = byRole('knight').concat(byRole('bishop'));
+    title = 'Tacticien';
+    name = 'IA — Stratège';
+  }
+  const pick = pickRandomFrom(pool) || pickRandomFrom(catalog);
+  const avatar = pick ? normalizePieceImageUrl(pick.image) : '';
+  playerNames[aiSeat] = name;
+  playerAvatars[aiSeat] = avatar;
+  playerTitles[aiSeat] = title;
+  if (typeof players !== 'undefined' && players[aiSeat]) {
+    players[aiSeat].name = name;
+  }
+  return { name, avatar, title };
 }
 
 function readLocalAiSettings() {
@@ -7647,7 +9061,7 @@ function readLocalAiSettings() {
   aiEnabled = !!(aiRadio && aiRadio.checked);
   aiSeat = 1;
   aiDifficulty = (diffSelect && diffSelect.value) || 'medium';
-  if (!['easy', 'medium', 'hard'].includes(aiDifficulty)) aiDifficulty = 'medium';
+  if (!['easy', 'medium', 'hard', 'expert'].includes(aiDifficulty)) aiDifficulty = 'medium';
 }
 
 function syncAiDifficultyUI() {
@@ -7682,14 +9096,13 @@ function buildAiApi(onlyPiece) {
 
 function executeAiMove() {
   if (!aiEnabled || !gameStarted || currentPlayer !== aiSeat) return;
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled) return;
   if (eliminationOrder.includes(aiSeat)) return;
 
   const scene = (infoText && infoText.scene)
     || (typeof game !== 'undefined' && game.scene && game.scene.scenes && game.scene.scenes[0]);
   if (!scene || typeof VGBAI === 'undefined') {
-    // Pas de moteur IA : passer le tour pour éviter un soft-lock
-    currentPlayer = getNextActivePlayer();
-    updateTurnUI();
+    console.warn('IA indisponible — tour conservé pour le joueur humain');
     return;
   }
 
@@ -7734,7 +9147,9 @@ function scheduleAiTurn() {
   }
 
   aiThinking = true;
-  const delay = aiDifficulty === 'easy' ? 350 : (aiDifficulty === 'hard' ? 750 : 500);
+  const delay = aiDifficulty === 'easy' ? 350
+    : (aiDifficulty === 'expert' ? 900
+      : (aiDifficulty === 'hard' ? 750 : 500));
   showInfoMessage('L’IA réfléchit…', delay + 100);
 
   aiTurnTimer = setTimeout(function () {
@@ -7757,6 +9172,9 @@ function scheduleAiTurn() {
 }
 
 function decrementLightningCharges() {
+  tickCardboardExpiry();
+  tickPaintExpiry();
+  tickStormWall();
   for (let i=0; i<playerItemIcons.length; i++) {
     const arr = playerItemIcons[i] || [];
     for (const e of arr) {
@@ -7821,6 +9239,7 @@ function applyLightningKill() {
     cleanupCursorForPiece(v);
     // Nettoyer l'ocarina si la pièce en avait un
     removeOcarinaFromPiece(v);
+    removeCardboardForPiece(v);
     removeHeartFromPiece(v);
     if (v && v.sprite) v.sprite.destroy();
     if (v && v.letterText) v.letterText.destroy();
@@ -8524,19 +9943,38 @@ function recordReplaySnapshot(action) {
       };
     }),
     itemCrates: (itemCrates || []).map(function (c) {
-      return { x: c.x, y: c.y, active: !!c.active };
+      return { x: c.x, y: c.y, active: !!c.active, fake: !!c.fake };
     }),
     playerItems: (playerItemIcons || []).map(function (arr) {
       return (arr || []).map(function (e) {
         return { item: e.item, chargeTurns: e.chargeTurns || 0 };
       });
-    })
+    }),
+    // Effets d'objets visibles sur le plateau
+    portals: {
+      orange: portalOrange ? { x: portalOrange.x, y: portalOrange.y } : null,
+      blue: portalBlue ? { x: portalBlue.x, y: portalBlue.y } : null
+    },
+    tetriminos: (tetriminos || []).map(function (t) { return { x: t.x, y: t.y }; }),
+    bananas: (bananas || []).map(function (b) { return { x: b.x, y: b.y }; }),
+    turrets: (turrets || []).map(function (t) { return { column: t.column, playerId: t.playerId }; }),
+    paintCells: (paintCells || []).map(function (p) { return { x: p.x, y: p.y }; }),
+    proximityMines: (proximityMines || []).map(function (m) { return { x: m.x, y: m.y, playerId: m.playerId }; }),
+    cardboardPieces: (cardboardPieces || []).map(function (c) {
+      return {
+        x: c.piece ? c.piece.x : null,
+        y: c.piece ? c.piece.y : null,
+        viewerId: c.viewerId
+      };
+    }),
+    stormWallActive: !!stormWallActive,
+    stormWallShrink: stormWallShrink || 0
   });
 }
 
 function buildReplayPayload() {
   return {
-    version: 1,
+    version: 2,
     savedAt: new Date().toISOString(),
     gridSize: GRID_SIZE,
     players: (players || []).map(function (p, i) {
@@ -8634,6 +10072,17 @@ function closeEndGameOverlay() {
   overlay.hidden = true;
   document.body.classList.remove('end-game-open');
   isEndGameMessage = false;
+
+  // Nettoyer l'état de partie (fermeture sans reload → sinon 2e partie cassée)
+  eliminationOrder = [];
+  currentPlayer = 0;
+  onlineGameStartedOnce = false;
+  clearOnlineMatchState();
+  aiThinking = false;
+  if (aiTurnTimer) {
+    clearTimeout(aiTurnTimer);
+    aiTurnTimer = null;
+  }
 
   // Revenir à l’écran de configuration sans recharger
   const canvas = document.querySelector('.game-root canvas');
@@ -9060,12 +10509,25 @@ function syncHtmlHudItems(playerId) {
       heart: '/images/items/heart.png',
       sandglass: '/images/items/hourglass.png',
       mask: '/images/items/mask-majora.png',
-      ocarina: '/images/items/oracina.png'
+      ocarina: '/images/items/oracina.png',
+      objection: '/images/items/objection.png',
+      'sonic-shoes': '/images/items/Sonic-shoe.png',
+      turret: '/images/items/turret.png',
+      'paint-bomb': '/images/items/spray-paint-can.png',
+      pokeball: '/images/items/pokeball.png',
+      cardboard: '/images/items/cardboard.png',
+      'proximity-mine': '/images/items/local-mine.png',
+      'fake-crate': '/images/items/false-box-item-mario-kart.png',
+      cherry: '/images/items/cherry.png',
+      'storm-wall': '/images/items/storm-wall.png',
+      'golden-gun': '/images/items/golden-gun.png',
+      crowbar: '/images/items/crowbar.png',
+      'mana-potion': '/images/items/mana-potion.png'
     };
     let src = ITEM_IMG[entry.item] || ('/images/items/' + key + '.png');
     if (typeof getItemByKey === 'function') {
       const found = getItemByKey(entry.item);
-      if (found && found.image) src = found.image;
+      if (found && found.image) src = (typeof getItemImageUrl === 'function' ? getItemImageUrl(found.image) : found.image);
     }
     img.src = src;
     img.alt = entry.item;
@@ -9231,9 +10693,9 @@ function createCharacterSelectionUI() {
         showInfoMessage('Complétez votre armée (17 pièces)', 2500);
         return;
       }
-      // Armée IA aléatoire
+      // Armée IA aléatoire + persona (avatar / titre)
       if (!playerFactions[aiSeat]) playerFactions[aiSeat] = 'PlayStation';
-      playerNames[aiSeat] = 'IA — ' + aiDifficultyLabel(aiDifficulty);
+      assignAiPersona();
       const prevIdx = currentPlayerIndex;
       currentPlayerIndex = aiSeat;
       fillArmyRandomly();
@@ -9823,6 +11285,7 @@ function startGameFromSelection() {
 
   // Partie locale : s'assurer qu'aucune session online ne bloque les tours
   clearOnlineMatchState();
+  readLocalAiSettings();
   readTimerOptionsFromUI();
 
   // Avatars à jour avant intro VS / HUD
@@ -9869,6 +11332,8 @@ function applyOnlineDraftAndStart(state) {
   if (!state || !state.armies) return;
   if (onlineGameStartedOnce || gameStarted) return;
   onlineGameStartedOnce = true;
+  aiEnabled = false;
+  aiSeat = 1;
 
   playerCount = 2;
   const matchMode = (VGBOnline.match && (VGBOnline.match.gameMode || (VGBOnline.match.gridSize === 8 ? 'classic' : 'vgb'))) || 'vgb';
@@ -9958,6 +11423,20 @@ function serializeOnlineBoardState() {
       to: lastMove.to,
       player: lastMove.player
     } : null,
+    lastMoveUndo: lastMoveUndo ? {
+      from: lastMoveUndo.from,
+      to: lastMoveUndo.to,
+      player: lastMoveUndo.player,
+      captured: lastMoveUndo.captured || null,
+      pickedItem: lastMoveUndo.pickedItem || null
+    } : null,
+    sonicShoes: sonicShoesState ? {
+      playerId: sonicShoesState.playerId,
+      phase: sonicShoesState.phase,
+      pieceOnlineId: sonicShoesState.piece && sonicShoesState.piece.onlineId,
+      pieceX: sonicShoesState.piece ? sonicShoesState.piece.x : null,
+      pieceY: sonicShoesState.piece ? sonicShoesState.piece.y : null
+    } : null,
     itemAction: (currentItemAction && currentItemAction.active) ? {
       type: currentItemAction.type,
       playerId: currentItemAction.playerId,
@@ -9973,7 +11452,26 @@ function serializeOnlineBoardState() {
     },
     tetriminos: (tetriminos || []).map(t => ({ x: t.x, y: t.y })),
     bananas: (bananas || []).map(b => ({ x: b.x, y: b.y })),
-    quickChat: lastQuickChat || null
+    turrets: (turrets || []).map(t => ({ column: t.column, playerId: t.playerId })),
+    paintCells: (paintCells || []).map(p => ({ x: p.x, y: p.y, untilRound: p.untilRound || 0 })),
+    proximityMines: (proximityMines || []).map(m => ({ x: m.x, y: m.y, playerId: m.playerId })),
+    cardboardPieces: (cardboardPieces || []).map(c => ({
+      pieceOnlineId: c.piece && c.piece.onlineId,
+      pieceX: c.piece ? c.piece.x : null,
+      pieceY: c.piece ? c.piece.y : null,
+      viewerId: c.viewerId,
+      untilRound: c.untilRound
+    })),
+    quickChat: lastQuickChat || null,
+    cherryDoubleNext: cherryDoubleNext || {},
+    stormWallActive: !!stormWallActive,
+    stormWallShrink: stormWallShrink || 0,
+    itemCratesFake: (itemCrates || []).map(c => ({ x: c.x, y: c.y, fake: !!c.fake })),
+    objectionBlock: objectionBlock ? {
+      playerId: objectionBlock.playerId,
+      from: { x: objectionBlock.from.x, y: objectionBlock.from.y },
+      to: { x: objectionBlock.to.x, y: objectionBlock.to.y }
+    } : null
   };
 }
 
@@ -10075,6 +11573,95 @@ function applyRemoteItemsState(state) {
       }
     }
   }
+
+  if (Array.isArray(state.turrets)) {
+    const remoteCols = state.turrets.map(t => t.column);
+    for (let i = turrets.length - 1; i >= 0; i--) {
+      if (!remoteCols.includes(turrets[i].column)) removeTurret(turrets[i]);
+    }
+    for (const rt of state.turrets) {
+      if (!turrets.some(t => t.column === rt.column)) {
+        placeTurretColumn(rt.column, rt.playerId);
+      }
+    }
+  }
+
+  if (Array.isArray(state.paintCells)) {
+    const remoteKeys = state.paintCells.map(p => p.x + ',' + p.y);
+    for (let i = paintCells.length - 1; i >= 0; i--) {
+      const p = paintCells[i];
+      if (!remoteKeys.includes(p.x + ',' + p.y)) {
+        if (p.sprite) p.sprite.destroy();
+        paintCells.splice(i, 1);
+      }
+    }
+    for (const rp of state.paintCells) {
+      if (!paintCells.some(p => p.x === rp.x && p.y === rp.y)) {
+        const sprite = createPaintOverlay(rp.x, rp.y);
+        paintCells.push({ x: rp.x, y: rp.y, sprite, untilRound: rp.untilRound || roundCounter + 5 });
+      } else {
+        const existing = paintCells.find(p => p.x === rp.x && p.y === rp.y);
+        if (existing && rp.untilRound != null) {
+          existing.untilRound = Math.max(existing.untilRound || 0, rp.untilRound);
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(state.proximityMines)) {
+    const remoteKeys = state.proximityMines.map(m => m.x + ',' + m.y);
+    for (let i = proximityMines.length - 1; i >= 0; i--) {
+      const m = proximityMines[i];
+      if (!remoteKeys.includes(m.x + ',' + m.y)) removeProximityMine(m);
+    }
+    for (const rm of state.proximityMines) {
+      if (!proximityMines.some(m => m.x === rm.x && m.y === rm.y)) {
+        placeProximityMine({ x: rm.x, y: rm.y }, rm.playerId);
+      }
+    }
+  }
+
+  if (Array.isArray(state.cardboardPieces)) {
+    for (const entry of cardboardPieces) {
+      if (entry.indicatorSprite) entry.indicatorSprite.destroy();
+    }
+    cardboardPieces = state.cardboardPieces.map(rc => {
+      let piece = null;
+      if (rc.pieceOnlineId) piece = pieces.find(p => p.onlineId === rc.pieceOnlineId) || null;
+      if (!piece && rc.pieceX != null && rc.pieceY != null) {
+        piece = getPieceAt({ x: rc.pieceX, y: rc.pieceY });
+      }
+      if (!piece) return null;
+      let indicatorSprite = null;
+      const pos = cellCenter(piece.x, piece.y);
+      indicatorSprite = scene.add.image(pos.x + 15, pos.y - 20, 'cardboard')
+        .setDisplaySize(20, 20)
+        .setDepth(1500);
+      return { piece, viewerId: rc.viewerId, untilRound: rc.untilRound, indicatorSprite };
+    }).filter(Boolean);
+    updateCardboardIndicators();
+  }
+  if (state.cherryDoubleNext) cherryDoubleNext = state.cherryDoubleNext;
+  if (state.stormWallActive != null) {
+    stormWallActive = state.stormWallActive;
+    stormWallShrink = state.stormWallShrink || 0;
+    updateStormWallVisuals(scene);
+  }
+  if (Array.isArray(state.itemCratesFake)) {
+    for (const rf of state.itemCratesFake) {
+      const local = (itemCrates || []).find(c => c.x === rf.x && c.y === rf.y);
+      if (local) local.fake = rf.fake;
+    }
+  }
+  if (state.objectionBlock && state.objectionBlock.from && state.objectionBlock.to) {
+    objectionBlock = {
+      playerId: state.objectionBlock.playerId,
+      from: { x: state.objectionBlock.from.x, y: state.objectionBlock.from.y },
+      to: { x: state.objectionBlock.to.x, y: state.objectionBlock.to.y }
+    };
+  } else if (state.objectionBlock === null) {
+    objectionBlock = null;
+  }
 }
 
 function applyRemoteBoardState(state) {
@@ -10153,6 +11740,24 @@ function applyRemoteBoardState(state) {
         to: { x: state.lastMove.to.x, y: state.lastMove.to.y },
         player: state.lastMove.player
       };
+    } else {
+      lastMove = null;
+    }
+    if (state.lastMoveUndo && state.lastMoveUndo.from && state.lastMoveUndo.to) {
+      lastMoveUndo = {
+        from: { x: state.lastMoveUndo.from.x, y: state.lastMoveUndo.from.y },
+        to: { x: state.lastMoveUndo.to.x, y: state.lastMoveUndo.to.y },
+        player: state.lastMoveUndo.player,
+        captured: state.lastMoveUndo.captured || null,
+        pickedItem: state.lastMoveUndo.pickedItem || null
+      };
+    } else if (!state.lastMove) {
+      lastMoveUndo = null;
+    }
+    if (state.sonicShoes && typeof state.sonicShoes.playerId === 'number') {
+      syncSonicShoesFromRemote(state.sonicShoes);
+    } else {
+      sonicShoesState = null;
     }
     if (state.itemAction && state.itemAction.active !== false && state.itemAction.type) {
       const label = state.itemAction.type;
@@ -10278,7 +11883,10 @@ function createPiecesFromSelection() {
   });
 
   document.querySelectorAll('input[name="local-opponent"]').forEach(function (el) {
-    el.addEventListener('change', syncAiDifficultyUI);
+    el.addEventListener('change', function () {
+      readLocalAiSettings();
+      syncAiDifficultyUI();
+    });
   });
   syncAiDifficultyUI();
 

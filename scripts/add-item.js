@@ -58,7 +58,7 @@ function addItemToItems(itemData) {
     nameKey: "${itemData.nameKey}",
     description: "${itemData.description}",
     descriptionKey: "${itemData.nameKey}-desc",
-    image: "public/images/items/${itemData.imageName}",
+    image: "/images/items/${itemData.imageName}",
     weight: ${itemData.weight},
     type: "${itemData.nameKey}"
   }`;
