@@ -467,7 +467,7 @@
   padding: 24px 16px;
   box-shadow: var(--shadow-medium);
   text-align: center;
-  max-width: 600px;
+  max-width: 720px;
   width: 100%;
 }
 
@@ -601,6 +601,152 @@
   border-color: #ffd700;
   background: rgba(255, 215, 0, 0.12);
   color: #ffd700;
+}
+
+/* Menu d’accueil style Smash — tuiles colorées */
+.home-mode-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+@media (min-width: 560px) {
+  .home-mode-menu {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.home-mode-tile {
+  appearance: none;
+  border: 3px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  min-height: 108px;
+  padding: 14px 10px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+}
+.home-mode-tile:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+  box-shadow: 0 9px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.home-mode-tile:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.35);
+}
+.home-mode-tile .tile-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  line-height: 1;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.22);
+  border: 2px solid rgba(255,255,255,0.28);
+}
+.home-mode-tile .tile-label {
+  font-size: clamp(12px, 2.8vw, 14px);
+  line-height: 1.2;
+}
+.home-mode-tile .tile-sub {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.85;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.home-mode-tile.tile-versus {
+  background: linear-gradient(160deg, #3498db, #1a5276);
+  border-color: #5dade2;
+}
+.home-mode-tile.tile-cpu {
+  background: linear-gradient(160deg, #9b59b6, #5b2c6f);
+  border-color: #bb8fce;
+}
+.home-mode-tile.tile-online {
+  background: linear-gradient(160deg, #e67e22, #a04000);
+  border-color: #f5b041;
+}
+.home-mode-tile.tile-classic {
+  background: linear-gradient(160deg, #1abc9c, #0e6655);
+  border-color: #76d7c4;
+}
+.home-mode-tile.tile-tournament {
+  background: linear-gradient(160deg, #e74c3c, #7b241c);
+  border-color: #f1948a;
+}
+.home-mode-tile.tile-span {
+  grid-column: 1 / -1;
+}
+@media (min-width: 560px) {
+  .home-mode-tile.tile-span {
+    grid-column: auto;
+  }
+}
+.home-mode-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.home-mode-back:hover {
+  color: #ffd700;
+  border-color: rgba(255,215,0,0.45);
+}
+.setup-detail-panel[hidden] {
+  display: none !important;
+}
+.tournament-setup {
+  text-align: left;
+}
+.tournament-setup .tournament-sizes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.tournament-size-btn {
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 48px;
+}
+.tournament-size-btn.active {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255,215,0,0.12);
+}
+.tournament-soon {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .online-panel {
@@ -1812,6 +1958,64 @@
 .faction-tag.sega { background: var(--accent-blue); color: #fff; }
 .faction-tag.xbox { background: var(--accent-green); color: #fff; }
 
+.end-game-cg {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(230, 126, 34, 0.14), rgba(0, 0, 0, 0.25));
+  border: 1px solid rgba(230, 126, 34, 0.4);
+  text-align: left;
+}
+.end-game-cg-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffd28a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.end-game-cg-desc {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.end-game-cg-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.end-game-cg-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.end-game-cg-link:hover {
+  border-color: rgba(255, 210, 138, 0.55);
+  background: rgba(230, 126, 34, 0.18);
+}
+.end-game-cg-link .cg-chip {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #ffd28a;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 210, 138, 0.45);
+}
+
+
 .end-game-ranking {
   list-style: none;
   margin: 0;
@@ -2067,13 +2271,45 @@ body.end-game-open {
   <!-- Configuration de la partie -->
   <div id="game-setup" class="game-setup">
     <div class="setup-card">
-      <h2 class="setup-title" data-t="game-title">Configuration de la partie</h2>
+      <h2 class="setup-title" data-t="game-title">Choisissez un mode</h2>
 
-      <div class="mode-toggle" role="tablist">
+      <div id="home-mode-menu" class="home-mode-menu" role="navigation" aria-label="Modes de jeu">
+        <button type="button" class="home-mode-tile tile-versus" data-home-mode="versus">
+          <span class="tile-icon" aria-hidden="true">⚔️</span>
+          <span class="tile-label">Local 1v1</span>
+          <span class="tile-sub">Même appareil</span>
+        </button>
+        <button type="button" class="home-mode-tile tile-cpu" data-home-mode="cpu">
+          <span class="tile-icon" aria-hidden="true">🤖</span>
+          <span class="tile-label">Contre l’IA</span>
+          <span class="tile-sub">4 difficultés</span>
+        </button>
+        <button type="button" class="home-mode-tile tile-online" data-home-mode="online">
+          <span class="tile-icon" aria-hidden="true">🌐</span>
+          <span class="tile-label">En ligne</span>
+          <span class="tile-sub">Classé Elo</span>
+        </button>
+        <button type="button" class="home-mode-tile tile-classic" data-home-mode="classic">
+          <span class="tile-icon" aria-hidden="true">♟️</span>
+          <span class="tile-label">Échecs</span>
+          <span class="tile-sub">8×8 classique</span>
+        </button>
+        <button type="button" class="home-mode-tile tile-tournament tile-span" data-home-mode="tournament">
+          <span class="tile-icon" aria-hidden="true">🏆</span>
+          <span class="tile-label">Tournoi</span>
+          <span class="tile-sub">8 / 16 / 32 / 64</span>
+        </button>
+      </div>
+
+      <!-- Conservés pour compat JS (masqués) -->
+      <div class="mode-toggle" role="tablist" hidden aria-hidden="true">
         <button type="button" class="mode-btn active" id="mode-local" data-mode="local">Local</button>
         <button type="button" class="mode-btn" id="mode-online" data-mode="online">En ligne (Elo)</button>
       </div>
-      
+
+      <div id="setup-detail" class="setup-detail-panel" hidden>
+        <button type="button" class="home-mode-back" id="home-mode-back">← Retour aux modes</button>
+
       <div id="local-setup">
         <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px;">
           Composez votre armée selon le mode choisi.
@@ -2137,6 +2373,10 @@ body.end-game-open {
             <input id="online-username" type="text" maxlength="24" placeholder="Pseudo" autocomplete="username" />
           </div>
           <div class="row">
+            <label for="online-email">Email (création de compte)</label>
+            <input id="online-email" type="email" maxlength="120" placeholder="email@exemple.com" autocomplete="email" />
+          </div>
+          <div class="row">
             <label for="online-password">Mot de passe</label>
             <input id="online-password" type="password" maxlength="64" placeholder="Mot de passe" autocomplete="current-password" />
           </div>
@@ -2144,6 +2384,7 @@ body.end-game-open {
             <button type="button" class="setup-btn" id="btn-online-login" style="flex:1;">Connexion</button>
             <button type="button" class="setup-btn" id="btn-online-register" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);">Créer un compte</button>
           </div>
+          <p style="margin:10px 0 0;font-size:12px;"><a href="/forgot-password.html" style="color:var(--accent-gold);">Mot de passe oublié ?</a></p>
         </div>
         <div id="online-play-box" style="display:none;">
           <div class="elo-badge" id="online-elo-badge">Elo —</div>
@@ -2155,8 +2396,8 @@ body.end-game-open {
             <p style="margin:0 0 8px;color:var(--text-secondary);font-size:13px;">Partie privée (amis)</p>
             <p id="online-user-id" style="margin:0 0 10px;font-size:12px;color:var(--text-muted);word-break:break-all;"></p>
             <div class="row" style="margin-bottom:8px;">
-              <label for="challenge-user-id">Défier un ID (opt.)</label>
-              <input id="challenge-user-id" type="text" maxlength="32" placeholder="ID de l'adversaire" autocomplete="off" />
+              <label for="challenge-user-id">Défier un joueur (opt.)</label>
+              <input id="challenge-user-id" type="text" maxlength="32" placeholder="Identifiant adversaire" autocomplete="off" />
             </div>
             <button type="button" class="setup-btn secondary" id="btn-create-private" style="width:100%;margin-bottom:8px;">Créer une partie privée</button>
             <div id="private-room-info" style="display:none;margin-bottom:10px;padding:10px;border-radius:8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);">
@@ -2169,20 +2410,36 @@ body.end-game-open {
               <input id="join-room-code" type="text" maxlength="8" placeholder="Ex. A1B2C3" autocomplete="off" />
             </div>
             <div class="row" style="margin-bottom:8px;">
-              <label for="join-host-id">Ou ID joueur</label>
-              <input id="join-host-id" type="text" maxlength="32" placeholder="ID MongoDB de l'hôte" autocomplete="off" />
+              <label for="join-host-id">Ou identifiant joueur</label>
+              <input id="join-host-id" type="text" maxlength="32" placeholder="Identifiant de l’hôte" autocomplete="off" />
             </div>
             <button type="button" class="setup-btn" id="btn-join-private" style="width:100%;">Rejoindre la partie</button>
           </div>
           <p id="match-status" style="margin-top:12px;color:var(--text-secondary);font-size:13px;"></p>
           <button type="button" class="mode-btn" id="btn-logout" style="margin-top:8px;">Se déconnecter</button>
         </div>
-        <div class="leaderboard-mini">
-          <h3>Classement Elo</h3>
-          <ol id="elo-leaderboard"><li>Chargement…</li></ol>
-          <p style="margin:8px 0 0;"><a href="classement.html" style="color:#ffd700;">Voir le classement complet →</a></p>
+        <div class="leaderboard-mini" style="margin-top:20px;text-align:left;">
+          <h3 style="color:var(--accent-gold);font-size:14px;margin:0 0 8px;">Top Elo</h3>
+          <ol id="elo-leaderboard" style="margin:0;padding-left:20px;color:var(--text-secondary);font-size:13px;"></ol>
+          <a href="/classement.html" style="display:inline-block;margin-top:8px;color:var(--accent-gold);font-size:13px;">Classement complet →</a>
         </div>
       </div>
+
+      <div id="tournament-setup" class="tournament-setup" hidden>
+        <p style="color:var(--text-secondary);font-size:14px;margin:0 0 8px;">
+          Préparez un bracket à élimination directe. Choisissez la taille du tournoi :
+        </p>
+        <div class="tournament-sizes" role="group" aria-label="Taille du tournoi">
+          <button type="button" class="tournament-size-btn active" data-size="8">8</button>
+          <button type="button" class="tournament-size-btn" data-size="16">16</button>
+          <button type="button" class="tournament-size-btn" data-size="32">32</button>
+          <button type="button" class="tournament-size-btn" data-size="64">64</button>
+        </div>
+        <p class="tournament-soon">
+          Mode tournoi bientôt disponible — l’interface et les tailles 8 / 16 / 32 / 64 sont déjà prévues.
+        </p>
+      </div>
+      </div><!-- /setup-detail -->
     </div>
   </div>
   
@@ -2261,6 +2518,8 @@ body.end-game-open {
 <script src="/js/header.js"></script>
 <script src="/js/profile-ui.js?v=20260726b"></script>
 <script src="/data/pieces.js?v=20260720u"></script>
+<script src="/data/piece-fiches.js?v=20260805a"></script>
+<script src="/data/cg-endgame-sheets.js?v=20260805a"></script>
 <script src="/data/items.js"></script>
 <script src="/js/translations.js?v=20260725a"></script>
 <script src="/js/piece-flavor.js?v=20260725b"></script>
@@ -10176,11 +10435,109 @@ function showEndGameOverlay(opts) {
   eloSlot.hidden = true;
   body.appendChild(eloSlot);
 
+  const cgBlock = buildEndGameCultureGamesBlock(ranking);
+  if (cgBlock) body.appendChild(cgBlock);
+
   overlay.hidden = false;
   document.body.classList.add('end-game-open');
 
   const btn = overlay.querySelector('#end-game-close-btn');
   if (btn) btn.focus();
+}
+
+function pickRandom(arr) {
+  if (!arr || !arr.length) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function collectMatchUniverses() {
+  const universes = [];
+  const seen = new Set();
+
+  function addFromKey(key, uniHint) {
+    let uni = uniHint;
+    if (!uni && key && typeof piecesData !== 'undefined') {
+      const ref = piecesData.find(function (x) {
+        return x.nameKey === key || x.type === key;
+      });
+      if (ref) uni = ref.universe;
+    }
+    if (uni && !seen.has(uni)) {
+      seen.add(uni);
+      universes.push(uni);
+    }
+  }
+
+  const armies = (typeof playerArmies !== 'undefined' && playerArmies) ? playerArmies : [];
+  armies.forEach(function (army) {
+    (army || []).forEach(function (p) {
+      if (typeof p === 'string') addFromKey(p);
+      else if (p) addFromKey(p.nameKey || p.type, p.universe);
+    });
+  });
+
+  if (typeof pieces !== 'undefined' && Array.isArray(pieces)) {
+    pieces.forEach(function (p) {
+      if (!p || p.role === 'king') return;
+      addFromKey(p.nameKey || p.type, p.universe);
+    });
+  }
+  return universes;
+}
+
+function buildEndGameCultureGamesBlock(ranking) {
+  const data = (typeof VGB_CG_ENDGAME_SHEETS !== 'undefined') ? VGB_CG_ENDGAME_SHEETS : null;
+  if (!data || !data.factions) return null;
+
+  const winnerId = ranking && ranking.length ? ranking[0] : 0;
+  const winnerInfo = getPlayerDisplayInfo(winnerId);
+  let faction = winnerInfo.faction || 'Nintendo';
+  if (faction === 'Playstation') faction = 'PlayStation';
+  const factionSheets = data.factions[faction] || data.factions.Nintendo || [];
+  const factionPick = pickRandom(factionSheets);
+
+  const universes = collectMatchUniverses();
+  let seriesPick = null;
+  let seriesLabel = '';
+  if (data.series && universes.length) {
+    const shuffled = universes.slice().sort(function () { return Math.random() - 0.5; });
+    for (let i = 0; i < shuffled.length; i++) {
+      const uni = shuffled[i];
+      const list = data.series[uni];
+      if (list && list.length) {
+        seriesPick = pickRandom(list);
+        seriesLabel = uni;
+        break;
+      }
+    }
+  }
+
+  if (!factionPick && !seriesPick) return null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'end-game-cg';
+  let html =
+    '<p class="end-game-cg-title">Culture Games</p>' +
+    '<p class="end-game-cg-desc">Pour aller plus loin après cette partie :</p>' +
+    '<div class="end-game-cg-links">';
+
+  if (factionPick) {
+    html +=
+      '<a class="end-game-cg-link" href="' + escapeHtml(factionPick.url) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span>Découvrir : ' + escapeHtml(factionPick.title) + ' <small style="opacity:.7">(' + escapeHtml(faction) + ')</small></span>' +
+        '<span class="cg-chip">Culture Games</span>' +
+      '</a>';
+  }
+  if (seriesPick) {
+    html +=
+      '<a class="end-game-cg-link" href="' + escapeHtml(seriesPick.url) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span>Série ' + escapeHtml(seriesLabel) + ' : ' + escapeHtml(seriesPick.title) + '</span>' +
+        '<span class="cg-chip">Culture Games</span>' +
+      '</a>';
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+  return wrap;
 }
 
 function buildEndGameWinnerBlock(info) {
@@ -11872,17 +12229,99 @@ function createPiecesFromSelection() {
   const modeOnline = document.getElementById('mode-online');
   const localSetup = document.getElementById('local-setup');
   const onlineSetup = document.getElementById('online-setup');
+  const homeMenu = document.getElementById('home-mode-menu');
+  const setupDetail = document.getElementById('setup-detail');
+  const tournamentSetup = document.getElementById('tournament-setup');
+  const homeBack = document.getElementById('home-mode-back');
+  const setupTitle = document.querySelector('.setup-title');
   if (!modeLocal || !modeOnline) return;
 
-  function setMode(mode) {
-    const isOnline = mode === 'online';
-    modeLocal.classList.toggle('active', !isOnline);
-    modeOnline.classList.toggle('active', isOnline);
-    if (localSetup) localSetup.style.display = isOnline ? 'none' : 'block';
-    if (onlineSetup) onlineSetup.classList.toggle('visible', isOnline);
-    if (!isOnline) clearOnlineMatchState();
-    if (isOnline) refreshOnlineUI();
+  function showHomeMenu() {
+    if (homeMenu) homeMenu.hidden = false;
+    if (setupDetail) setupDetail.hidden = true;
+    if (setupTitle) setupTitle.textContent = 'Choisissez un mode';
+    clearOnlineMatchState();
   }
+
+  function openSetupPanel(mode) {
+    if (homeMenu) homeMenu.hidden = true;
+    if (setupDetail) setupDetail.hidden = false;
+    if (localSetup) localSetup.style.display = 'none';
+    if (onlineSetup) onlineSetup.classList.remove('visible');
+    if (onlineSetup) onlineSetup.style.display = 'none';
+    if (tournamentSetup) tournamentSetup.hidden = true;
+
+    const titles = {
+      versus: 'Local 1v1',
+      cpu: 'Contre l’IA',
+      classic: 'Échecs traditionnels',
+      online: 'En ligne (Elo)',
+      tournament: 'Tournoi'
+    };
+    if (setupTitle) setupTitle.textContent = titles[mode] || 'Configuration';
+
+    if (mode === 'tournament') {
+      if (tournamentSetup) tournamentSetup.hidden = false;
+      modeLocal.classList.add('active');
+      modeOnline.classList.remove('active');
+      return;
+    }
+
+    if (mode === 'online') {
+      aiEnabled = false;
+      modeLocal.classList.remove('active');
+      modeOnline.classList.add('active');
+      if (onlineSetup) {
+        onlineSetup.classList.add('visible');
+        onlineSetup.style.display = 'block';
+      }
+      refreshOnlineUI();
+      return;
+    }
+
+    // Local panels
+    modeLocal.classList.add('active');
+    modeOnline.classList.remove('active');
+    if (localSetup) localSetup.style.display = 'block';
+    const modeVgb = document.getElementById('mode-vgb');
+    const modeClassic = document.getElementById('mode-classic');
+    const oppHuman = document.getElementById('opponent-human');
+    const oppAi = document.getElementById('opponent-ai');
+    if (mode === 'classic') {
+      if (modeClassic) modeClassic.checked = true;
+      if (oppHuman) oppHuman.checked = true;
+    } else if (mode === 'cpu') {
+      if (modeVgb) modeVgb.checked = true;
+      if (oppAi) oppAi.checked = true;
+    } else {
+      if (modeVgb) modeVgb.checked = true;
+      if (oppHuman) oppHuman.checked = true;
+    }
+    if (typeof readLocalAiSettings === 'function') readLocalAiSettings();
+    if (typeof syncAiDifficultyUI === 'function') syncAiDifficultyUI();
+    clearOnlineMatchState();
+  }
+
+  function setMode(mode) {
+    openSetupPanel(mode === 'online' ? 'online' : 'versus');
+  }
+
+  if (homeMenu) {
+    homeMenu.addEventListener('click', function (e) {
+      const tile = e.target.closest('[data-home-mode]');
+      if (!tile) return;
+      openSetupPanel(tile.getAttribute('data-home-mode'));
+    });
+  }
+  if (homeBack) homeBack.addEventListener('click', showHomeMenu);
+
+  document.querySelectorAll('.tournament-size-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tournament-size-btn').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+    });
+  });
 
   modeLocal.addEventListener('click', () => setMode('local'));
   modeOnline.addEventListener('click', () => {
@@ -11897,6 +12336,7 @@ function createPiecesFromSelection() {
     });
   });
   syncAiDifficultyUI();
+  showHomeMenu();
 
   async function refreshLeaderboard() {
     const ol = document.getElementById('elo-leaderboard');
@@ -11934,7 +12374,7 @@ function createPiecesFromSelection() {
     if (label && VGBOnline.user) label.textContent = `Connecté : ${VGBOnline.user.username}`;
     if (idEl && VGBOnline.user) {
       idEl.textContent = VGBOnline.user.id
-        ? `Votre ID (à partager) : ${VGBOnline.user.id}`
+        ? `Votre identifiant (à partager) : ${VGBOnline.user.id}`
         : '';
     }
   }
@@ -11973,8 +12413,11 @@ function createPiecesFromSelection() {
     const u = document.getElementById('online-username').value.trim();
     const p = document.getElementById('online-password').value;
     try {
-      if (isRegister) await VGBOnline.register(u, p);
-      else await VGBOnline.login(u, p);
+      if (isRegister) {
+        const emailEl = document.getElementById('online-email');
+        const email = emailEl ? emailEl.value.trim() : '';
+        await VGBOnline.register(u, p, email);
+      } else await VGBOnline.login(u, p);
       showLoggedIn();
       refreshLeaderboard();
     } catch (e) {
@@ -12088,7 +12531,7 @@ function createPiecesFromSelection() {
     const roomCode = codeEl ? codeEl.value.trim().toUpperCase() : '';
     const hostId = hostEl ? hostEl.value.trim() : '';
     if (!roomCode && !hostId) {
-      statusEl.textContent = 'Entrez un code de partie ou l’ID de l’hôte';
+      statusEl.textContent = 'Entrez un code de partie ou l’identifiant de l’hôte';
       return;
     }
     try {

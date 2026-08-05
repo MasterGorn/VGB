@@ -7,21 +7,28 @@ $action = $input['action'] ?? ($_GET['action'] ?? '');
 if ($action === 'register') {
   $username = trim((string)($input['username'] ?? ''));
   $password = (string)($input['password'] ?? '');
+  $email = strtolower(trim((string)($input['email'] ?? '')));
   if (strlen($username) < 3 || strlen($username) > 24) {
     vgb_error('Pseudo entre 3 et 24 caractères');
   }
   if (!preg_match('/^[a-zA-Z0-9_\-]+$/', $username)) {
     vgb_error('Pseudo: lettres, chiffres, _ et - uniquement');
   }
-  if (strlen($password) < 4) {
-    vgb_error('Mot de passe trop court (min. 4)');
+  if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    vgb_error('Email valide requis');
+  }
+  if (strlen($password) < 6) {
+    vgb_error('Mot de passe trop court (min. 6)');
   }
 
   $pdo = vgb_db();
   try {
-    $stmt = $pdo->prepare('INSERT INTO users (username, password_hash, elo) VALUES (?, ?, ?)');
-    $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), VGB_ELO_DEFAULT]);
+    $stmt = $pdo->prepare('INSERT INTO users (username, password_hash, elo, email) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), VGB_ELO_DEFAULT, $email]);
   } catch (PDOException $e) {
+    if (stripos($e->getMessage(), 'email') !== false) {
+      vgb_error('Cet email est déjà utilisé', 409);
+    }
     vgb_error('Ce pseudo est déjà pris', 409);
   }
 

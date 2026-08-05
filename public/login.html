@@ -149,48 +149,65 @@
   .profile-save-msg { font-size: 13px; margin-top: 8px; color: #2ecc71; }
 
   .match-history {
+    margin: 16px 0 4px;
+    padding: 14px 14px 12px;
+    border-radius: 12px;
+    background: linear-gradient(160deg, rgba(255, 215, 0, 0.08), rgba(0, 0, 0, 0.28));
+    border: 1px solid rgba(255, 215, 0, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  .match-history-head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
+    justify-content: space-between;
     gap: 8px;
-    margin: 14px 0 4px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 10px;
   }
   .match-history-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    margin: 0;
+  }
+  .match-history-hint {
     font-size: 11px;
-    color: rgba(255,255,255,0.55);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-right: 2px;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .match-history-track {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .match-history-dot {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     line-height: 1;
     box-sizing: border-box;
   }
   .match-history-dot.win {
-    background: #2ecc71;
+    background: linear-gradient(145deg, #2ecc71, #1e8449);
     color: #fff;
-    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.35);
+    box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.45);
   }
   .match-history-dot.loss {
-    background: #e74c3c;
+    background: linear-gradient(145deg, #e74c3c, #922b21);
     color: #fff;
   }
   .match-history-dot.draw {
-    background: #95a5a6;
+    background: linear-gradient(145deg, #95a5a6, #7f8c8d);
     color: #fff;
   }
   .match-history-dot.empty {
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.22);
   }
 
   .replay-section {
@@ -281,6 +298,10 @@
       <label for="username">Pseudo</label>
       <input id="username" type="text" maxlength="24" autocomplete="username" />
     </div>
+    <div class="row" id="email-row">
+      <label for="email">Email</label>
+      <input id="email" type="email" maxlength="120" autocomplete="email" placeholder="pour mot de passe oublié" />
+    </div>
     <div class="row">
       <label for="password">Mot de passe</label>
       <input id="password" type="password" maxlength="64" autocomplete="current-password" />
@@ -289,7 +310,7 @@
       <button type="button" id="btn-login">Connexion</button>
       <button type="button" id="btn-register">Créer un compte</button>
     </div>
-    <p class="hint">Le même compte sert pour le mode en ligne classé (Elo) sur la page Jouer.</p>
+    <p class="hint">L’email sert à sécuriser le compte et à récupérer un mot de passe oublié. <a href="/forgot-password.html">Mot de passe oublié ?</a></p>
     <p class="msg" id="msg"></p>
   </div>
   <div class="card" id="profile-card" style="display:none;">
@@ -299,11 +320,17 @@
         <p id="profile-name"></p>
         <p class="profile-title-preview" id="profile-title-preview"></p>
         <p class="elo" id="profile-elo" style="margin:0;"></p>
+        <p id="profile-email" style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.65);"></p>
       </div>
     </div>
-    <div class="match-history" id="match-history" aria-label="Historique des 5 derniers matchs"></div>
+    <div class="match-history" id="match-history" aria-label="Historique des 10 dernières parties"></div>
 
     <div class="profile-edit-section">
+      <h2>Email</h2>
+      <div class="row">
+        <label for="profile-email-input">Adresse email</label>
+        <input id="profile-email-input" type="email" maxlength="120" autocomplete="email" />
+      </div>
       <h2>Avatar</h2>
       <div class="avatar-grid" id="avatar-grid"></div>
       <h2 style="margin-top:16px;">Titre</h2>
@@ -481,13 +508,20 @@ let profileTitleList = null;
 function renderMatchHistory(results) {
   const el = document.getElementById('match-history');
   if (!el) return;
-  const slots = Array.isArray(results) ? results.slice(0, 5) : [];
-  while (slots.length < 5) slots.push(null);
-  el.innerHTML = '<span class="match-history-label">Forme</span>' + slots.map(function (r) {
-    if (r === 'W') return '<span class="match-history-dot win" title="Victoire">✓</span>';
-    if (r === 'L') return '<span class="match-history-dot loss" title="Défaite">✕</span>';
+  const slots = Array.isArray(results) ? results.slice(0, 10) : [];
+  while (slots.length < 10) slots.push(null);
+  const dots = slots.map(function (r) {
+    if (r === 'W') return '<span class="match-history-dot win" title="Victoire">V</span>';
+    if (r === 'L') return '<span class="match-history-dot loss" title="Défaite">D</span>';
+    if (r === 'D') return '<span class="match-history-dot draw" title="Nul">N</span>';
     return '<span class="match-history-dot empty" title="Pas encore joué"></span>';
   }).join('');
+  el.innerHTML =
+    '<div class="match-history-head">' +
+      '<span class="match-history-label">Dernières parties</span>' +
+      '<span class="match-history-hint">10 plus récentes</span>' +
+    '</div>' +
+    '<div class="match-history-track">' + dots + '</div>';
 }
 
 function updateProfilePreview(user) {
@@ -505,6 +539,12 @@ function updateProfilePreview(user) {
     eloEl.textContent = 'Elo ' + (u.elo != null ? u.elo : '—') +
       ' — ' + (u.wins || 0) + 'V · ' + (u.losses || 0) + ' déf.';
   }
+  const emailEl = document.getElementById('profile-email');
+  if (emailEl) {
+    emailEl.textContent = u.email ? ('Email : ' + u.email) : 'Email non renseigné — ajoutez-en un pour récupérer votre mot de passe.';
+  }
+  const emailInput = document.getElementById('profile-email-input');
+  if (emailInput && u.email) emailInput.value = u.email;
   const img = document.getElementById('profile-avatar-preview');
   if (img) {
     if (u.avatarUrl) {
@@ -632,8 +672,9 @@ async function doAuth(register) {
   msg.textContent = '';
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
+  const email = (document.getElementById('email') || {}).value || '';
   try {
-    if (register) await VGBOnline.register(username, password);
+    if (register) await VGBOnline.register(username, password, email.trim());
     else await VGBOnline.login(username, password);
     await showProfile();
   } catch (e) {
@@ -734,10 +775,12 @@ document.getElementById('profile-country').addEventListener('change', async func
 document.getElementById('btn-save-profile').onclick = async function () {
   const saveMsg = document.getElementById('profile-save-msg');
   const country = document.getElementById('profile-country').value || '';
+  const email = (document.getElementById('profile-email-input') || {}).value || '';
   try {
     const payload = {
       countryCode: country,
-      titleId: selectedTitleId || ''
+      titleId: selectedTitleId || '',
+      email: String(email).trim()
     };
     if (selectedAvatarUrl) payload.avatarUrl = selectedAvatarUrl;
     await VGBOnline.updateProfile(payload);

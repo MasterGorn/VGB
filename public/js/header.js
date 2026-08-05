@@ -131,6 +131,8 @@
           '<span class="footer-sep" aria-hidden="true">·</span>' +
           '<a href="/replay.html" class="footer-link'+(active==='replay'?' active':'')+'">Replays</a>' +
           '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<a href="https://www.culture-games.com/contact/" class="footer-link" target="_blank" rel="noopener noreferrer">Contact</a>' +
+          '<span class="footer-sep" aria-hidden="true">·</span>' +
           '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
         '</div>' +
       '</footer>'

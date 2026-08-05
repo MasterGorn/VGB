@@ -11,6 +11,16 @@ const userSchema = new Schema(
       maxlength: 24,
     },
     passwordHash: { type: String, required: true },
+    /** Email (mdp oublié, notifications). Unique si renseigné. */
+    email: {
+      type: String,
+      default: "",
+      trim: true,
+      lowercase: true,
+      maxlength: 120,
+    },
+    passwordResetToken: { type: String, default: "" },
+    passwordResetExpires: { type: Date, default: null },
     /** Elo Video Games Battle (9×9) */
     elo: { type: Number, default: 1000 },
     wins: { type: Number, default: 0 },
@@ -57,12 +67,23 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ username: 1 }, { unique: true, collation: { locale: "en", strength: 2 } });
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { email: { $type: "string", $gt: "" } },
+    collation: { locale: "en", strength: 2 },
+  }
+);
 userSchema.index({ elo: -1, wins: -1 });
 userSchema.index({ eloClassic: -1, winsClassic: -1 });
 
 export type UserDoc = HydratedDocument<{
   username: string;
   passwordHash: string;
+  email: string;
+  passwordResetToken: string;
+  passwordResetExpires: Date | null;
   elo: number;
   wins: number;
   losses: number;
@@ -140,6 +161,13 @@ function getUserModel(): Model<UserDoc> {
         unlockedTitles: { type: [String], default: [] },
       });
     }
+    if (!existing.schema.path("email")) {
+      existing.schema.add({
+        email: { type: String, default: "", trim: true, lowercase: true, maxlength: 120 },
+        passwordResetToken: { type: String, default: "" },
+        passwordResetExpires: { type: Date, default: null },
+      });
+    }
     return existing;
   }
   return mongoose.model<UserDoc>("User", userSchema);
@@ -153,6 +181,7 @@ export function publicUser(user: UserDoc) {
   return {
     id: String(user._id),
     username: user.username,
+    email: user.email || "",
     elo: user.elo,
     wins: user.wins,
     losses: user.losses,

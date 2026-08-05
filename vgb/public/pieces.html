@@ -82,6 +82,47 @@
 .active-filters { margin:16px 0; display:flex; gap:8px; flex-wrap:wrap; }
 .filter-tag { background:var(--secondary-bg); color:var(--text-primary); padding:4px 8px; border-radius:16px; font-size:12px; display:flex; align-items:center; gap:4px; border:1px solid var(--border-color); }
 .filter-tag .remove { cursor:pointer; font-weight:bold; }
+
+.piece-fiches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.piece-fiche-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.piece-fiche-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.piece-fiche-chip .fiche-site {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.9;
+}
+.piece-fiche-chip.cg {
+  background: rgba(230, 126, 34, 0.18);
+  border-color: rgba(230, 126, 34, 0.55);
+  color: #ffd28a;
+}
+.piece-fiche-chip.smash {
+  background: rgba(52, 152, 219, 0.18);
+  border-color: rgba(52, 152, 219, 0.55);
+  color: #9fd4ff;
+}
 </style>
 </head>
 <body>
@@ -176,6 +217,7 @@
 <script src="/js/translations.js?v=20260717g"></script>
 <script src="/js/header.js"></script>
 <script src="/data/pieces.js?v=20260720u"></script>
+<script src="/data/piece-fiches.js?v=20260805a"></script>
 <script src="/js/chess-roles.js?v=20260717g"></script>
 <script>
 // Les données des pièces sont maintenant importées depuis pieces.js
@@ -250,6 +292,26 @@ function displayPieces(pieces) {
     }
     const roleLabel = getRoleLabel(piece.role);
     const roleIcon = getRoleIcon(piece.role);
+    const fiches = (typeof VGB_PIECE_FICHES !== 'undefined' && VGB_PIECE_FICHES[nameKey]) || null;
+    let fichesHtml = '';
+    if (fiches) {
+      const chips = [];
+      if (fiches.cultureGames && fiches.cultureGames.url) {
+        chips.push(
+          '<a class="piece-fiche-chip cg" href="' + fiches.cultureGames.url + '" target="_blank" rel="noopener noreferrer">' +
+            '<span class="fiche-site">Culture Games</span>' +
+          '</a>'
+        );
+      }
+      if (fiches.smashpro && fiches.smashpro.url) {
+        chips.push(
+          '<a class="piece-fiche-chip smash" href="' + fiches.smashpro.url + '" target="_blank" rel="noopener noreferrer">' +
+            '<span class="fiche-site">Smashpro.tips</span>' +
+          '</a>'
+        );
+      }
+      if (chips.length) fichesHtml = '<div class="piece-fiches">' + chips.join('') + '</div>';
+    }
     
     card.innerHTML = `
       <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
@@ -261,6 +323,7 @@ function displayPieces(pieces) {
         <span class="badge">${t(piece.universeKey || piece.universe)}</span>
         <span class="badge role" title="${roleLabel}"><span class="role-icon" aria-hidden="true">${roleIcon}</span>${roleLabel}</span>
       </div>
+      ${fichesHtml}
     `;
     
     grid.appendChild(card);

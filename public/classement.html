@@ -79,7 +79,7 @@
           <th>#</th>
           <th>Joueur</th>
           <th>Elo</th>
-          <th>V / D / N</th>
+          <th>V / D</th>
         </tr>
       </thead>
       <tbody id="lb-body">
@@ -135,7 +135,7 @@ if (typeof initTranslation === 'function') initTranslation();
           <td class="rank">${r.rank}</td>
           <td>${nameHtml}${streakHtml}</td>
           <td class="elo">${r.elo}</td>
-          <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
+          <td class="muted">${r.wins} / ${r.losses}</td>
         </tr>`;
       }).join('');
     } catch (e) {
