@@ -3034,9 +3034,11 @@ const factionCatalogs = {
     'joe-musashi': { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
   },
   playstation: {
-    'nathan-drake': { cost: 5, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 3 }, // faible
-    'kratos': { cost: 3, tier: 2, moves: [[1,1],[1,-1],[-1,1],[-1,-1]], range: 2 }, // moyen
-    'astro-bot': { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 } // fort
+    'sackboy': { cost: 2, tier: 1, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 1 },
+    'nathan-drake': { cost: 3, tier: 2, moves: [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]], range: 1 },
+    'kratos': { cost: 6, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1]], range: 8 },
+    'aloy': { cost: 7, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 8 },
+    'jak': { cost: 5, tier: 3, moves: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], range: 3 }
   }
 };
 
@@ -3144,17 +3146,34 @@ function preload() {
   this.load.image('king-playstation', 'king.png');
   
   // Personnages PlayStation
-  this.load.image('nathan-drake', 'nathan-drake.png');
-  this.load.image('kratos', 'kratos.png');
-  this.load.image('astro-bot', 'astro-bot.png');
-  this.load.image('aloy', 'aloy.png');
   this.load.image('sackboy', 'sackboy.png');
-  this.load.image('jak', 'jak.png');
   this.load.image('daxter', 'daxter.png');
-  this.load.image('kat', 'kat.png');
-  this.load.image('parappa', 'parappa-the-rapper.png');
-  this.load.image('sam-porter', 'sam-porter-bridges.png');
+  this.load.image('astro-bot', 'astro-bot.png');
+  this.load.image('clank', 'clank.png');
   this.load.image('ico', 'ico.png');
+  this.load.image('nathan-drake', 'nathan-drake.png');
+  this.load.image('sam-porter', 'sam-porter-bridges.png');
+  this.load.image('atreus', 'atreus.png');
+  this.load.image('ellie', 'ellie.png');
+  this.load.image('pilote-gran-turismo', 'pilote-gran-turismo.png');
+  this.load.image('william-adams', 'william-adams.png');
+  this.load.image('deacon-st-john', 'deacon-st-john.png');
+  this.load.image('parappa', 'parappa-the-rapper.png');
+  this.load.image('cole-macgrath', 'cole-macgrath.png');
+  this.load.image('ratchet', 'ratchet.png');
+  this.load.image('sir-daniel-fortesque', 'sir-daniel-fortesque.png');
+  this.load.image('sly-cooper', 'sly-cooper.png');
+  this.load.image('toro-inoue', 'toro-inoue.png');
+  this.load.image('kratos', 'kratos.png');
+  this.load.image('jin-sakai', 'jin-sakai.png');
+  this.load.image('joel', 'joel.png');
+  this.load.image('abby', 'abby.png');
+  this.load.image('trico', 'trico.png');
+  this.load.image('aloy', 'aloy.png');
+  this.load.image('kat', 'kat.png');
+  this.load.image('carmelita-fox', 'carmelita-fox.png');
+  this.load.image('chloe-frazer', 'chloe-frazer.png');
+  this.load.image('jak', 'jak.png');
   
   this.load.setPath('/images/xbox/characters/');
   this.load.image('king-xbox', 'king.png');
@@ -11565,7 +11584,7 @@ function generateCharacterCards() {
     const card = document.createElement('div');
     const isUniqueAsClassic = gameMode === 'classic' && piece.role === 'unique';
     card.style.cssText = 'background:rgba(255,255,255,.04);border:2px solid '+(count?'#ffd700':'var(--border-color)')+';border-radius:10px;padding:10px;text-align:center;cursor:pointer;opacity:'+(full && !count ? '.45':'1')+';position:relative;';
-    card.innerHTML = '<img src="'+piece.image+'" alt="" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;">'+
+    card.innerHTML = '<img src="'+normalizePieceImageUrl(piece.image)+'" alt="" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;">'+
       '<div style="font-size:13px;font-weight:bold;">'+piece.name+'</div>'+
       '<div style="font-size:11px;color:#aaa;">'+VGBChess.getRoleLabel(role)+(isUniqueAsClassic ? ' · Unique' : '')+'</div>';
     if (count > 0) {
@@ -11879,7 +11898,7 @@ function updateDraftSummary() {
         const fac = String(playerFactions[currentPlayerIndex] || 'nintendo').toLowerCase();
         cell.innerHTML = '<img src="/images/'+fac+'/characters/king.png" style="width:90%;height:90%;object-fit:contain;" title="Roi">';
       } else if (piece) {
-        cell.innerHTML = '<img src="'+piece.image+'" style="width:90%;height:90%;object-fit:contain;" title="'+piece.name+'">';
+        cell.innerHTML = '<img src="'+normalizePieceImageUrl(piece.image)+'" style="width:90%;height:90%;object-fit:contain;" title="'+piece.name+'">';
       } else {
         cell.textContent = VGBChess.getRoleLabel(role).charAt(0);
       }
