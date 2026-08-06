@@ -24,6 +24,7 @@
   .rank { font-weight: bold; color: #ffd700; width: 48px; }
   .elo { font-weight: bold; }
   .muted { color: rgba(255,255,255,0.55); font-size: 13px; }
+  .streak { color: #ff8a3d; font-weight: bold; font-size: 12px; white-space: nowrap; }
   .cta { margin-top: 20px; }
   .cta a {
     display: inline-block;
@@ -78,7 +79,7 @@
           <th>#</th>
           <th>Joueur</th>
           <th>Elo</th>
-          <th>V / D / N</th>
+          <th>V / D</th>
         </tr>
       </thead>
       <tbody id="lb-body">
@@ -91,8 +92,10 @@
   </div>
 </main>
 <script src="/js/translations.js"></script>
+<script src="/js/profile-ui.js?v=20260726b"></script>
 <script src="/js/header.js"></script>
-<script src="/js/online.js"></script>
+<script src="/js/piece-flavor.js?v=20260725b"></script>
+<script src="/js/online.js?v=20260726b"></script>
 <script>
 VGBHeader.injectHeader('classement');
 if (typeof initTranslation === 'function') initTranslation();
@@ -118,14 +121,23 @@ if (typeof initTranslation === 'function') initTranslation();
         body.innerHTML = '<tr><td colspan="4" class="muted">Aucun joueur classé pour l’instant.</td></tr>';
         return;
       }
-      body.innerHTML = rows.map(r =>
-        `<tr>
+      body.innerHTML = rows.map(r => {
+        const streak = (typeof VGBFlavor !== 'undefined' && VGBFlavor.formatWinStreak)
+          ? VGBFlavor.formatWinStreak(r.winStreak)
+          : (r.winStreak >= 10 ? '🔥 GODLIKE' : (r.winStreak > 0 ? '🔥 ×' + r.winStreak : ''));
+        const streakHtml = streak
+          ? ' <span class="streak" title="Série de victoires">(' + streak + ')</span>'
+          : '';
+        const nameHtml = (typeof VGBProfile !== 'undefined' && VGBProfile.userBadgeHtml)
+          ? VGBProfile.userBadgeHtml(r)
+          : r.username;
+        return `<tr>
           <td class="rank">${r.rank}</td>
-          <td>${r.username}</td>
+          <td>${nameHtml}${streakHtml}</td>
           <td class="elo">${r.elo}</td>
-          <td class="muted">${r.wins} / ${r.losses} / ${r.draws}</td>
-        </tr>`
-      ).join('');
+          <td class="muted">${r.wins} / ${r.losses}</td>
+        </tr>`;
+      }).join('');
     } catch (e) {
       const detail = (e && e.message) ? String(e.message) : "";
       const hint = detail

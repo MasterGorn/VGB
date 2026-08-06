@@ -15,10 +15,10 @@ export async function GET() {
 
     const results = (Array.isArray(user.recentResults) ? user.recentResults : []).slice(
       0,
-      5
+      10
     ) as Array<"W" | "L" | "D">;
     const slots: Array<"W" | "L" | "D" | null> = [...results];
-    while (slots.length < 5) slots.push(null);
+    while (slots.length < 10) slots.push(null);
 
     // Recharger pour publicUser à jour
     const fresh = (await User.findById(user._id)) || user;

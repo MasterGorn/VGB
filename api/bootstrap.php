@@ -35,6 +35,7 @@ function vgb_db(): PDO {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE COLLATE NOCASE,
       password_hash TEXT NOT NULL,
+      email TEXT NOT NULL DEFAULT '',
       elo INTEGER NOT NULL DEFAULT 1000,
       wins INTEGER NOT NULL DEFAULT 0,
       losses INTEGER NOT NULL DEFAULT 0,
@@ -81,6 +82,16 @@ function vgb_db(): PDO {
     );
     CREATE INDEX IF NOT EXISTS idx_decks_user ON decks(user_id);
   ");
+
+  try {
+    $cols = $pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC);
+    $names = array_map(static function ($c) { return $c['name']; }, $cols);
+    if (!in_array('email', $names, true)) {
+      $pdo->exec("ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT ''");
+    }
+  } catch (Throwable $e) {
+    // ignore
+  }
 
   return $pdo;
 }
@@ -130,6 +141,7 @@ function vgb_public_user(array $user): array {
   return [
     'id' => (int)$user['id'],
     'username' => $user['username'],
+    'email' => (string)($user['email'] ?? ''),
     'elo' => (int)$user['elo'],
     'wins' => (int)$user['wins'],
     'losses' => (int)$user['losses'],

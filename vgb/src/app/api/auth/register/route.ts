@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import User, { publicUser } from "@/models/User";
+import { isValidEmail, normalizeEmail } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const username = String(body.username || "").trim();
     const password = String(body.password || "");
+    const email = normalizeEmail(String(body.email || ""));
 
     if (username.length < 3 || username.length > 24) {
       return NextResponse.json(
@@ -23,9 +25,15 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (password.length < 4) {
+    if (!isValidEmail(email)) {
       return NextResponse.json(
-        { ok: false, error: "Mot de passe trop court (min. 4)" },
+        { ok: false, error: "Email valide requis" },
+        { status: 400 }
+      );
+    }
+    if (password.length < 6) {
+      return NextResponse.json(
+        { ok: false, error: "Mot de passe trop court (min. 6)" },
         { status: 400 }
       );
     }
@@ -42,8 +50,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const emailTaken = await User.findOne({ email }).collation({
+      locale: "en",
+      strength: 2,
+    });
+    if (emailTaken) {
+      return NextResponse.json(
+        { ok: false, error: "Cet email est déjà utilisé" },
+        { status: 409 }
+      );
+    }
+
     const user = await User.create({
       username,
+      email,
       passwordHash: await bcrypt.hash(password, 10),
       elo: 1000,
     });

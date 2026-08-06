@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/session";
-import {
+import User, {
   publicUser,
   isAllowedAvatar,
   isValidCountryCode,
   selectableAvatars,
 } from "@/models/User";
+import { isValidEmail, normalizeEmail } from "@/lib/mail";
 import { PROGRESSION_AVATARS } from "@/lib/progression-avatars";
 import {
   allMissionsDone,
@@ -127,10 +128,40 @@ export async function PATCH(req: Request) {
       }
     }
 
+    if (typeof body.email === "string") {
+      const email = normalizeEmail(body.email);
+      if (email === "") {
+        return NextResponse.json(
+          { ok: false, error: "Email requis" },
+          { status: 400 }
+        );
+      }
+      if (!isValidEmail(email)) {
+        return NextResponse.json(
+          { ok: false, error: "Email invalide" },
+          { status: 400 }
+        );
+      }
+      if (email !== (user.email || "")) {
+        const taken = await User.findOne({
+          email,
+          _id: { $ne: user._id },
+        }).collation({ locale: "en", strength: 2 });
+        if (taken) {
+          return NextResponse.json(
+            { ok: false, error: "Cet email est déjà utilisé" },
+            { status: 409 }
+          );
+        }
+        user.email = email;
+      }
+    }
+
     user.lastPlayedAt = new Date();
     user.markModified("avatarUrl");
     user.markModified("titleId");
     user.markModified("countryCode");
+    user.markModified("email");
     await user.save();
 
     return NextResponse.json({ ok: true, user: publicUser(user) });

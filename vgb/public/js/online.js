@@ -139,18 +139,41 @@
       return data;
     },
 
-    async register(username, password) {
+    async register(username, password, email) {
       if (this.mode === "next") {
-        const data = await this.request("/api/auth/register", { username, password });
+        const data = await this.request("/api/auth/register", {
+          username,
+          password,
+          email: email || "",
+        });
         await this.login(username, password);
         return data.user;
       }
       const API = phpEndpoints();
-      const data = await this.request(API.auth, { action: "register", username, password });
+      const data = await this.request(API.auth, {
+        action: "register",
+        username,
+        password,
+        email: email || "",
+      });
       this.token = data.token;
       this.user = data.user;
       this.saveSession();
       return data.user;
+    },
+
+    async forgotPassword(email) {
+      if (this.mode === "next") {
+        return this.request("/api/auth/forgot-password", { email });
+      }
+      throw new Error("Réinitialisation disponible uniquement via l’API Next");
+    },
+
+    async resetPassword(token, password) {
+      if (this.mode === "next") {
+        return this.request("/api/auth/reset-password", { token, password });
+      }
+      throw new Error("Réinitialisation disponible uniquement via l’API Next");
     },
 
     async login(username, password) {
