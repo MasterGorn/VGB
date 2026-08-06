@@ -35,6 +35,9 @@
       parts += '<span class="nav-user-flag">' + escapeHtml(user.countryCode) + '</span>';
     }
     parts += escapeHtml(user.username) + ' <span class="nav-elo">' + escapeHtml(elo) + ' Elo</span>';
+    if (typeof user.coins === 'number') {
+      parts += ' <span class="nav-coins">' + escapeHtml(user.coins) + ' 🪙</span>';
+    }
     return parts;
   }
 

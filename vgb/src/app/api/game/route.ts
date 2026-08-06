@@ -12,6 +12,7 @@ import {
   saveAutoReplayForMatchPlayers,
 } from "@/lib/replays";
 import { mergeMoveLogIntoPayload } from "@/models/Replay";
+import { awardGameCoins } from "@/lib/coins";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ async function saveUserMatchStats(u: {
   winStreakClassic?: number;
   bestWinStreakClassic?: number;
   lastPlayedAt?: Date;
+  coins?: number;
 }) {
   await User.updateOne(
     { _id: u._id },
@@ -53,6 +55,7 @@ async function saveUserMatchStats(u: {
         winStreakClassic: u.winStreakClassic,
         bestWinStreakClassic: u.bestWinStreakClassic,
         lastPlayedAt: u.lastPlayedAt,
+        ...(typeof u.coins === "number" ? { coins: u.coins } : {}),
       },
     }
   );
@@ -244,6 +247,8 @@ export async function POST(req: Request) {
         pushRecentResult(p2, "D", classic ? "classic" : "vgb");
         applyWinStreak(p1, "D", classic ? "classic" : "vgb");
         applyWinStreak(p2, "D", classic ? "classic" : "vgb");
+        awardGameCoins(p1, "D");
+        awardGameCoins(p2, "D");
       } else if (score1 === 1) {
         if (classic) {
           p1.winsClassic = (p1.winsClassic || 0) + 1;
@@ -256,6 +261,8 @@ export async function POST(req: Request) {
         pushRecentResult(p2, "L", classic ? "classic" : "vgb");
         applyWinStreak(p1, "W", classic ? "classic" : "vgb");
         applyWinStreak(p2, "L", classic ? "classic" : "vgb");
+        awardGameCoins(p1, "W");
+        awardGameCoins(p2, "L");
       } else {
         if (classic) {
           p1.lossesClassic = (p1.lossesClassic || 0) + 1;
@@ -268,6 +275,8 @@ export async function POST(req: Request) {
         pushRecentResult(p2, "W", classic ? "classic" : "vgb");
         applyWinStreak(p1, "L", classic ? "classic" : "vgb");
         applyWinStreak(p2, "W", classic ? "classic" : "vgb");
+        awardGameCoins(p1, "L");
+        awardGameCoins(p2, "W");
       }
       p1.lastPlayedAt = new Date();
       p2.lastPlayedAt = new Date();

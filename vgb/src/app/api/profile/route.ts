@@ -17,6 +17,7 @@ import {
   progressionTitleIdsThrough,
   selectableTitles,
 } from "@/lib/progression-titles";
+import { claimDailyLoginBonus } from "@/lib/coins";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,14 @@ export async function GET() {
       await user.save();
     }
 
+    const daily = claimDailyLoginBonus(user);
+    if (!daily.alreadyClaimed) {
+      user.markModified("coins");
+      user.markModified("loginStreak");
+      user.markModified("lastDailyBonusDay");
+      await user.save();
+    }
+
     const unlocked = user.unlockedAvatars;
     const labelByUrl = Object.fromEntries(
       PROGRESSION_AVATARS.map((a) => [a.url, a.label])
@@ -66,6 +75,11 @@ export async function GET() {
       user: publicUser(user),
       avatars,
       titles,
+      dailyBonus: {
+        awarded: daily.awarded,
+        alreadyClaimed: daily.alreadyClaimed,
+        loginStreak: daily.loginStreak,
+      },
     });
   } catch (e) {
     const status =

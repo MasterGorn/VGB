@@ -170,6 +170,35 @@
   font-weight: bold;
   color: var(--text-primary);
 }
+.hud-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  min-width: 0;
+}
+.hud-record {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.75);
+}
+.hud-record:empty {
+  display: none;
+}
+.hud-record .stat-w {
+  color: #2ecc71;
+  font-weight: 800;
+}
+.hud-record .stat-d {
+  color: #e74c3c;
+  font-weight: 800;
+}
+.hud-record .stat-sep {
+  opacity: 0.55;
+  margin: 0 3px;
+  color: rgba(255, 255, 255, 0.65);
+}
 .hud-identity {
   display: flex;
   flex-direction: column;
@@ -1599,6 +1628,29 @@
 .vs-intro-title:empty {
   display: none;
 }
+.vs-intro-record {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+}
+.vs-intro-record:empty {
+  display: none;
+}
+.vs-intro-record .stat-w {
+  color: #2ecc71;
+  font-weight: 800;
+}
+.vs-intro-record .stat-d {
+  color: #e74c3c;
+  font-weight: 800;
+}
+.vs-intro-record .stat-sep {
+  opacity: 0.55;
+  margin: 0 4px;
+  color: rgba(255, 255, 255, 0.65);
+}
 .vs-intro-vs {
   font-size: clamp(28px, 6vw, 48px);
   font-weight: 900;
@@ -2142,6 +2194,14 @@
 
 .end-game-elo-delta.up { color: #2ecc71; }
 .end-game-elo-delta.down { color: #e74c3c; }
+.end-game-coins {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 16px;
+  color: #f1c40f;
+  letter-spacing: 0.02em;
+}
 
 .end-game-footer {
   padding: 0 24px 24px;
@@ -2240,6 +2300,7 @@ body.end-game-open {
       <div class="vs-intro-faction" id="vs-faction-0">Nintendo</div>
       <div class="vs-intro-name" id="vs-name-0"></div>
       <div class="vs-intro-title" id="vs-title-0"></div>
+      <div class="vs-intro-record" id="vs-record-0"></div>
     </div>
     <div class="vs-intro-vs">VS</div>
     <div class="vs-intro-side right">
@@ -2247,6 +2308,7 @@ body.end-game-open {
       <div class="vs-intro-faction" id="vs-faction-1">PlayStation</div>
       <div class="vs-intro-name" id="vs-name-1"></div>
       <div class="vs-intro-title" id="vs-title-1"></div>
+      <div class="vs-intro-record" id="vs-record-1"></div>
     </div>
   </div>
 </div>
@@ -2449,7 +2511,10 @@ body.end-game-open {
     <div class="hud-main">
       <img class="hud-avatar" id="hud-avatar-0" alt="" hidden />
       <div class="hud-identity">
-        <span class="hud-name" id="hud-name-0">Joueur 1</span>
+        <div class="hud-name-row">
+          <span class="hud-name" id="hud-name-0">Joueur 1</span>
+          <span class="hud-record" id="hud-record-0"></span>
+        </div>
         <span class="hud-title" id="hud-title-0"></span>
       </div>
       <span class="hud-faction" id="hud-faction-0"></span>
@@ -2467,7 +2532,10 @@ body.end-game-open {
     <div class="hud-main">
       <img class="hud-avatar" id="hud-avatar-1" alt="" hidden />
       <div class="hud-identity">
-        <span class="hud-name" id="hud-name-1">Joueur 2</span>
+        <div class="hud-name-row">
+          <span class="hud-name" id="hud-name-1">Joueur 2</span>
+          <span class="hud-record" id="hud-record-1"></span>
+        </div>
         <span class="hud-title" id="hud-title-1"></span>
       </div>
       <span class="hud-faction" id="hud-faction-1"></span>
@@ -5387,6 +5455,15 @@ function updatePieces() {
       }
     }
   }
+  if (tetriminos && tetriminos.length) {
+    for (const t of tetriminos) {
+      if (!t || !t.sprite) continue;
+      const pos = cellCenter(t.x, t.y);
+      t.sprite.x = pos.x;
+      t.sprite.y = pos.y;
+      t.sprite.setDisplaySize(TILE_SIZE - 2, TILE_SIZE - 2);
+    }
+  }
   // Portails: positionner leurs sprites si présents
   const scene = infoText && infoText.scene;
   if (portalOrange && portalOrange.sprite) {
@@ -7583,6 +7660,22 @@ function applyItemVisibilityEffects() {
   applyProximityMineVisibility();
 }
 
+/** Vainqueur classique quand un roi meurt : jamais la victime. */
+function otherActiveSeat(excludeId) {
+  const n = typeof playerCount === 'number' ? playerCount : 2;
+  for (let i = 0; i < n; i++) {
+    if (i !== excludeId && !(eliminationOrder || []).includes(i)) return i;
+  }
+  return excludeId === 0 ? 1 : 0;
+}
+
+function resolveClassicKingKillWinner(victimPlayer, preferredWinner) {
+  if (typeof preferredWinner === 'number' && preferredWinner !== victimPlayer) {
+    return preferredWinner;
+  }
+  return otherActiveSeat(victimPlayer);
+}
+
 function forceDestroyPiece(victim) {
   if (!victim) return;
   const wasKing = victim.type === 'king';
@@ -7600,7 +7693,8 @@ function forceDestroyPiece(victim) {
   if (wasKing) {
     if (isClassicRulesActive()) {
       lastEndGameReason = 'checkmate';
-      endGameWithRanking([currentPlayer, victimPlayer]);
+      const winner = resolveClassicKingKillWinner(victimPlayer, currentPlayer);
+      endGameWithRanking([winner, victimPlayer]);
       return;
     }
     if (!eliminationOrder.includes(victimPlayer)) {
@@ -7622,7 +7716,7 @@ function forceDestroyPiece(victim) {
   }
 }
 
-function tryDestroyPieceFromTrap(victim) {
+function tryDestroyPieceFromTrap(victim, preferredWinner) {
   if (!victim) return { removed: false, kingEliminated: false, gameEnded: false };
   const hasHeart = heartPieces.some(hp => hp.piece === victim);
   if (hasHeart) {
@@ -7646,7 +7740,8 @@ function tryDestroyPieceFromTrap(victim) {
 
   if (isClassicRulesActive()) {
     lastEndGameReason = 'checkmate';
-    endGameWithRanking([currentPlayer, victimPlayer]);
+    const winner = resolveClassicKingKillWinner(victimPlayer, preferredWinner);
+    endGameWithRanking([winner, victimPlayer]);
     return { removed: true, kingEliminated: true, gameEnded: true };
   }
   if (!eliminationOrder.includes(victimPlayer)) {
@@ -7686,9 +7781,10 @@ function checkItemTrapsAfterMove(piece, from, to) {
 
   const mine = proximityMines.find(m => m.x === to.x && m.y === to.y);
   if (mine) {
+    const trapOwner = mine.playerId;
     removeProximityMine(mine);
     showInfoMessage('Mine de proximité : explosion !', 2500);
-    const result = tryDestroyPieceFromTrap(piece);
+    const result = tryDestroyPieceFromTrap(piece, trapOwner);
     return { triggered: true, pieceRemoved: result.removed, gameEnded: result.gameEnded };
   }
 
@@ -7699,7 +7795,7 @@ function checkItemTrapsAfterMove(piece, from, to) {
     piece.player !== t.playerId
   );
   if (turret) {
-    const result = tryDestroyPieceFromTrap(piece);
+    const result = tryDestroyPieceFromTrap(piece, turret.playerId);
     if (result.removed) {
       removeTurret(turret);
       showInfoMessage('Tourelle : pièce adverse détruite !', 2500);
@@ -8873,12 +8969,20 @@ function teleportKingTo(playerId, newPos) {
   }
 }
 
+function getTetriminoShapeCells(centerX, centerY) {
+  // Forme T inversé (⊥) en coords logiques : barre + tige vers +y
+  return [
+    { x: centerX - 1, y: centerY },
+    { x: centerX, y: centerY },
+    { x: centerX + 1, y: centerY },
+    { x: centerX, y: centerY + 1 }
+  ];
+}
+
 function getTetriminoPlacablePositions() {
   const positions = [];
-  // Vérifier toutes les positions possibles pour le tetrimino (forme T inversé)
   for (let x = 0; x < GRID_SIZE; x++) {
     for (let y = 0; y < GRID_SIZE; y++) {
-      // Vérifier si le tetrimino peut être placé à cette position
       if (canPlaceTetriminoAt(x, y)) {
         positions.push({ x, y });
       }
@@ -8888,32 +8992,21 @@ function getTetriminoPlacablePositions() {
 }
 
 function canPlaceTetriminoAt(centerX, centerY) {
-  // Forme T inversé : 3 cases horizontales + 1 case en dessous du milieu
-  const positions = [
-    { x: centerX - 1, y: centerY },     // gauche
-    { x: centerX, y: centerY },         // centre
-    { x: centerX + 1, y: centerY },     // droite
-    { x: centerX, y: centerY + 1 }      // en dessous du centre
-  ];
-  
-  // Vérifier que toutes les positions sont dans la grille
+  const positions = getTetriminoShapeCells(centerX, centerY);
+
   for (const pos of positions) {
     if (pos.x < 0 || pos.x >= GRID_SIZE || pos.y < 0 || pos.y >= GRID_SIZE) {
       return false;
     }
-    // Vérifier qu'il n'y a pas de pièce sur cette case
     if (getPieceAt(pos)) {
       return false;
     }
-    // Vérifier qu'il n'y a pas déjà un tetrimino sur cette case
     if (tetriminos.some(t => t.x === pos.x && t.y === pos.y)) {
       return false;
     }
-    // Vérifier qu'il n'y a pas de caisse d'objet sur cette case
     if (itemCrates.some(c => c.x === pos.x && c.y === pos.y)) {
       return false;
     }
-    // Vérifier qu'il n'y a pas de portail sur cette case
     if ((portalOrange && portalOrange.x === pos.x && portalOrange.y === pos.y) ||
         (portalBlue && portalBlue.x === pos.x && portalBlue.y === pos.y)) {
       return false;
@@ -8924,23 +9017,19 @@ function canPlaceTetriminoAt(centerX, centerY) {
 
 function placeTetrimino(centerPos) {
   const scene = infoText.scene;
-  const positions = [
-    { x: centerPos.x - 1, y: centerPos.y },     // gauche
-    { x: centerPos.x, y: centerPos.y },         // centre
-    { x: centerPos.x + 1, y: centerPos.y },     // droite
-    { x: centerPos.x, y: centerPos.y + 1 }      // en dessous du centre
-  ];
-  
-  // Créer des rectangles violets pour chaque case du tetrimino
+  const positions = getTetriminoShapeCells(centerPos.x, centerPos.y);
+
+  // cellCenter : respecte l’inversion du plateau (IA / online siège 0)
   for (const pos of positions) {
+    const c = cellCenter(pos.x, pos.y);
     const rect = scene.add.rectangle(
-      GRID_OFFSET_X + pos.x * TILE_SIZE + TILE_SIZE/2,
-      GRID_OFFSET_Y + pos.y * TILE_SIZE + TILE_SIZE/2,
-      TILE_SIZE-2,
-      TILE_SIZE-2,
+      c.x,
+      c.y,
+      TILE_SIZE - 2,
+      TILE_SIZE - 2,
       0x9c27b0 // violet
     );
-    rect.setDepth(100); // au-dessus des cases mais sous les pièces
+    rect.setDepth(100);
     tetriminos.push({ x: pos.x, y: pos.y, sprite: rect });
   }
 }
@@ -9357,8 +9446,166 @@ function buildAiApi(onlyPiece) {
     hasHeart: function (p) { return heartPieces.some(function (hp) { return hp.piece === p; }); },
     isStarProtected: function (p) {
       return isPieceStarProtected(p);
-    }
+    },
+    traps: {
+      mines: (proximityMines || []).map(function (m) {
+        return { x: m.x, y: m.y, playerId: m.playerId };
+      }),
+      bananas: (bananas || []).map(function (b) {
+        return { x: b.x, y: b.y };
+      }),
+      turrets: (turrets || []).map(function (t) {
+        return { column: t.column, playerId: t.playerId };
+      })
+    },
+    inventory: ((playerItemIcons[aiSeat] || []).map(function (e, i) {
+      return e && e.item ? { item: e.item, index: i, chargeTurns: e.chargeTurns || 0 } : null;
+    }).filter(Boolean))
   };
+}
+
+/** Pose un objet IA (sans terminer le tour) — retourne true si un objet a été utilisé. */
+function tryAiUseItem() {
+  if (!aiEnabled || itemUsedThisTurn || currentPlayer !== aiSeat) return false;
+  if (forcedPiece && forcedPiece.playerId === aiSeat) return false;
+  const inv = playerItemIcons[aiSeat] || [];
+  if (!inv.length) return false;
+
+  const diff = aiDifficulty || 'medium';
+  // Facile : presque jamais d'objets
+  if (diff === 'easy' && Math.random() > 0.12) return false;
+  if (diff === 'medium' && Math.random() > 0.55) return false;
+
+  const oppSeat = aiSeat === 0 ? 1 : 0;
+  const enemyKing = pieces.find(function (p) { return p.player === oppSeat && p.type === 'king'; });
+  const myKing = pieces.find(function (p) { return p.player === aiSeat && p.type === 'king'; });
+
+  function findInv(key) {
+    return inv.findIndex(function (e) { return e && e.item === key; });
+  }
+
+  // Heart sur une pièce de valeur menacée
+  const heartIdx = findInv('heart');
+  if (heartIdx >= 0 && diff !== 'easy') {
+    const candidates = pieces.filter(function (p) {
+      return p.player === aiSeat && p.type !== 'king' && !heartPieces.some(function (hp) { return hp.piece === p; });
+    });
+    candidates.sort(function (a, b) {
+      const va = (typeof VGBAI !== 'undefined' && VGBAI.pieceValue) ? VGBAI.pieceValue(a) : 20;
+      const vb = (typeof VGBAI !== 'undefined' && VGBAI.pieceValue) ? VGBAI.pieceValue(b) : 20;
+      return vb - va;
+    });
+    if (candidates.length && (diff === 'expert' || diff === 'hard' || Math.random() < 0.5)) {
+      const target = candidates[0];
+      // apply heart via tryUseItem path: simulate heart placement
+      if (typeof giveHeartToPiece === 'function') {
+        giveHeartToPiece(target);
+        consumeInventoryItemAt(aiSeat, heartIdx);
+        itemUsedThisTurn = true;
+        matchItemsUsedByPlayer[aiSeat] = true;
+        showInfoMessage('IA : cœur sur ' + (target.name || target.type), 1800);
+        updatePieces();
+        return true;
+      }
+    }
+  }
+
+  // Tourelle sur la colonne du roi adverse
+  const turretIdx = findInv('turret');
+  if (turretIdx >= 0 && enemyKing && canPlaceTurretOnColumn(enemyKing.x)) {
+    placeTurretColumn(enemyKing.x, aiSeat);
+    consumeInventoryItemAt(aiSeat, turretIdx);
+    itemUsedThisTurn = true;
+    matchItemsUsedByPlayer[aiSeat] = true;
+    showInfoMessage('IA : tourelle posée !', 1800);
+    updatePieces();
+    return true;
+  }
+
+  // Mine près du roi adverse
+  const mineIdx = findInv('proximity-mine');
+  if (mineIdx >= 0 && enemyKing) {
+    const spots = [];
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const x = enemyKing.x + dx;
+        const y = enemyKing.y + dy;
+        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) continue;
+        if (canPlaceProximityMineAt(x, y)) spots.push({ x: x, y: y, d: Math.abs(dx) + Math.abs(dy) });
+      }
+    }
+    spots.sort(function (a, b) { return a.d - b.d; });
+    if (spots.length) {
+      const pick = spots[Math.min(spots.length - 1, diff === 'easy' ? Math.floor(Math.random() * spots.length) : 0)];
+      placeProximityMine(pick, aiSeat);
+      consumeInventoryItemAt(aiSeat, mineIdx);
+      itemUsedThisTurn = true;
+      matchItemsUsedByPlayer[aiSeat] = true;
+      showInfoMessage('IA : mine posée !', 1800);
+      updatePieces();
+      return true;
+    }
+  }
+
+  // Banane sur une case centrale / devant le roi
+  const bananaIdx = findInv('banana');
+  if (bananaIdx >= 0) {
+    const allowed = typeof getBananaPlacablePositions === 'function' ? getBananaPlacablePositions() : [];
+    let best = null;
+    let bestScore = -Infinity;
+    for (let i = 0; i < allowed.length; i++) {
+      const p = allowed[i];
+      let s = 0;
+      if (enemyKing) s += 8 - (Math.abs(p.x - enemyKing.x) + Math.abs(p.y - enemyKing.y));
+      s += 3 - Math.abs(p.x - (GRID_SIZE - 1) / 2) * 0.3;
+      if (s > bestScore) { bestScore = s; best = p; }
+    }
+    if (best && typeof placeBanana === 'function') {
+      placeBanana(best);
+      consumeInventoryItemAt(aiSeat, bananaIdx);
+      itemUsedThisTurn = true;
+      matchItemsUsedByPlayer[aiSeat] = true;
+      showInfoMessage('IA : banane posée !', 1800);
+      updatePieces();
+      return true;
+    }
+  }
+
+  // Pokéball si case libre
+  const pokeIdx = findInv('pokeball');
+  if (pokeIdx >= 0 && myKing && trySummonPokemon(aiSeat)) {
+    consumeInventoryItemAt(aiSeat, pokeIdx);
+    itemUsedThisTurn = true;
+    matchItemsUsedByPlayer[aiSeat] = true;
+    showInfoMessage('IA : Pokémon invoqué !', 1800);
+    updatePieces();
+    return true;
+  }
+
+  // Golden Gun sur pièce de valeur (hard+)
+  const gunIdx = findInv('golden-gun');
+  if (gunIdx >= 0 && (diff === 'hard' || diff === 'expert')) {
+    const targets = pieces.filter(function (p) {
+      return p.player === oppSeat && p.type !== 'king' && !(typeof isPieceStarProtected === 'function' && isPieceStarProtected(p));
+    });
+    targets.sort(function (a, b) {
+      const va = (typeof VGBAI !== 'undefined' && VGBAI.pieceValue) ? VGBAI.pieceValue(a) : 20;
+      const vb = (typeof VGBAI !== 'undefined' && VGBAI.pieceValue) ? VGBAI.pieceValue(b) : 20;
+      return vb - va;
+    });
+    if (targets.length && (diff === 'expert' || targets[0].role === 'queen' || targets[0].role === 'rook' || targets[0].type === 'queen')) {
+      const victim = targets[0];
+      consumeInventoryItemAt(aiSeat, gunIdx);
+      itemUsedThisTurn = true;
+      matchItemsUsedByPlayer[aiSeat] = true;
+      showInfoMessage('IA : Golden Gun !', 2000);
+      forceDestroyPiece(victim);
+      updatePieces();
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function executeAiMove() {
@@ -9372,6 +9619,14 @@ function executeAiMove() {
     console.warn('IA indisponible — tour conservé pour le joueur humain');
     return;
   }
+
+  try {
+    window.__vgbAiMove = true;
+    tryAiUseItem();
+  } finally {
+    window.__vgbAiMove = false;
+  }
+  if (!gameStarted || currentPlayer !== aiSeat || endGameHandled) return;
 
   let onlyPiece = null;
   if (forcedPiece && forcedPiece.playerId === aiSeat && forcedPiece.piece) {
@@ -9981,8 +10236,16 @@ function endGameWithRanking(ranking) {
             updateEndGameElo(data.elo);
           }
           if (data && data.you && VGBOnline.user) {
+            const prevCoins = typeof VGBOnline.user.coins === 'number' ? VGBOnline.user.coins : null;
             VGBOnline.user = Object.assign({}, VGBOnline.user, data.you);
             if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+            if (prevCoins != null && typeof data.you.coins === 'number' && data.you.coins > prevCoins) {
+              const el = document.getElementById('end-game-coins');
+              if (el) {
+                el.hidden = false;
+                el.textContent = '+' + (data.you.coins - prevCoins) + ' coins';
+              }
+            }
           } else if (data && data.alreadyFinished) {
             try {
               const me = await VGBOnline.refreshMe();
@@ -10013,6 +10276,7 @@ function endGameWithRanking(ranking) {
       } catch (e) {}
       persistAccountAutoReplay(null);
       reportProgressionAfterGame(ranking || []);
+      awardLocalGameCoins(ranking || []);
       showEndGameOverlay(overlayOpts);
     }
     savePreset();
@@ -10057,6 +10321,39 @@ function reportProgressionAfterGame(ranking) {
       gameMode: (typeof gameMode !== 'undefined' && gameMode === 'classic') ? 'classic' : 'vgb',
       moveCount: typeof moveCount === 'number' ? moveCount : 0,
       winStreak: streak || 0
+    }).catch(function () {});
+  } catch (e) {}
+}
+
+/** Coins pour parties locales / IA (en ligne : déjà via /api/game finish). */
+function awardLocalGameCoins(ranking) {
+  if (typeof VGBOnline === 'undefined' || !VGBOnline.user || VGBOnline.mode !== 'next') return;
+  if (typeof VGBOnline.request !== 'function') return;
+  try {
+    const mySeat = 0; // local / IA : le joueur humain est toujours le siège 0
+    let result = 'D';
+    if (lastEndGameReason === 'stalemate' || !ranking || !ranking.length) {
+      result = 'D';
+    } else if (ranking[0] === mySeat) {
+      result = 'W';
+    } else {
+      result = 'L';
+    }
+    VGBOnline.request('/api/coins', { action: 'game', result: result }).then(function (data) {
+      if (data && data.user) {
+        VGBOnline.user = Object.assign({}, VGBOnline.user, data.user);
+        if (typeof VGBHeader !== 'undefined' && VGBHeader.refreshAuth) VGBHeader.refreshAuth();
+      }
+      if (data && typeof data.awarded === 'number' && data.awarded > 0) {
+        window.__vgbLastCoinsAwarded = data.awarded;
+        try {
+          const el = document.getElementById('end-game-coins');
+          if (el) {
+            el.hidden = false;
+            el.textContent = '+' + data.awarded + ' coins';
+          }
+        } catch (e2) {}
+      }
     }).catch(function () {});
   } catch (e) {}
 }
@@ -10435,6 +10732,17 @@ function showEndGameOverlay(opts) {
   eloSlot.hidden = true;
   body.appendChild(eloSlot);
 
+  const coinsSlot = document.createElement('div');
+  coinsSlot.id = 'end-game-coins';
+  coinsSlot.className = 'end-game-coins';
+  coinsSlot.hidden = true;
+  if (window.__vgbLastCoinsAwarded) {
+    coinsSlot.hidden = false;
+    coinsSlot.textContent = '+' + window.__vgbLastCoinsAwarded + ' coins';
+    window.__vgbLastCoinsAwarded = 0;
+  }
+  body.appendChild(coinsSlot);
+
   const cgBlock = buildEndGameCultureGamesBlock(ranking);
   if (cgBlock) body.appendChild(cgBlock);
 
@@ -10717,6 +11025,61 @@ function resolvePlayerTitle(playerId) {
   return '';
 }
 
+/** Bilan V/D pour l’intro VS (compte connecté / adversaire online). */
+function resolvePlayerRecord(playerId) {
+  const classic = typeof gameMode !== 'undefined' && gameMode === 'classic';
+  function fromUser(u) {
+    if (!u) return null;
+    if (classic) {
+      return {
+        wins: Number(u.winsClassic != null ? u.winsClassic : u.wins) || 0,
+        losses: Number(u.lossesClassic != null ? u.lossesClassic : u.losses) || 0
+      };
+    }
+    return {
+      wins: Number(u.wins) || 0,
+      losses: Number(u.losses) || 0
+    };
+  }
+  if (typeof VGBOnline !== 'undefined' && VGBOnline.enabled && VGBOnline.match) {
+    const m = VGBOnline.match;
+    if (m.seat === playerId) return fromUser(m.you);
+    return fromUser(m.opponent);
+  }
+  if (playerId === 0 && typeof VGBOnline !== 'undefined' && VGBOnline.user) {
+    return fromUser(VGBOnline.user);
+  }
+  if (playerId === 0) {
+    try {
+      const raw = localStorage.getItem('vgb_online_session');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.user) return fromUser(data.user);
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
+function formatRecordHtml(record) {
+  if (!record) return '';
+  return '<span class="stat-w">' + record.wins + ' V</span>' +
+    '<span class="stat-sep">·</span>' +
+    '<span class="stat-d">' + record.losses + ' D</span>';
+}
+
+function setVsIntroRecord(playerId, record) {
+  const el = document.getElementById('vs-record-' + playerId);
+  if (!el) return;
+  el.innerHTML = formatRecordHtml(record);
+}
+
+function setHudRecord(slot, record) {
+  const el = document.getElementById('hud-record-' + slot);
+  if (!el) return;
+  el.innerHTML = formatRecordHtml(record);
+}
+
 function setHudTitle(slot, title) {
   const el = document.getElementById('hud-title-' + slot);
   if (!el) return;
@@ -10742,32 +11105,48 @@ function showFactionVsIntro() {
       resolve();
       return;
     }
-    const f0 = formatFactionLabel(playerFactions[0] || (players[0] && players[0].faction));
-    const f1 = formatFactionLabel(playerFactions[1] || (players[1] && players[1].faction));
-    const n0 = nameWithStreak(playerNames[0] || (players[0] && players[0].name) || 'Joueur 1', 0);
-    const n1 = nameWithStreak(playerNames[1] || (players[1] && players[1].name) || 'Joueur 2', 1);
-    const elF0 = document.getElementById('vs-faction-0');
-    const elF1 = document.getElementById('vs-faction-1');
-    const elN0 = document.getElementById('vs-name-0');
-    const elN1 = document.getElementById('vs-name-1');
-    if (elF0) elF0.textContent = f0;
-    if (elF1) elF1.textContent = f1;
-    if (elN0) elN0.textContent = n0;
-    if (elN1) elN1.textContent = n1;
-    const elT0 = document.getElementById('vs-title-0');
-    const elT1 = document.getElementById('vs-title-1');
-    if (elT0) elT0.textContent = resolvePlayerTitle(0) || '';
-    if (elT1) elT1.textContent = resolvePlayerTitle(1) || '';
-    setVsIntroAvatar(0, resolvePlayerAvatar(0));
-    setVsIntroAvatar(1, resolvePlayerAvatar(1));
-    overlay.setAttribute('aria-hidden', 'false');
-    overlay.classList.add('visible');
-    window.__vgbSkipStartToast = true;
-    setTimeout(function() {
-      overlay.classList.remove('visible');
-      overlay.setAttribute('aria-hidden', 'true');
-      resolve();
-    }, 2000);
+
+    function fillIntro() {
+      const f0 = formatFactionLabel(playerFactions[0] || (players[0] && players[0].faction));
+      const f1 = formatFactionLabel(playerFactions[1] || (players[1] && players[1].faction));
+      const n0 = nameWithStreak(playerNames[0] || (players[0] && players[0].name) || 'Joueur 1', 0);
+      const n1 = nameWithStreak(playerNames[1] || (players[1] && players[1].name) || 'Joueur 2', 1);
+      const elF0 = document.getElementById('vs-faction-0');
+      const elF1 = document.getElementById('vs-faction-1');
+      const elN0 = document.getElementById('vs-name-0');
+      const elN1 = document.getElementById('vs-name-1');
+      if (elF0) elF0.textContent = f0;
+      if (elF1) elF1.textContent = f1;
+      if (elN0) elN0.textContent = n0;
+      if (elN1) elN1.textContent = n1;
+      const elT0 = document.getElementById('vs-title-0');
+      const elT1 = document.getElementById('vs-title-1');
+      if (elT0) elT0.textContent = resolvePlayerTitle(0) || '';
+      if (elT1) elT1.textContent = resolvePlayerTitle(1) || '';
+      setVsIntroAvatar(0, resolvePlayerAvatar(0));
+      setVsIntroAvatar(1, resolvePlayerAvatar(1));
+      setVsIntroRecord(0, resolvePlayerRecord(0));
+      setVsIntroRecord(1, resolvePlayerRecord(1));
+      overlay.setAttribute('aria-hidden', 'false');
+      overlay.classList.add('visible');
+      window.__vgbSkipStartToast = true;
+      setTimeout(function() {
+        overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden', 'true');
+        resolve();
+      }, 2000);
+    }
+
+    // S’assurer que wins/losses sont à jour avant l’affichage
+    const needRefresh = typeof VGBOnline !== 'undefined'
+      && VGBOnline.user
+      && typeof VGBOnline.refreshMe === 'function'
+      && (typeof VGBOnline.user.wins !== 'number' || typeof VGBOnline.user.losses !== 'number');
+    if (needRefresh) {
+      VGBOnline.refreshMe().then(fillIntro).catch(fillIntro);
+    } else {
+      fillIntro();
+    }
   });
 }
 
@@ -10789,6 +11168,7 @@ function setupHtmlHud() {
     const titleText = resolvePlayerTitle(i);
     if (playerTitles) playerTitles[i] = titleText || playerTitles[i] || '';
     setHudTitle(slot, titleText);
+    setHudRecord(slot, resolvePlayerRecord(i));
     if (nameEl) {
       nameEl.textContent = baseName;
       let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
@@ -10829,6 +11209,7 @@ function refreshHtmlHudTurn() {
     nameEl.textContent = baseName;
     setHudAvatar(slot, resolvePlayerAvatar(i));
     setHudTitle(slot, resolvePlayerTitle(i));
+    setHudRecord(slot, resolvePlayerRecord(i));
     const streak = formatStreakLabel(getPlayerWinStreak(i));
     let streakEl = nameEl.parentNode && nameEl.parentNode.querySelector('.hud-streak');
     if (streak) {
@@ -11910,9 +12291,10 @@ function applyRemoteItemsState(state) {
     }
     for (const rt of state.tetriminos) {
       if (!tetriminos.some(t => t.x === rt.x && t.y === rt.y)) {
+        const c = cellCenter(rt.x, rt.y);
         const rect = scene.add.rectangle(
-          GRID_OFFSET_X + rt.x * TILE_SIZE + TILE_SIZE / 2,
-          GRID_OFFSET_Y + rt.y * TILE_SIZE + TILE_SIZE / 2,
+          c.x,
+          c.y,
           TILE_SIZE - 2,
           TILE_SIZE - 2,
           0x9c27b0

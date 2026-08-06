@@ -62,6 +62,12 @@ const userSchema = new Schema(
     /** Titre affiché sous le pseudo (id DEFAULT_TITLES / PROGRESSION_TITLES) */
     titleId: { type: String, default: "", maxlength: 40 },
     unlockedTitles: { type: [String], default: [] },
+    /** Monnaie in-game (boutique future) */
+    coins: { type: Number, default: 0, min: 0 },
+    /** Jour de la série de connexion (1..7) */
+    loginStreak: { type: Number, default: 0, min: 0, max: 7 },
+    /** Dernier jour (YYYY-MM-DD) où le bonus quotidien a été réclamé */
+    lastDailyBonusDay: { type: String, default: "", maxlength: 10 },
   },
   { timestamps: true }
 );
@@ -110,6 +116,9 @@ export type UserDoc = HydratedDocument<{
   unlockedBadges: string[];
   titleId: string;
   unlockedTitles: string[];
+  coins: number;
+  loginStreak: number;
+  lastDailyBonusDay: string;
   createdAt?: Date;
   updatedAt?: Date;
 }>;
@@ -168,6 +177,13 @@ function getUserModel(): Model<UserDoc> {
         passwordResetExpires: { type: Date, default: null },
       });
     }
+    if (!existing.schema.path("coins")) {
+      existing.schema.add({
+        coins: { type: Number, default: 0, min: 0 },
+        loginStreak: { type: Number, default: 0, min: 0, max: 7 },
+        lastDailyBonusDay: { type: String, default: "", maxlength: 10 },
+      });
+    }
     return existing;
   }
   return mongoose.model<UserDoc>("User", userSchema);
@@ -203,6 +219,9 @@ export function publicUser(user: UserDoc) {
     titleId: user.titleId || "",
     title: titleLabel(user.titleId) || "",
     unlockedTitles: Array.isArray(user.unlockedTitles) ? user.unlockedTitles : [],
+    coins: Math.max(0, Number(user.coins) || 0),
+    loginStreak: Math.max(0, Number(user.loginStreak) || 0),
+    lastDailyBonusDay: user.lastDailyBonusDay || "",
     recentResults: Array.isArray(user.recentResults) ? user.recentResults.slice(0, 10) : [],
     recentResultsClassic: Array.isArray(user.recentResultsClassic)
       ? user.recentResultsClassic.slice(0, 10)
