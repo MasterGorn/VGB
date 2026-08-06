@@ -155,6 +155,37 @@
     cursor: pointer;
     transition: transform 0.2s ease, background 0.2s ease;
   }
+  /* Boss / checkpoint tous les 10 niveaux : silhouette de tour */
+  .stage-dot.stage-tower {
+    width: 52px;
+    height: 64px;
+    border-radius: 8px 8px 4px 4px;
+    position: relative;
+    font-size: 14px;
+    box-shadow: 0 7px 0 rgba(0,0,0,0.22);
+  }
+  .stage-dot.stage-tower::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 10px;
+    background: inherit;
+    border: 3px solid #fff;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    box-shadow:
+      -14px 0 0 -3px inherit,
+      -14px 0 0 -1px #fff,
+      14px 0 0 -3px inherit,
+      14px 0 0 -1px #fff,
+      0 0 0 -3px inherit,
+      0 0 0 -1px #fff;
+    clip-path: polygon(0 100%, 0 35%, 18% 35%, 18% 0, 38% 0, 38% 35%, 62% 35%, 62% 0, 82% 0, 82% 35%, 100% 35%, 100% 100%);
+    pointer-events: none;
+  }
   .stage-node.done .stage-dot {
     background: linear-gradient(160deg, #2ecc71, #27ae60);
   }
@@ -163,6 +194,9 @@
     color: #111;
     transform: scale(1.12);
     animation: bounce-soft 1.6s ease-in-out infinite;
+  }
+  .stage-node.current .stage-dot.stage-tower {
+    animation: bounce-soft-tower 1.6s ease-in-out infinite;
   }
   .stage-node.cleared .stage-dot {
     background: linear-gradient(160deg, #f39c12, #e67e22);
@@ -183,6 +217,10 @@
   @keyframes bounce-soft {
     0%, 100% { transform: scale(1.12) translateY(0); }
     50% { transform: scale(1.12) translateY(-5px); }
+  }
+  @keyframes bounce-soft-tower {
+    0%, 100% { transform: scale(1.08) translateY(0); }
+    50% { transform: scale(1.08) translateY(-5px); }
   }
 
   .panel {
@@ -432,9 +470,14 @@ function formatWait(ms) {
 function renderBoard(data) {
   const track = document.getElementById('board-track');
   track.innerHTML = (data.stages || []).map(function (s) {
+    const isTower = s.stage % 10 === 0;
+    const dotClass = 'stage-dot' + (isTower ? ' stage-tower' : '');
+    const aria = isTower
+      ? ('Tour / étape ' + s.stage)
+      : ('Étape ' + s.stage);
     return '<div class="stage-node ' + s.status + '" data-stage="' + s.stage + '">' +
-      '<button type="button" class="stage-dot" aria-label="Étape ' + s.stage + '">' + s.stage + '</button>' +
-      '<div class="stage-label">Niv. ' + s.level + '</div>' +
+      '<button type="button" class="' + dotClass + '" aria-label="' + aria + '">' + s.stage + '</button>' +
+      '<div class="stage-label">' + (isTower ? 'Tour ' : 'Niv. ') + s.level + '</div>' +
       '</div>';
   }).join('');
 

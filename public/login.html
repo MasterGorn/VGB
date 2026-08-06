@@ -57,13 +57,22 @@
 
   .profile-identity {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    margin-bottom: 14px;
+  }
+  .profile-identity-main {
+    display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 14px;
+    flex: 1 1 220px;
+    min-width: 0;
   }
   .profile-avatar-preview {
     width: 64px;
     height: 64px;
+    flex: 0 0 64px;
     border-radius: 50%;
     object-fit: cover;
     background: rgba(0,0,0,.35);
@@ -72,6 +81,91 @@
   .profile-identity-text { flex: 1; min-width: 0; }
   .profile-identity-text #profile-name { margin: 0 0 4px; font-weight: bold; }
   .profile-flag-inline { font-size: 22px; margin-left: 6px; vertical-align: middle; }
+  #profile-elo.profile-record {
+    margin: 4px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.78);
+  }
+  #profile-elo .stat-w {
+    color: #2ecc71 !important;
+    font-weight: 800;
+    -webkit-text-fill-color: #2ecc71;
+  }
+  #profile-elo .stat-d {
+    color: #e74c3c !important;
+    font-weight: 800;
+    -webkit-text-fill-color: #e74c3c;
+  }
+  #profile-elo .stat-sep {
+    opacity: 0.55;
+    margin: 0 3px;
+    color: rgba(255,255,255,0.65);
+  }
+  .profile-coins-aside {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    text-align: right;
+    margin-left: auto;
+    padding: 6px 0 6px 14px;
+    border-left: 1px solid rgba(255,255,255,0.12);
+  }
+  .profile-coins {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #f1c40f;
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 1.2;
+  }
+  .profile-coins .coin-icon {
+    display: inline-block;
+    width: 1.15em;
+    height: 1.15em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe56a, #f1c40f 55%, #c59a00);
+    box-shadow: inset 0 0 0 1.5px rgba(120, 80, 0, 0.35), 0 1px 2px rgba(0,0,0,0.35);
+    flex-shrink: 0;
+  }
+  .profile-coins-streak {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 500;
+  }
+  @media (max-width: 520px) {
+    .profile-identity {
+      align-items: stretch;
+    }
+    .profile-identity-main {
+      flex: 1 1 100%;
+    }
+    .profile-coins-aside {
+      width: 100%;
+      margin-left: 0;
+      padding: 10px 0 0;
+      border-left: none;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      text-align: right;
+    }
+    .profile-coins-streak {
+      margin: 0;
+    }
+    .profile-avatar-preview {
+      width: 52px;
+      height: 52px;
+      flex-basis: 52px;
+    }
+  }
 
   .profile-edit-section {
     margin-top: 16px;
@@ -315,12 +409,18 @@
   </div>
   <div class="card" id="profile-card" style="display:none;">
     <div class="profile-identity">
-      <img id="profile-avatar-preview" class="profile-avatar-preview" alt="" hidden />
-      <div class="profile-identity-text">
-        <p id="profile-name"></p>
-        <p class="profile-title-preview" id="profile-title-preview"></p>
-        <p class="elo" id="profile-elo" style="margin:0;"></p>
-        <p id="profile-email" style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.65);"></p>
+      <div class="profile-identity-main">
+        <img id="profile-avatar-preview" class="profile-avatar-preview" alt="" hidden />
+        <div class="profile-identity-text">
+          <p id="profile-name"></p>
+          <p class="profile-title-preview" id="profile-title-preview"></p>
+          <p class="elo profile-record" id="profile-elo"></p>
+          <p id="profile-email" style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.65);"></p>
+        </div>
+      </div>
+      <div class="profile-coins-aside" aria-label="Coins">
+        <p class="profile-coins" id="profile-coins"></p>
+        <p class="profile-coins-streak" id="profile-coins-streak" hidden></p>
       </div>
     </div>
     <div class="match-history" id="match-history" aria-label="Historique des 10 dernières parties"></div>
@@ -536,8 +636,31 @@ function updateProfilePreview(user) {
   }
   const eloEl = document.getElementById('profile-elo');
   if (eloEl) {
-    eloEl.textContent = 'Elo ' + (u.elo != null ? u.elo : '—') +
-      ' — ' + (u.wins || 0) + 'V · ' + (u.losses || 0) + ' déf.';
+    const wins = Number(u.wins) || 0;
+    const losses = Number(u.losses) || 0;
+    eloEl.className = 'elo profile-record';
+    eloEl.innerHTML =
+      'Elo ' + (u.elo != null ? escapeHtml(String(u.elo)) : '—') + ' — ' +
+      '<span class="stat-w">' + wins + ' V</span>' +
+      '<span class="stat-sep">·</span>' +
+      '<span class="stat-d">' + losses + ' D</span>';
+  }
+  const coinsEl = document.getElementById('profile-coins');
+  if (coinsEl) {
+    const coins = typeof u.coins === 'number' ? u.coins : 0;
+    coinsEl.innerHTML =
+      '<span class="coin-icon" aria-hidden="true"></span>' +
+      '<span class="coin-amount">' + escapeHtml(String(coins)) + '</span>';
+  }
+  const streakEl = document.getElementById('profile-coins-streak');
+  if (streakEl) {
+    if (typeof u.loginStreak === 'number' && u.loginStreak > 0) {
+      streakEl.hidden = false;
+      streakEl.textContent = 'Série ' + u.loginStreak + '/7';
+    } else {
+      streakEl.hidden = true;
+      streakEl.textContent = '';
+    }
   }
   const emailEl = document.getElementById('profile-email');
   if (emailEl) {

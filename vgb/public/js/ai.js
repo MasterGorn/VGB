@@ -1,6 +1,7 @@
 /**
  * IA locale Video Games Battle — facile / moyenne / difficile / expert.
  * S'appuie sur getReachablePositions / getPieceAt fournis par play.html.
+ * Prend en compte mines, bananes, tourelles adverses.
  */
 (function (global) {
   'use strict';
@@ -41,6 +42,39 @@
     return Math.max(0, 8 - d) * 0.6;
   }
 
+  function trapPenalty(api, to, seat, piece) {
+    var traps = api.traps;
+    if (!traps || !to) return 0;
+    var penalty = 0;
+    var mines = traps.mines || [];
+    for (var i = 0; i < mines.length; i++) {
+      var m = mines[i];
+      if (m.x === to.x && m.y === to.y) {
+        // Mine adverse (ou inconnue) : très dangereux
+        if (m.playerId !== seat) {
+          penalty += piece && piece.type === 'king' ? 80000 : pieceValue(piece) * 18;
+        } else {
+          // Sa propre mine : encore une mauvaise idée
+          penalty += pieceValue(piece) * 8;
+        }
+      }
+    }
+    var bananas = traps.bananas || [];
+    for (var b = 0; b < bananas.length; b++) {
+      if (bananas[b].x === to.x && bananas[b].y === to.y) {
+        penalty += 35;
+      }
+    }
+    var turrets = traps.turrets || [];
+    for (var t = 0; t < turrets.length; t++) {
+      var tur = turrets[t];
+      if (tur.playerId !== seat && tur.column === to.x) {
+        penalty += piece && piece.type === 'king' ? 90000 : pieceValue(piece) * 20;
+      }
+    }
+    return penalty;
+  }
+
   function enumerateMoves(api, seat, onlyPiece) {
     var list = [];
     var pieces = api.pieces;
@@ -71,13 +105,13 @@
     }
     score += centerBonus(move.to.x, move.to.y, api.gridSize || 9);
     score += kingProximity(move.to, api.pieces, seat);
-    // légère préférence à avancer les pièces non-roi
     if (move.piece.type !== 'king') {
       var dir = seat === 0 ? 1 : -1;
       score += (move.to.y - move.from.y) * dir * 0.4;
     } else {
       score -= 2;
     }
+    score -= trapPenalty(api, move.to, seat, move.piece);
     return score;
   }
 
@@ -163,9 +197,8 @@
     me += enumerateMoves(api, seat).length * 0.15;
     opp += enumerateMoves(api, oppSeat).length * 0.15;
 
-    // Bonus chasse au roi + sécurité du nôtre
     var ek = enemyKing(api.pieces, seat);
-    var mk = enemyKing(api.pieces, oppSeat); // notre roi du point de vue adverse
+    var mk = enemyKing(api.pieces, oppSeat);
     if (ek) {
       var ourMoves = enumerateMoves(api, seat);
       var pressure = 0;
@@ -181,6 +214,11 @@
     if (mk) {
       var threats = bestCaptureValue(api, oppSeat);
       if (threats >= 100000) me -= 500;
+      // Roi sur colonne tourelle adverse
+      var turrets = (api.traps && api.traps.turrets) || [];
+      for (var ti = 0; ti < turrets.length; ti++) {
+        if (turrets[ti].playerId === oppSeat && turrets[ti].column === mk.x) me -= 40;
+      }
     }
 
     return me - opp;
@@ -192,21 +230,20 @@
 
     return withSimulatedMove(api, move, seat, function (removed) {
       if (removed && removed.type === 'king') return 100000;
-      var reply = bestCaptureValue(api, oppSeat) * 11;
-      // notre pièce sur to est-elle capturable ?
+      var reply = bestCaptureValue(api, oppSeat) * 12;
       var hanging = 0;
       var after = api.getPieceAt(move.to);
       if (after && after.player === seat) {
         var oppMoves = enumerateMoves(api, oppSeat);
         for (var i = 0; i < oppMoves.length; i++) {
           if (oppMoves[i].to.x === move.to.x && oppMoves[i].to.y === move.to.y) {
-            hanging = pieceValue(after) * 10;
+            hanging = pieceValue(after) * 12;
             break;
           }
         }
       }
       var staticEval = evaluateBoard(api, seat);
-      return immediate + staticEval * 0.8 - reply - hanging;
+      return immediate + staticEval * 0.9 - reply - hanging;
     });
   }
 
@@ -216,32 +253,32 @@
 
     return withSimulatedMove(api, move, seat, function (removed) {
       if (removed && removed.type === 'king') return 200000;
-      var reply = bestCaptureValue(api, oppSeat) * 14;
+      var reply = bestCaptureValue(api, oppSeat) * 16;
       var hanging = 0;
       var after = api.getPieceAt(move.to);
       if (after && after.player === seat) {
         var oppMoves = enumerateMoves(api, oppSeat);
         for (var i = 0; i < oppMoves.length; i++) {
           if (oppMoves[i].to.x === move.to.x && oppMoves[i].to.y === move.to.y) {
-            hanging = pieceValue(after) * 14;
+            hanging = pieceValue(after) * 16;
             break;
           }
         }
       }
-      // Pénaliser les coups qui exposent notre roi
       var kingDanger = 0;
       var myKing = enemyKing(api.pieces, oppSeat);
       if (myKing) {
         var threatsOnKing = enumerateMoves(api, oppSeat);
         for (var k = 0; k < threatsOnKing.length; k++) {
           if (threatsOnKing[k].to.x === myKing.x && threatsOnKing[k].to.y === myKing.y) {
-            kingDanger = 900;
+            kingDanger = 1200;
             break;
           }
         }
+        kingDanger += trapPenalty(api, { x: myKing.x, y: myKing.y }, seat, myKing) * 0.02;
       }
       var staticEval = evaluateBoard(api, seat);
-      return immediate * 1.15 + staticEval * 1.1 - reply - hanging - kingDanger;
+      return immediate * 1.2 + staticEval * 1.25 - reply - hanging - kingDanger;
     });
   }
 
@@ -253,7 +290,6 @@
     var replyLimit = opts.replyLimit || 40;
     var scoreFn = opts.scoreFn || scoreImmediate;
 
-    // Ordonner les coups (captures / proximité roi d'abord)
     moves = moves.slice().sort(function (a, b) {
       return scoreFn(api, b, seat) - scoreFn(api, a, seat);
     });
@@ -276,18 +312,17 @@
           var rs = withSimulatedMove(api, replies[r], oppSeat, function (cap) {
             if (cap && cap.type === 'king') return -200000;
             if (depth >= 3) {
-              // Un demi-ply supplémentaire : meilleure riposte IA
               var ourReplies = enumerateMoves(api, seat);
               if (!ourReplies.length) return evaluateBoard(api, seat) - 30;
               ourReplies.sort(function (a, b) {
                 return scoreImmediate(api, b, seat) - scoreImmediate(api, a, seat);
               });
               var bestReply = -Infinity;
-              var lim2 = Math.min(ourReplies.length, 18);
+              var lim2 = Math.min(ourReplies.length, opts.depth3Limit || 22);
               for (var o = 0; o < lim2; o++) {
                 var os = withSimulatedMove(api, ourReplies[o], seat, function (c2) {
                   if (c2 && c2.type === 'king') return 200000;
-                  return evaluateBoard(api, seat);
+                  return evaluateBoard(api, seat) - trapPenalty(api, ourReplies[o].to, seat, ourReplies[o].piece) * 0.05;
                 });
                 if (os > bestReply) bestReply = os;
               }
@@ -301,12 +336,26 @@
       });
 
       score += scoreImmediate(api, move, seat) * (opts.immediateWeight || 0.05);
+      score -= trapPenalty(api, move.to, seat, move.piece) * (opts.trapWeight || 0.15);
       if (score > bestScore) {
         bestScore = score;
         best = move;
       }
     }
     return best;
+  }
+
+  function filterSuicidal(api, moves, seat) {
+    var safe = [];
+    for (var i = 0; i < moves.length; i++) {
+      var m = moves[i];
+      var pen = trapPenalty(api, m.to, seat, m.piece);
+      // Garder les coups suicidaires seulement s’ils capturent le roi
+      var target = api.getPieceAt(m.to);
+      if (pen >= 50000 && !(target && target.type === 'king')) continue;
+      safe.push(m);
+    }
+    return safe.length ? safe : moves;
   }
 
   function chooseMove(api) {
@@ -318,23 +367,26 @@
     if (!moves.length) return null;
 
     if (difficulty === 'easy') {
-      // 70% aléatoire, 30% un coup un peu meilleur
-      if (Math.random() < 0.7) return pickRandom(moves);
-      return pickBest(moves, function (m) { return scoreImmediate(api, m, seat); }, 25);
+      // Très souvent aléatoire ; ignore souvent les pièges
+      if (Math.random() < 0.82) return pickRandom(moves);
+      return pickBest(moves, function (m) { return scoreImmediate(api, m, seat); }, 40);
     }
 
+    moves = filterSuicidal(api, moves, seat);
+
     if (difficulty === 'expert') {
-      // Pré-filtre agressif puis minimax profond, sans bruit
-      if (moves.length > 60) {
+      if (moves.length > 50) {
         moves.sort(function (a, b) {
           return scoreExpert(api, b, seat) - scoreExpert(api, a, seat);
         });
-        moves = moves.slice(0, 36);
+        moves = moves.slice(0, 32);
       }
       return minimaxRoot(api, moves, seat, 3, {
-        replyLimit: 28,
-        quietFactor: 12,
-        immediateWeight: 0.12,
+        replyLimit: 32,
+        quietFactor: 14,
+        immediateWeight: 0.1,
+        trapWeight: 0.35,
+        depth3Limit: 24,
         scoreFn: scoreExpert
       }) || pickBest(moves, function (m) {
         return scoreExpert(api, m, seat);
@@ -342,27 +394,27 @@
     }
 
     if (difficulty === 'hard') {
-      if (moves.length > 80) {
-        // pré-filtre sur score immédiat pour limiter le branching
+      if (moves.length > 70) {
         moves.sort(function (a, b) {
           return scoreHard(api, b, seat) - scoreHard(api, a, seat);
         });
-        moves = moves.slice(0, 50);
+        moves = moves.slice(0, 45);
       }
       return minimaxRoot(api, moves, seat, 2, {
-        replyLimit: 40,
-        quietFactor: 8,
-        immediateWeight: 0.05,
+        replyLimit: 36,
+        quietFactor: 10,
+        immediateWeight: 0.08,
+        trapWeight: 0.25,
         scoreFn: scoreHard
       }) || pickBest(moves, function (m) {
         return scoreHard(api, m, seat);
-      }, 2);
+      }, 1);
     }
 
-    // medium
+    // medium : conscient des pièges, un peu de bruit, pas de minimax profond
     return pickBest(moves, function (m) {
-      return scoreImmediate(api, m, seat);
-    }, 6);
+      return scoreImmediate(api, m, seat) + evaluateBoard(api, seat) * 0.05;
+    }, 5);
   }
 
   global.VGBAI = {

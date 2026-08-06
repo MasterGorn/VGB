@@ -17,7 +17,7 @@ export type MissionKind =
   | "play_n"
   | "win_n"
   | "capture_n"
-  | "beat_higher_elo"
+  | "win_use_item"
   | "mate_role"
   | "win_streak"
   | "win_mode"
@@ -134,7 +134,6 @@ function buildStage1(): StageDef {
 
 function missionForSlot(stage: number, slot: number): MissionDef {
   const id = `s${stage}-m${slot}`;
-  const tier = Math.ceil(stage / 10); // 1..10
   const faction = FACTIONS[(stage + slot) % FACTIONS.length];
   const role = ROLES[(stage + slot * 2) % ROLES.length];
 
@@ -144,7 +143,7 @@ function missionForSlot(stage: number, slot: number): MissionDef {
     "play_n",
     "win_n",
     "capture_n",
-    "beat_higher_elo",
+    "win_use_item",
     "mate_role",
     "win_streak",
     "win_mode",
@@ -197,15 +196,14 @@ function missionForSlot(stage: number, slot: number): MissionDef {
         label: `Capturer ${target} pièces en une partie`,
       };
     }
-    case "beat_higher_elo":
+    case "win_use_item":
       return {
         id,
         kind,
         label:
-          stage < 30
-            ? "Battre un joueur mieux classé"
-            : `Battre un joueur avec +${10 + tier * 5} Elo`,
-        target: stage < 30 ? 1 : 10 + tier * 5,
+          stage < 25
+            ? "Gagner une partie en utilisant au moins un objet"
+            : "Gagner en utilisant des objets",
       };
     case "mate_role":
       return {
@@ -387,15 +385,9 @@ export function applyEventToMissions(
         case "capture_n":
           if (captures >= (m.target || 1)) hit = true;
           break;
-        case "beat_higher_elo": {
-          const my = Number(event.myElo || 0);
-          const opp = Number(event.opponentElo || 0);
-          if (!event.won || !(opp > 0)) break;
-          const margin = Number(m.target || 1);
-          if (margin <= 1) hit = opp > my;
-          else hit = opp >= my + margin;
+        case "win_use_item":
+          hit = !!event.won && !!event.usedItems;
           break;
-        }
         case "mate_role":
           hit = !!event.won && !!role && role === m.role;
           break;
