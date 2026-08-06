@@ -56,6 +56,7 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      { source: "/public/images/:path*", destination: "/images/:path*" },
       { source: "/jouer", destination: "/play.html" },
       { source: "/index.html", destination: "/play.html" },
     ];

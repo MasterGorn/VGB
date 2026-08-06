@@ -314,7 +314,7 @@ function displayPieces(pieces) {
     }
     
     card.innerHTML = `
-      <img src="${piece.image}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
+      <img src="${(piece.image || '').replace(/^public\//, '/')}" alt="${translatedName}" class="piece-image" onerror="this.style.display='none'">
       <div class="piece-name">${translatedName}</div>
       <div class="piece-description">${translatedDescription}</div>
       ${abilityText && piece.role === 'unique' ? `<div class="piece-ability"><span class="piece-ability-label">Capacité unique</span>${abilityText}</div>` : ''}
