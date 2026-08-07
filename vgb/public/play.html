@@ -338,7 +338,8 @@
 }
 
 .ad-slot {
-  height: 100px;
+  position: relative;
+  height: 120px;
   background: var(--secondary-bg);
   margin-bottom: var(--spacing-sm);
   display: flex;
@@ -347,6 +348,40 @@
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   color: var(--text-muted);
+  overflow: hidden;
+  padding: 0;
+}
+
+.ad-slot a.ad-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ad-slot img.ad-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ad-slot .ad-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.75));
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 0.02em;
+  pointer-events: none;
 }
 
 .ad-info {
@@ -557,6 +592,10 @@
   justify-content: center;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+.mode-toggle[hidden] {
+  display: none !important;
 }
 
 .mode-btn {
@@ -1468,6 +1507,42 @@
 @media (max-width: 767px) {
   #character-selection-container .character-card {
     min-height: 44px;
+  }
+
+  .game-container.game-active {
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+  }
+
+  .game-container.game-active .sidebar {
+    margin-bottom: 16px;
+  }
+
+  .commands-panel {
+    order: 1;
+  }
+
+  .ads-panel {
+    display: block;
+    order: 2;
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-light);
+  }
+
+  .ads-panel .ad-slot {
+    height: 100px;
+  }
+
+  .items-ref-panel {
+    order: 3;
+  }
+
+  .rules-panel {
+    order: 4;
   }
 }
 
@@ -2577,8 +2652,8 @@ body.end-game-open {
     
     <div id="ads-panel" class="ads-panel">
       <div id="ads-title" class="ads-title" data-t="advertisements">Publicités</div>
-      <div id="ad-slot-1" class="ad-slot" data-t="ad-1">Annonce 1</div>
-      <div id="ad-slot-2" class="ad-slot" data-t="ad-2">Annonce 2</div>
+      <div id="ad-slot-1" class="ad-slot"></div>
+      <div id="ad-slot-2" class="ad-slot"></div>
       <div id="ad-info" class="ad-info" data-t="ad-update">Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a></div>
     </div>
   </div>
@@ -10952,20 +11027,34 @@ const game = new Phaser.Game(config);
 
 // --- Publicités ---
 const ADS = [
-  { a1: 'Retro Console XL', a2: 'Promo -30%' },
-  { a1: 'Figurines 8-bit', a2: 'Nouveautés' },
-  { a1: 'Cartouches Repro', a2: 'Rare Loot' },
-  { a1: 'T-shirts Pixel', a2: 'Collection 2025' },
+  {
+    href: 'https://www.liengo.fr',
+    image: 'https://cqmn9pld5406cni8.public.blob.vercel-storage.com/featured/1779835885052-7b7c6576cc16.webp',
+    title: 'LIENGO',
+    label: 'LIENGO'
+  },
+  {
+    href: 'https://www.supersmashbros.fr',
+    image: 'https://img.youtube.com/vi/GYYwS2nbB3Y/maxresdefault.jpg',
+    title: 'La Bible Super Smash Bros.',
+    label: 'La Bible Super Smash Bros.'
+  }
 ];
 
+function renderAdSlot(el, ad) {
+  if (!el || !ad) return;
+  el.innerHTML =
+    '<a class="ad-link" href="' + ad.href + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(ad.title) + '">' +
+      '<img class="ad-image" src="' + ad.image + '" alt="' + escapeHtml(ad.title) + '" loading="lazy" />' +
+      '<span class="ad-caption">' + escapeHtml(ad.label) + '</span>' +
+    '</a>';
+}
+
 function rotateAds() {
-  adRotationIndex = (adRotationIndex + 1) % ADS.length;
-  const data = ADS[adRotationIndex];
-  const s1 = document.getElementById('ad-slot-1');
-  const s2 = document.getElementById('ad-slot-2');
-  if (s1) s1.textContent = data.a1;
-  if (s2) s2.textContent = data.a2;
-  updateAdInfo(true);
+  // Deux pubs fixes (pas de rotation placeholder)
+  renderAdSlot(document.getElementById('ad-slot-1'), ADS[0]);
+  renderAdSlot(document.getElementById('ad-slot-2'), ADS[1]);
+  updateAdInfo();
 }
 
 function updateAdInfo() {
@@ -10975,6 +11064,9 @@ function updateAdInfo() {
     ? t('ad-update')
     : 'Votre publicité ici ? <a href="https://www.culture-games.com/contact/" target="_blank" rel="noopener noreferrer">Contactez-nous</a>';
 }
+
+// Afficher les pubs au chargement
+rotateAds();
 
 // ========================================
 // SYSTÈME DE SÉLECTION DES PERSONNAGES
@@ -12645,6 +12737,11 @@ function createPiecesFromSelection() {
   }
 
   function openSetupPanel(mode) {
+    const modeToggle = document.querySelector('.mode-toggle');
+    if (modeToggle) {
+      modeToggle.hidden = true;
+      modeToggle.setAttribute('aria-hidden', 'true');
+    }
     if (homeMenu) homeMenu.hidden = true;
     if (setupDetail) setupDetail.hidden = false;
     if (localSetup) localSetup.style.display = 'none';
