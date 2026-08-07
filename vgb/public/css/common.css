@@ -249,6 +249,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
 }
 
@@ -626,6 +635,17 @@ body {
   .header-inner {
     height: 56px;
     padding: 8px 12px;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .logo-link {
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+    margin-right: auto;
+    z-index: 1;
   }
 
   .logo {
@@ -679,6 +699,26 @@ body {
 
   .auth-link {
     gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .nav-link-user .nav-user-flag,
+  .nav-link-user .nav-elo {
+    display: none !important;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-links {
+    gap: 8px 12px;
+  }
+
+  .site-footer {
+    margin-top: 28px;
   }
 }
 

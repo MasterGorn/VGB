@@ -65,12 +65,13 @@
             '<a href="/pieces.html" class="nav-link'+(active==='pieces'?' active':'')+'" data-t="pieces">Les pièces</a>' +
             '<a href="/objets.html" class="nav-link'+(active==='objets'?' active':'')+'" data-t="items">Les objets</a>' +
             '<a href="/regles.html" class="nav-link'+(active==='regles'?' active':'')+'" data-t="rules">Les règles</a>' +
+            '<a href="/progression.html" class="nav-link nav-link-mobile-only'+(active==='progression'?' active':'')+'">Progression</a>' +
           '</nav>' +
           '<a href="/play.html" aria-label="Accueil" class="logo-link">' +
             '<img src="/images/site/logo-video-games-battle-256.webp" alt="Video Games Battle" class="logo" />' +
           '</a>' +
           '<div class="auth-link">' +
-            '<a href="/progression.html" class="nav-link'+(active==='progression'?' active':'')+'">Progression</a>' +
+            '<a href="/progression.html" class="nav-link nav-link-desktop-only'+(active==='progression'?' active':'')+'">Progression</a>' +
             renderAuthLink('', active) +
             '<div class="language-selector">' +
               '<button class="language-btn" id="current-lang-btn" title="Changer de langue" type="button">' +
@@ -130,12 +131,13 @@
     return (
       '<footer class="site-footer">' +
         '<div class="footer-inner">' +
-          '<a href="/credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
-          '<span class="footer-sep" aria-hidden="true">·</span>' +
-          '<a href="/replay.html" class="footer-link'+(active==='replay'?' active':'')+'">Replays</a>' +
-          '<span class="footer-sep" aria-hidden="true">·</span>' +
-          '<a href="https://www.culture-games.com/contact/" class="footer-link" target="_blank" rel="noopener noreferrer">Contact</a>' +
-          '<span class="footer-sep" aria-hidden="true">·</span>' +
+          '<nav class="footer-links" aria-label="Pied de page">' +
+            '<a href="/credits.html" class="footer-link'+(active==='credits'?' active':'')+'" data-t="credits">Crédits</a>' +
+            '<span class="footer-sep" aria-hidden="true">·</span>' +
+            '<a href="/replay.html" class="footer-link'+(active==='replay'?' active':'')+'">Replays</a>' +
+            '<span class="footer-sep" aria-hidden="true">·</span>' +
+            '<a href="https://www.culture-games.com/contact/" class="footer-link" target="_blank" rel="noopener noreferrer">Contact</a>' +
+          '</nav>' +
           '<span class="footer-copy">&copy; ' + year + ' Video Games Battle</span>' +
         '</div>' +
       '</footer>'
