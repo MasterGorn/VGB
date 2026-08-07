@@ -1534,7 +1534,10 @@
   }
 
   .ads-panel .ad-slot {
-    height: 100px;
+    /* Desktop ≈ 248×120 (~2.1:1) ; éviter le format trop plat du height fixe */
+    height: auto;
+    aspect-ratio: 21 / 10;
+    min-height: 150px;
   }
 
   .items-ref-panel {
