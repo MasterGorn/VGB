@@ -678,6 +678,9 @@
   gap: 12px;
   margin: 0 0 28px;
 }
+.home-mode-menu[hidden] {
+  display: none !important;
+}
 @media (min-width: 560px) {
   .home-mode-menu {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -754,13 +757,425 @@
   background: linear-gradient(160deg, #e74c3c, #7b241c);
   border-color: #f1948a;
 }
-.home-mode-tile.tile-span {
-  grid-column: 1 / -1;
+.home-mode-tile.tile-tutorial {
+  background: linear-gradient(160deg, #f1c40f, #b7950b);
+  border-color: #f9e79f;
+  color: #1a1204;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 }
-@media (min-width: 560px) {
-  .home-mode-tile.tile-span {
-    grid-column: auto;
-  }
+.home-mode-tile.tile-tutorial .tile-icon {
+  background: rgba(0,0,0,0.18);
+  border-color: rgba(255,255,255,0.45);
+}
+.home-mode-tile.tile-new {
+  position: relative;
+}
+.home-mode-tile.tile-new::after {
+  content: 'Nouveau';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #1a1204;
+  color: #f9e79f;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+.setup-card.is-tutorial-playing {
+  max-width: 560px;
+  text-align: left;
+}
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  padding: 76px 12px 32px;
+  background: rgba(6, 4, 10, 0.82);
+  backdrop-filter: blur(8px);
+}
+.tutorial-overlay[hidden] {
+  display: none !important;
+}
+body.tutorial-open {
+  overflow: hidden;
+}
+.tutorial-overlay .tutorial-screen {
+  width: min(100%, 520px);
+  margin: 12px auto 0;
+}
+
+.tutorial-hub-intro {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tutorial-lesson-list {
+  display: grid;
+  gap: 10px;
+}
+.tutorial-lesson-card {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.tutorial-lesson-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(241,196,15,0.55);
+  background: rgba(241,196,15,0.08);
+}
+.tutorial-lesson-card.is-done {
+  border-color: rgba(46,204,113,0.45);
+}
+.tutorial-lesson-card .lesson-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.28);
+}
+.tutorial-lesson-card .lesson-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tutorial-lesson-card .lesson-title {
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.tutorial-lesson-card .lesson-title em {
+  font-style: normal;
+  font-size: 10px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(46,204,113,0.2);
+  color: #2ecc71;
+  vertical-align: middle;
+}
+.tutorial-lesson-card .lesson-meta,
+.tutorial-lesson-card .lesson-desc {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.tutorial-screen {
+  width: 100%;
+}
+.tutorial-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tutorial-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: #f1c40f;
+}
+.tutorial-heading-row h2 {
+  margin: 4px 0 0;
+  font-size: clamp(20px, 4vw, 26px);
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+.tutorial-progress-count {
+  font-size: 14px;
+  color: #f9e79f;
+  font-weight: 800;
+  border: 1px solid rgba(241,196,15,0.45);
+  border-radius: 999px;
+  padding: 4px 10px;
+  line-height: 1.2;
+}
+.tutorial-skip {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.88);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 0 0 12px auto;
+  display: block;
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.tutorial-skip:hover { color: #f9e79f; border-color: #f1c40f; }
+.tutorial-progress-rail {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.tutorial-progress-rail span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #f1c40f, #f9e79f);
+  transition: width 0.25s ease;
+}
+.tutorial-board {
+  --tuto-size: 5;
+  display: grid;
+  grid-template-columns: repeat(var(--tuto-size), minmax(0, 1fr));
+  width: min(100%, 420px);
+  margin: 0 auto 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  aspect-ratio: 1 / 1;
+}
+.tuto-cell {
+  position: relative;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.tuto-cell.is-light { background: #eeeed2; }
+.tuto-cell.is-dark { background: #769656; }
+.tuto-cell.is-dest { box-shadow: inset 0 0 0 3px rgba(241,196,15,0.85); }
+.tuto-cell.is-selected { box-shadow: inset 0 0 0 3px #fff; }
+.tuto-cell.is-glow .tuto-piece,
+.tuto-cell.is-crate-glow .tuto-crate {
+  animation: tuto-pulse 1.1s ease-in-out infinite;
+}
+.tuto-cell.is-capture { box-shadow: inset 0 0 0 3px #e74c3c; }
+.tuto-piece,
+.tuto-crate {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+.tuto-crate { width: 58%; height: 58%; }
+.tuto-letter {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 1px 0 #000;
+  z-index: 2;
+}
+.tuto-dot {
+  width: 18%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.28);
+}
+.tutorial-inventory {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.tuto-inv-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.tuto-inv-item {
+  appearance: none;
+  border: 2px solid #f1c40f;
+  background: rgba(241,196,15,0.12);
+  color: #fff;
+  border-radius: 12px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  animation: tuto-pulse 1.1s ease-in-out infinite;
+}
+.tuto-inv-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.tuto-inv-item.is-used {
+  animation: none;
+  opacity: 0.65;
+  border-color: #2ecc71;
+}
+.tutorial-card {
+  background: linear-gradient(145deg, rgba(33,28,27,0.92), rgba(10,9,9,0.95));
+  border: 1px solid rgba(241,196,15,0.28);
+  border-radius: 18px;
+  padding: 18px 16px 16px;
+  margin-bottom: 12px;
+}
+.tutorial-card .tutorial-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(241,196,15,0.12);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.tutorial-card h3 {
+  margin: 0 0 8px;
+  color: #f9e79f;
+  letter-spacing: 0.08em;
+  font-size: 18px;
+}
+.tutorial-card p,
+.tutorial-card li {
+  margin: 0;
+  color: rgba(255,255,255,0.88);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.tutorial-card ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+.tutorial-card li { margin: 4px 0; }
+.tutorial-instruction {
+  display: block;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(241,196,15,0.45);
+  background: rgba(241,196,15,0.1);
+  color: #f9e79f;
+  font-size: 14px;
+  font-weight: 800;
+}
+.tuto-visual-pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  margin: 14px 0 4px;
+}
+.tuto-visual-card {
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(241,196,15,0.28);
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.tuto-visual-card img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+.tuto-visual-card strong {
+  color: #f9e79f;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tuto-visual-card span {
+  color: rgba(255,255,255,0.72);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.tuto-vs {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #f1c40f;
+}
+.tutorial-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tutorial-nav button {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 10px 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.tutorial-nav .tutorial-prev,
+.tutorial-nav .tutorial-quit {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.tutorial-nav .tutorial-next {
+  flex: 1;
+  background: linear-gradient(180deg, #f1c40f, #d4ac0d);
+  color: #1a1204;
+}
+.tutorial-nav .tutorial-next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+@keyframes tuto-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.08); filter: brightness(1.25); }
+}
+.setup-title[hidden],
+.home-mode-back[hidden],
+.tutorial-screen[hidden],
+#tutorial-hub[hidden],
+#tutorial-board[hidden],
+#tutorial-inventory[hidden],
+#tutorial-skip[hidden],
+#tutorial-quit[hidden] {
+  display: none !important;
+}
+#tutorial-hub {
+  text-align: left;
 }
 .home-mode-back {
   display: inline-flex;
@@ -2434,10 +2849,15 @@ body.end-game-open {
           <span class="tile-label">Échecs</span>
           <span class="tile-sub">8×8 classique</span>
         </button>
-        <button type="button" class="home-mode-tile tile-tournament tile-span" data-home-mode="tournament">
+        <button type="button" class="home-mode-tile tile-tournament" data-home-mode="tournament">
           <span class="tile-icon" aria-hidden="true">🏆</span>
           <span class="tile-label">Tournoi</span>
           <span class="tile-sub">8 / 16 / 32 / 64</span>
+        </button>
+        <button type="button" class="home-mode-tile tile-tutorial" data-home-mode="tutorial">
+          <span class="tile-icon" aria-hidden="true">📖</span>
+          <span class="tile-label">Tutoriel</span>
+          <span class="tile-sub">Guidé · 3 min</span>
         </button>
       </div>
 
@@ -2579,6 +2999,11 @@ body.end-game-open {
           Mode tournoi bientôt disponible — l’interface et les tailles 8 / 16 / 32 / 64 sont déjà prévues.
         </p>
       </div>
+
+      <div id="tutorial-hub" hidden>
+        <p class="tutorial-hub-intro">Trois mini-leçons, environ une minute chacune. Tu joues vraiment les coups, comme dans la partie.</p>
+        <div id="tutorial-lesson-list" class="tutorial-lesson-list"></div>
+      </div>
       </div><!-- /setup-detail -->
     </div>
   </div>
@@ -2661,6 +3086,28 @@ body.end-game-open {
     </div>
   </div>
 </div>
+
+<div id="tutorial-overlay" class="tutorial-overlay" hidden>
+  <div id="tutorial-screen" class="tutorial-screen">
+    <button type="button" class="tutorial-skip" id="tutorial-skip">Passer</button>
+    <div class="tutorial-heading-row">
+      <div>
+        <span class="tutorial-kicker" id="tutorial-kicker">Les bases</span>
+        <h2 id="tutorial-heading">TUTORIEL GUIDÉ</h2>
+      </div>
+      <strong class="tutorial-progress-count" id="tutorial-progress-count">1/4</strong>
+    </div>
+    <div class="tutorial-progress-rail" aria-hidden="true"><span id="tutorial-progress-fill"></span></div>
+    <div id="tutorial-board" class="tutorial-board" aria-label="Plateau du tutoriel"></div>
+    <div id="tutorial-inventory" class="tutorial-inventory" hidden></div>
+    <article id="tutorial-card" class="tutorial-card"></article>
+    <div class="tutorial-nav">
+      <button type="button" class="tutorial-prev" id="tutorial-prev">← REVOIR</button>
+      <button type="button" class="tutorial-next" id="tutorial-next">J’AI COMPRIS • SUIVANT →</button>
+      <button type="button" class="tutorial-quit" id="tutorial-quit">Leçons</button>
+    </div>
+  </div>
+</div>
 <script src="/js/header.js"></script>
 <script src="/js/profile-ui.js?v=20260726b"></script>
 <script src="/data/pieces.js?v=20260720u"></script>
@@ -2673,6 +3120,7 @@ body.end-game-open {
 <script src="/js/unique-abilities.js?v=20260720u"></script>
 <script src="/js/ai.js?v=20260729e"></script>
 <script src="/js/online.js?v=20260726b"></script>
+<script src="/js/tutorial.js?v=20260911c"></script>
 <script>
 VGBHeader.injectHeader('index');
 
@@ -12728,14 +13176,29 @@ function createPiecesFromSelection() {
   const homeMenu = document.getElementById('home-mode-menu');
   const setupDetail = document.getElementById('setup-detail');
   const tournamentSetup = document.getElementById('tournament-setup');
+  const tutorialHub = document.getElementById('tutorial-hub');
+  const tutorialOverlay = document.getElementById('tutorial-overlay');
   const homeBack = document.getElementById('home-mode-back');
   const setupTitle = document.querySelector('.setup-title');
+  const setupCard = document.querySelector('.setup-card');
   if (!modeLocal || !modeOnline) return;
+
+  function hideTutorialUi() {
+    if (tutorialHub) tutorialHub.hidden = true;
+    if (tutorialOverlay) tutorialOverlay.hidden = true;
+    document.body.classList.remove('tutorial-open');
+    if (setupCard) setupCard.classList.remove('is-tutorial-playing');
+  }
 
   function showHomeMenu() {
     if (homeMenu) homeMenu.hidden = false;
     if (setupDetail) setupDetail.hidden = true;
-    if (setupTitle) setupTitle.textContent = 'Choisissez un mode';
+    hideTutorialUi();
+    if (setupTitle) {
+      setupTitle.hidden = false;
+      setupTitle.textContent = 'Choisissez un mode';
+    }
+    if (homeBack) homeBack.hidden = false;
     clearOnlineMatchState();
   }
 
@@ -12751,15 +13214,30 @@ function createPiecesFromSelection() {
     if (onlineSetup) onlineSetup.classList.remove('visible');
     if (onlineSetup) onlineSetup.style.display = 'none';
     if (tournamentSetup) tournamentSetup.hidden = true;
+    hideTutorialUi();
+    if (homeBack) homeBack.hidden = false;
+    if (setupTitle) setupTitle.hidden = false;
 
     const titles = {
       versus: 'Local 1v1',
       cpu: 'Contre l’IA',
       classic: 'Échecs traditionnels',
       online: 'En ligne (Elo)',
-      tournament: 'Tournoi'
+      tournament: 'Tournoi',
+      tutorial: 'Tutoriel'
     };
     if (setupTitle) setupTitle.textContent = titles[mode] || 'Configuration';
+
+    if (mode === 'tutorial') {
+      if (typeof VGBTutorial !== 'undefined' && VGBTutorial.openHub) {
+        VGBTutorial.openHub();
+      } else if (tutorialHub) {
+        tutorialHub.hidden = false;
+      }
+      modeLocal.classList.add('active');
+      modeOnline.classList.remove('active');
+      return;
+    }
 
     if (mode === 'tournament') {
       if (tournamentSetup) tournamentSetup.hidden = false;
@@ -12838,6 +13316,9 @@ function createPiecesFromSelection() {
   });
   syncAiDifficultyUI();
   showHomeMenu();
+  if (typeof VGBTutorial !== 'undefined' && VGBTutorial.maybeAutoStart) {
+    VGBTutorial.maybeAutoStart();
+  }
 
   async function refreshLeaderboard() {
     const ol = document.getElementById('elo-leaderboard');
