@@ -7,7 +7,7 @@
 
   const IMAGES = {
     toad: '/images/nintendo/characters/toad.png',
-    king: '/images/nintendo/characters/king.png',
+    king: '/images/xbox/characters/king.png',
     mario: '/images/nintendo/characters/mario.png',
     bayonetta: '/images/nintendo/characters/bayonetta.png',
     junior: '/images/nintendo/characters/bowser-junior.png',
@@ -75,7 +75,7 @@
             size: 5,
             pieces: [
               { id: 'toad', x: 2, y: 2, role: 'pawn', team: 'you', img: IMAGES.toad, name: 'Toad', letter: 'P' },
-              { id: 'king', x: 2, y: 0, role: 'king', team: 'foe', img: IMAGES.king, name: 'Roi', letter: 'R' }
+              { id: 'king', x: 2, y: 0, role: 'king', team: 'foe', img: IMAGES.king, name: 'Phil Spencer', letter: 'R' }
             ]
           }
         }
@@ -355,9 +355,9 @@
         '</div>' +
         '<span class="tuto-vs">VS</span>' +
         '<div class="tuto-visual-card">' +
-          '<img src="' + IMAGES.king + '" alt="">' +
-          '<strong>Le roi adverse</strong>' +
-          '<span>Capture-le pour gagner</span>' +
+          '<img src="' + IMAGES.king + '" alt="Phil Spencer">' +
+          '<strong>Phil Spencer</strong>' +
+          '<span>Le roi adverse à capturer</span>' +
         '</div>' +
       '</div>'
     );
